@@ -1,7 +1,14 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+//test the response from api
+import testDB, { GET } from "./api/health/db/route";
 
-export default function Home() {
+export default async function Home() {
+  //This is to test the response from the api file with query
+  //refactor it later for more api routes
+  const test = await GET();
+  const data = await test.json();
+  console.log(data);
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -36,6 +43,7 @@ export default function Home() {
               Learning
             </a>{" "}
             center.
+            <br />Testing: {JSON.stringify(data.now)}
           </p>
         </div>
         <div className={styles.ctas}>
