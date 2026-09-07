@@ -1,0 +1,64 @@
+.wrapper {
+  width: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: 200px;
+  display: block;
+  overflow: visible;
+}
+
+.gridLine {
+  stroke: #4a352e;
+  stroke-width: 1;
+}
+
+.area {
+  fill: #f0a752;
+  fill-opacity: 0.1;
+  stroke: none;
+}
+
+.line {
+  fill: none;
+  stroke: #f0a752;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.crosshair {
+  stroke: #6b5347;
+  stroke-width: 1;
+}
+
+.marker {
+  fill: #f0a752;
+  stroke: #2f201c;
+  stroke-width: 2;
+  transition: r 0.1s ease;
+}
+
+.hitTarget {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.axisLabel {
+  font-size: 9px;
+  font-weight: 600;
+  fill: #8f7a6d;
+}
+
+.tooltipBg {
+  fill: #17100d;
+  stroke: #4a352e;
+  stroke-width: 1;
+}
+
+.tooltipText {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #ffffff;
+}

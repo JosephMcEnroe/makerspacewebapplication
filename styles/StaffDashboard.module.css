@@ -1,0 +1,72 @@
+.page {
+  background-color: #1c1310;
+  min-height: 100vh;
+}
+
+.content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+}
+
+.date {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #8f7a6d;
+  margin: 0 0 0.5rem 0;
+}
+
+.greeting {
+  text-align: center;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 2.5rem 0;
+}
+
+.actionsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.viewAllWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2.5rem;
+}
+
+.viewAllBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2b1c1c;
+  background-color: #f0a752;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+}
+
+.viewAllBtn:hover {
+  background-color: #e5943a;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .actionsGrid,
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}
