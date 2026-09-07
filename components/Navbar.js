@@ -4,7 +4,7 @@ import styles from "./Navbar.module.css";
 export default function Navbar() {
   return (
     <header className={styles.navbar}>
-      <Link href="/" className={styles.brand}>
+      <Link href="/dashboard" className={styles.brand}>
         THE CRAFTY STUDIO
       </Link>
 
@@ -21,9 +21,9 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        <div className={styles.avatar} aria-label="User profile">
+        <Link href="/account" className={styles.avatar} aria-label="Account settings">
           AC
-        </div>
+        </Link>
       </div>
     </header>
   );
