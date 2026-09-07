@@ -11,12 +11,15 @@ import styles from "@/styles/AdminDashboard.module.css";
 const DATE_LABEL = "Mon, Mar 12, 2026";
 
 // Placeholder until revenue/usage data is wired up to the database
+// Dummy data — once a database is connected, these stat cards should pull
+// live revenue totals for today/this week/this month instead of hardcoded values.
 const REVENUE_STATS = [
   { label: "Today", value: "$4,200", delta: { text: "+12% from yesterday", positive: true } },
   { label: "This Week", value: "$24,130", delta: { text: "+8% from last week", positive: true } },
   { label: "This Month", value: "$38,420", delta: { text: "+15% from last month", positive: true } },
 ];
 
+// Dummy data — replace with actual daily revenue figures from the database.
 const REVENUE_TREND = [
   { label: "Mar 7", value: 3200 },
   { label: "Mar 8", value: 4100 },
@@ -26,6 +29,7 @@ const REVENUE_TREND = [
   { label: "Mar 12", value: 4200 },
 ];
 
+// Dummy data — replace with actual daily new-membership counts from the database.
 const MEMBERSHIP_ENTRIES = [
   { label: "Mar 7", value: 5 },
   { label: "Mar 8", value: 8 },
@@ -35,6 +39,7 @@ const MEMBERSHIP_ENTRIES = [
   { label: "Mar 12", value: 10 },
 ];
 
+// Dummy data — replace with real machine usage/utilization stats from the database.
 const MACHINE_USAGE = [
   { name: "3D Printer", subtitle: "34.0 hrs this week", percent: 85 },
   { name: "Laser Cutter", subtitle: "28.8 hrs this week", percent: 72 },
@@ -84,6 +89,7 @@ export default function AdminDashboardPage() {
           <p className={styles.date}>{DATE_LABEL}</p>
           <h1 className={styles.heading}>Revenue &amp; Operations</h1>
 
+          {/* Dummy data — see REVENUE_STATS above; wire up to the database once it exists */}
           <div className={styles.statsGrid}>
             {REVENUE_STATS.map((stat) => (
               <StatCard key={stat.label} label={stat.label} value={stat.value} icon={DollarIcon} delta={stat.delta} />
@@ -91,20 +97,24 @@ export default function AdminDashboardPage() {
           </div>
 
           <div className={styles.chartsGrid}>
+            {/* Dummy data — see REVENUE_TREND above; wire up to the database once it exists */}
             <ChartCard title="Revenue Trend" subtitle="Last 6 days">
               <LineChart data={REVENUE_TREND} formatValue={(v) => `$${v.toLocaleString()}`} />
             </ChartCard>
+            {/* Dummy data — see MEMBERSHIP_ENTRIES above; wire up to the database once it exists */}
             <ChartCard title="Daily Membership Entries" subtitle="Last 6 days">
               <BarChart data={MEMBERSHIP_ENTRIES} />
             </ChartCard>
           </div>
 
+          {/* Dummy data — see MACHINE_USAGE above; wire up to the database once it exists */}
           <div className={styles.usageSection}>
             <ChartCard title="Machine Usage Statistics" subtitle="Today's Utilization">
               <MachineUsageList machines={MACHINE_USAGE} />
             </ChartCard>
           </div>
 
+          {/* Static quick-action links — no data to wire up, just destinations/handlers */}
           <div className={styles.actionsGrid}>
             <ActionCard
               icon={ActivityIcon}

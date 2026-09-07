@@ -6,7 +6,8 @@ import styles from "@/styles/StaffDashboard.module.css";
 
 const TODAY_LABEL = "Monday, March 12";
 
-// Placeholder until reservation/member/class data is wired up to the database
+// Dummy data — once a database is connected, these stat cards should pull
+// live reservation, member, and class counts instead of hardcoded values.
 const STATS = [
   { label: "Active Reservations Today", value: "24" },
   { label: "Total Members", value: "148" },
@@ -56,6 +57,7 @@ export default function StaffDashboardPage() {
           <p className={styles.date}>{TODAY_LABEL}</p>
           <h1 className={styles.greeting}>Hello, Staff!</h1>
 
+          {/* Static quick-action links — no data to wire up, just handlers */}
           <div className={styles.actionsGrid}>
             <ActionCard
               icon={CalendarIcon}
@@ -78,6 +80,7 @@ export default function StaffDashboardPage() {
             </button>
           </div>
 
+          {/* Dummy data — see STATS above; wire up to the database once it exists */}
           <div className={styles.statsGrid}>
             {STATS.map((stat) => (
               <StatCard key={stat.label} label={stat.label} value={stat.value} icon={InfoIcon} />
