@@ -15,10 +15,35 @@ export function useAuth() {
     setLoading(true);
     setError(null);
     try {
-      // Future authentication implementation
-      console.log("Login attempt:", { email });
+      
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        
+        body: JSON.stringify({
+          email,
+          password
+        }),
+      });
+
+      console.log("Response:", response);
+
+      const data = await response.json();
+
+      //if authentication failed
+      if(!response.ok){
+        throw new Error(data.error || "Failed to log in");
+      }
+
+      //if auth successful
+      setUser(data.user);
+
+      return data.user;
     } catch (err) {
       setError(err.message || "Failed to log in");
+      return null;
     } finally {
       setLoading(false);
     }
