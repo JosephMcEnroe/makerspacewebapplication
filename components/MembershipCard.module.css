@@ -1,0 +1,154 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 2rem 2.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #382222;
+  margin: 0 0 0.35rem 0;
+}
+
+.cardSubtitle {
+  font-size: 0.85rem;
+  color: #a07865;
+  font-weight: 600;
+  margin: 0;
+}
+
+.badge {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.badgeActive {
+  background-color: #e9f4ea;
+  color: #3f8452;
+}
+
+.badgeInactive {
+  background-color: #f2ece6;
+  color: #8c7c6f;
+}
+
+.details {
+  display: flex;
+  gap: 3rem;
+  margin-bottom: 1.75rem;
+}
+
+.detailLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #a07865;
+  margin: 0 0 0.4rem 0;
+}
+
+.detailValue {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #382222;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.autoRenewBtn {
+  padding: 0.8rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #382222;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.autoRenewBtn:hover {
+  background-color: #271616;
+}
+
+.cancelBtn {
+  padding: 0.8rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #382222;
+  background-color: #ffffff;
+  border: 1px solid #dfd3c7;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.cancelBtn:hover {
+  background-color: #faf7f4;
+  border-color: #cfbfb0;
+}
+
+.promoCard {
+  background-color: #c9702f;
+  border-radius: 16px;
+  padding: 1.75rem 2.25rem;
+  box-sizing: border-box;
+}
+
+.promoTitle {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.6rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.promoText {
+  font-size: 0.9rem;
+  color: #fbe6cb;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 46ch;
+}
+
+@media (max-width: 640px) {
+  .cardHeader {
+    flex-direction: column;
+  }
+
+  .details {
+    gap: 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .autoRenewBtn,
+  .cancelBtn {
+    width: 100%;
+  }
+}

@@ -1,0 +1,40 @@
+.page {
+  background-color: #fbe6cb;
+  min-height: 100vh;
+}
+
+.section {
+  padding: 2.75rem 3rem;
+}
+
+.sectionDark {
+  background-color: #2b1c1c;
+}
+
+.sectionInner {
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #382222;
+  margin: 0 0 1.5rem 0;
+}
+
+.sectionTitleLight {
+  color: #ffffff;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding: 2rem 1.25rem;
+  }
+}

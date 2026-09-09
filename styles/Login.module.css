@@ -1,0 +1,21 @@
+.pageContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #fbe6cb;
+}
+
+.mainContent {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .mainContent {
+    padding: 2rem 1rem;
+  }
+}
+

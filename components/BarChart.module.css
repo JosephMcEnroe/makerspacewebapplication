@@ -1,0 +1,49 @@
+.wrapper {
+  width: 100%;
+}
+
+.svg {
+  width: 100%;
+  height: 200px;
+  display: block;
+  overflow: visible;
+}
+
+.gridLine {
+  stroke: #4a352e;
+  stroke-width: 1;
+}
+
+.baseline {
+  stroke: #6b5347;
+  stroke-width: 1;
+}
+
+.bar {
+  fill: #f0a752;
+  cursor: pointer;
+  transition: fill 0.1s ease;
+}
+
+.barHovered {
+  fill: #f7bd7c;
+  cursor: pointer;
+}
+
+.axisLabel {
+  font-size: 9px;
+  font-weight: 600;
+  fill: #8f7a6d;
+}
+
+.tooltipBg {
+  fill: #17100d;
+  stroke: #4a352e;
+  stroke-width: 1;
+}
+
+.tooltipText {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #ffffff;
+}

@@ -1,0 +1,53 @@
+.card {
+  padding: 1.4rem 1.6rem;
+  background-color: #2f201c;
+  border: 1px solid #4a352e;
+  border-radius: 14px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 0.9rem;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #b3a094;
+  margin: 0;
+}
+
+.iconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background-color: #3f2c27;
+  color: #f0a752;
+  flex-shrink: 0;
+}
+
+.value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.delta {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0 0;
+}
+
+.deltaPositive {
+  color: #6fbf73;
+}
+
+.deltaNegative {
+  color: #d9695f;
+}

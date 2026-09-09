@@ -1,0 +1,14 @@
+.title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #382222;
+  letter-spacing: 0.02em;
+  margin: 0 0 0.35rem 0;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #a07865;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+}
