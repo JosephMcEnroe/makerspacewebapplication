@@ -82,11 +82,12 @@ class UserRepository {
         return rows[0] || null;
     }
     // Login authentication
+    // get data from user_id, email, password, and m.member
     async findEmailAuthentication(userEmail) {
         const { rows } = await query(`
-            SELECT user_id, email, password, m.type_of_membership
+            SELECT user_id, email, password, m.status
             FROM users
-            LEFT JOIN membership m
+            LEFT JOIN member m
                 on u.user_id = m.user_id
             WHERE email = $1
             `, [userEmail]);
