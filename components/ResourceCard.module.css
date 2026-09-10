@@ -1,0 +1,66 @@
+.card {
+  border-radius: 14px;
+  overflow: hidden;
+  background-color: #f0a752;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.imagePlaceholder {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background-color: #d9cabb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a3907d;
+}
+
+.placeholderIcon {
+  opacity: 0.7;
+}
+
+.badgeRow {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  right: 0.65rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.timeBadge {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #2b1c1c;
+  border-radius: 999px;
+}
+
+.spotsBadge {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #382222;
+  background-color: #ffffff;
+  border-radius: 999px;
+}
+
+.body {
+  padding: 1rem 1.15rem 1.25rem;
+}
+
+.title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #382222;
+  margin: 0 0 0.4rem 0;
+}
+
+.description {
+  font-size: 0.8rem;
+  color: #5c4536;
+  line-height: 1.45;
+  margin: 0;
+}

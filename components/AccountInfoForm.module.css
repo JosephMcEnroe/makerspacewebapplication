@@ -1,0 +1,113 @@
+.card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 2rem 2.25rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  box-sizing: border-box;
+}
+
+.cardTitle {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #382222;
+  margin: 0 0 1.5rem 0;
+}
+
+.row {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.grow {
+  flex: 1.6;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #382222;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.9rem;
+  color: #382222;
+  background-color: #ffffff;
+  border: 1px solid #e7ded5;
+  border-radius: 9px;
+  box-sizing: border-box;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input:focus {
+  border-color: #905e49;
+  box-shadow: 0 0 0 3px rgba(144, 94, 73, 0.12);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.resetBtn {
+  padding: 0.8rem 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #382222;
+  background-color: #ffffff;
+  border: 1px solid #dfd3c7;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.resetBtn:hover {
+  background-color: #faf7f4;
+  border-color: #cfbfb0;
+}
+
+.saveBtn {
+  padding: 0.8rem 1.75rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #382222;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.saveBtn:hover {
+  background-color: #271616;
+}
+
+@media (max-width: 640px) {
+  .row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .resetBtn,
+  .saveBtn {
+    width: 100%;
+  }
+}
