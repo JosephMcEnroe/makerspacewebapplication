@@ -1,13 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthContext } from "@/context/AuthContext";
 
 /**
  * Custom hook for authentication state and operations.
  * Placeholder for future authentication logic (e.g., NextAuth, Supabase, JWT, session).
  */
 export function useAuth() {
-  const [user, setUser] = useState(null);
+  //changed this for useAuthContext to keep user data
+  const {user, setUser} = useAuthContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 

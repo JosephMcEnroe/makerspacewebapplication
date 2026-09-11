@@ -1,8 +1,12 @@
 //npm install bcrypt.s (must otherwise cause error) to compare passwords later that have hash
 import bcrypt from "bcryptjs";
+import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { query } from "@/lib/db";
 
 export default async function handler(req, res) {
+    //Instantiate UserRepository
+    const userQuery = new UserRepository();
+
     //debugging logs in console log
     console.log("=== LOGIN REQUEST ===");
     console.log("Method:", req.method);
@@ -30,17 +34,9 @@ export default async function handler(req, res) {
 
         console.log("Email type:", typeof email);
 
-        const result = await query(
-            `
-                SELECT user_id, email, password
-                FROM users
-                WHERE email = $1
-            `,
-            [email]    
-        );
-        console.log("Database result:", result.rows);
+        const result = await userQuery.findEmailAuthentication(email);
 
-        const user = result.rows[0];
+        const user = result;
         console.log("User found?", !!user);
 
         if(!user){
@@ -65,12 +61,16 @@ export default async function handler(req, res) {
             });
         }
 
+        const member = await userQuery.findRoleById(user.user_id);
+        console.log("Role found: ", member);
+
         return res.status(200).json({
             ok: true,
 
             user: {
                 id: user.user_id,
-                email: user.email,
+                status: member.status,
+                role: member.type_of_membership
             },
         });
     } catch(error){

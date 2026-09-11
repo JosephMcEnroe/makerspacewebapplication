@@ -1,6 +1,6 @@
 import { query } from "@/lib/db";
 
-class UserRepository {
+export class UserRepository {
     // search all users
     async findAll() {
         const { rows } = await query(
@@ -17,6 +17,16 @@ class UserRepository {
             `SELECT user_id, first_name, last_name, phone_number,
                 date_of_birth, email, notes, rfid_id, last_check_in
             FROM "users"
+            WHERE (user_id = $1)`,
+            [userId]
+        );
+        return rows[0] || null;
+    }
+    //Find the role of the user that have userID + (maybe) membership_id
+    async findRoleById(userId){
+        const { rows } = await query(
+            `SELECT user_id, status, type_of_membership
+            FROM "member"
             WHERE (user_id = $1)`,
             [userId]
         );
@@ -85,10 +95,10 @@ class UserRepository {
     // get data from user_id, email, password, and m.member
     async findEmailAuthentication(userEmail) {
         const { rows } = await query(`
-            SELECT user_id, email, password, m.status
-            FROM users
+            SELECT u.user_id, email, password, m.status
+            FROM users u
             LEFT JOIN member m
-                on u.user_id = m.user_id
+                ON u.user_id = m.user_id
             WHERE email = $1
             `, [userEmail]);
 

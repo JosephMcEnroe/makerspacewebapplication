@@ -24,19 +24,18 @@ export default function LoginForm() {
 
     //calling the login from useAuth
     const user = await login(email, password);
-
+   
     //redirect based on role
-    //was there one more role???
-    //Reminder: add or update the useAuth to get role property
-    // if(user.role === "admin"){
-    //   router.push("/admin");
-    // }
-    // else if (user.role === "staff"){
-    //   router.push("/staff");
-    // }
-    // else {
-    //   router.push("/member");
-    // }
+    //Where is the page for instructor/student? Is what the member page for?
+    if(user.role === "admin"){
+      router.push("/admin");
+    }
+    else if (user.role === "staff"){
+      router.push("/staff");
+    }
+    else {
+      router.push("/member");
+    }
   };
 
   return (
