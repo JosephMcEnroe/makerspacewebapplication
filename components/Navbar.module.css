@@ -2,19 +2,23 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 3rem;
+  padding: 1.1rem 3rem;
   background-color: #ffffff;
   width: 100%;
   box-sizing: border-box;
+  border-bottom: 1px solid #f0e7dc;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .brand {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 800;
-  letter-spacing: 0.05em;
-  color: #2b1c1c;
+  letter-spacing: 0.08em;
+  color: #2b1916;
   text-transform: uppercase;
-  font-family: inherit;
+  font-family: "Inter", sans-serif;
 }
 
 .navRight {
@@ -33,16 +37,17 @@
 }
 
 .navLink {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #3b2828;
+  letter-spacing: 0.08em;
+  color: #2b1916;
   text-transform: uppercase;
   transition: opacity 0.15s ease;
+  font-family: "Inter", sans-serif;
 }
 
 .navLink:hover {
-  opacity: 0.75;
+  opacity: 0.65;
 }
 
 .avatar {
@@ -53,28 +58,28 @@
   height: 38px;
   border-radius: 50%;
   background-color: #f0a752;
-  color: #2b1c1c;
-  font-size: 0.85rem;
+  color: #2b1916;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   user-select: none;
+  font-family: "Inter", sans-serif;
 }
 
 @media (max-width: 640px) {
   .navbar {
     padding: 1rem 1.5rem;
   }
-  
+
   .navLinks {
     gap: 1.25rem;
   }
-  
+
   .navRight {
     gap: 1.25rem;
   }
 
   .brand {
-    font-size: 1.05rem;
+    font-size: 0.95rem;
   }
 }
-
