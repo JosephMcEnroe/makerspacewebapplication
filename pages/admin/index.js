@@ -78,8 +78,16 @@ const ExportIcon = (
 );
 
 export default function AdminDashboardPage() {
-  const { user } = useAuth();
-  //Need to add verification/authentication that this is the same user (when refresh or back to pages)
+  const { user, loading, error } = useAuth();
+
+  if(loading) {
+    return <p>Checking authentication...</p>;
+  }
+
+  if(!user){
+    return <p>Not authorized</p>;
+  }
+
 
   return (
     <>

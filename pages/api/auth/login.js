@@ -1,5 +1,8 @@
 //npm install bcrypt.s (must otherwise cause error) to compare passwords later that have hash
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
+//reminder to add cookie package to the package file
+import { serialize } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { query } from "@/lib/db";
 
@@ -34,7 +37,7 @@ export default async function handler(req, res) {
 
         console.log("Email type:", typeof email);
 
-        const result = await userQuery.findEmailAuthentication(email);
+        const result = await userQuery.findEmailAuthentication(email.toLowerCase()); //alway lowercase the data string
 
         const user = result;
         console.log("User found?", !!user);
@@ -61,6 +64,29 @@ export default async function handler(req, res) {
             });
         }
 
+        const sessionId = crypto.randomBytes(32).toString("hex");
+
+        const isStored = await userQuery.insertCookie(sessionId, user.user_id);
+
+        if(!isStored){
+            console.log("WARNING - the session isn't stored: ", isStored);
+            return res.status(401).json({
+                ok: false,
+                error: "Session cookie isn't stored",
+            });
+        }
+
+        res.setHeader(
+            "Set-Cookie",
+            serialize("session_id", sessionId, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                path: "/",
+                maxAge: 60 * 60 * 24 * 7,
+            })
+        );
+
         const member = await userQuery.findRoleById(user.user_id);
         console.log("Role found: ", member);
 
@@ -68,9 +94,9 @@ export default async function handler(req, res) {
             ok: true,
 
             user: {
-                id: user.user_id,
-                status: member.status,
-                role: member.type_of_membership
+                id: user.user_id ?? -1,
+                status: member.status ?? "null",
+                role: member.type_of_membership ?? ""
             },
         });
     } catch(error){

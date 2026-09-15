@@ -9,12 +9,12 @@ import { useAuthContext } from "@/context/AuthContext";
  */
 export function useAuth() {
   //changed this for useAuthContext to keep user data
-  const {user, setUser} = useAuthContext();
-  const [loading, setLoading] = useState(false);
+  const {user, loading, setUser} = useAuthContext();
+  const [loginloading, setLoginLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const login = async (email, password) => {
-    setLoading(true);
+    setLoginLoading(true);
     setError(null);
     try {
       
@@ -47,7 +47,7 @@ export function useAuth() {
       setError(err.message || "Failed to log in");
       return null;
     } finally {
-      setLoading(false);
+      setLoginLoading(false);
     }
   };
 
@@ -57,7 +57,8 @@ export function useAuth() {
 
   return {
     user,
-    loading,
+    loading, // AuthProvider's session check loading
+    loginloading, //Login request loading
     error,
     login,
     logout,

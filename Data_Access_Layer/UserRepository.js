@@ -105,5 +105,32 @@ export class UserRepository {
         return rows[0] || null;
     }
 
+    async insertCookie(sessionId, userId) {
+        const { rows } = await query(`
+            INSERT INTO sessions (
+              session_id,
+              user_id,
+              expires_at
+            )
+            VALUES ($1, $2, NOW() + INTERVAL '7 days')
+            `, [sessionId, userId]);
+        return true;
+    }
+
+    async findByCookie(sessionId) {
+        const { rows } = await query(`
+            SELECT
+              m.user_id,
+              m.status,
+              m.type_of_membership
+            FROM sessions s
+            JOIN member m
+              ON s.user_id = m.user_id
+            WHERE s.session_id = $1
+              AND s.expires_at > NOW()
+            `, [sessionId]);
+        return rows[0] || null;
+    }
+
 }
 export default UserRepository;

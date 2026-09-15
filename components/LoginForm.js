@@ -14,10 +14,15 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
 
   const {
+    user,
     login,
-    loading,
+    loginloading,
     error,
   } = useAuth();
+
+  if(user){
+    router.push("/", user.role);
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,6 +30,7 @@ export default function LoginForm() {
     //calling the login from useAuth
     const user = await login(email, password);
    
+    //Add the loading buff if the user data is null or unreachable
     //redirect based on role
     //Where is the page for instructor/student? Is what the member page for?
     if(user.role === "admin"){
@@ -93,8 +99,8 @@ export default function LoginForm() {
           </Link>
         </div>
 
-        <button type="submit" className={styles.submitBtn} disabled={loading}>
-          {loading ? "Signing In..." : "Sign In"}
+        <button type="submit" className={styles.submitBtn} disabled={loginloading}>
+          {loginloading ? "Signing In..." : "Sign In"}
         </button>
 
         <div className={styles.divider}>
