@@ -1,5 +1,4 @@
 import Head from "next/head";
-import DashboardLayout from "@/components/DashboardLayout";
 import MembershipCard from "@/components/MembershipCard";
 import styles from "@/styles/Account.module.css";
 
@@ -26,11 +25,9 @@ export default function MembershipPage() {
         <title>Membership Management - The Crafty Studio</title>
         <meta name="description" content="Manage your Crafty Studio membership" />
       </Head>
-      <DashboardLayout user={{ name: `${MOCK_ACCOUNT.firstName} ${MOCK_ACCOUNT.lastName}`, memberSince: MOCK_ACCOUNT.memberSince }}>
-        <h1 className={styles.title}>MEMBERSHIP MANAGEMENT</h1>
-        <p className={styles.subtitle}>Account ID: {MOCK_ACCOUNT.accountId}</p>
-        <MembershipCard membership={MOCK_MEMBERSHIP} />
-      </DashboardLayout>
+      <h1 className={styles.title}>MEMBERSHIP MANAGEMENT</h1>
+      <p className={styles.subtitle}>Account ID: {MOCK_ACCOUNT.accountId}</p>
+      <MembershipCard membership={MOCK_MEMBERSHIP} />
     </>
   );
 }
