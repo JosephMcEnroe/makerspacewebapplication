@@ -1,15 +1,8 @@
 import Head from "next/head";
-import DashboardLayout from "@/components/DashboardLayout";
 import ReservationsPanel from "@/components/ReservationsPanel";
 import styles from "@/styles/Account.module.css";
 
 // Placeholder until reservation data is wired up to the database
-const MOCK_ACCOUNT = {
-  firstName: "Alex",
-  lastName: "Chen",
-  memberSince: "2025",
-};
-
 const MOCK_RESERVATIONS = {
   equipment: {
     upcoming: [
@@ -33,10 +26,8 @@ export default function ReservationsPage() {
         <title>Reservations - The Crafty Studio</title>
         <meta name="description" content="Manage your Crafty Studio reservations" />
       </Head>
-      <DashboardLayout user={{ name: `${MOCK_ACCOUNT.firstName} ${MOCK_ACCOUNT.lastName}`, memberSince: MOCK_ACCOUNT.memberSince }}>
-        <h1 className={styles.title}>RESERVATIONS</h1>
-        <ReservationsPanel reservations={MOCK_RESERVATIONS} />
-      </DashboardLayout>
+      <h1 className={styles.title}>RESERVATIONS</h1>
+      <ReservationsPanel reservations={MOCK_RESERVATIONS} />
     </>
   );
 }
