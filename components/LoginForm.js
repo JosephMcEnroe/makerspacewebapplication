@@ -1,10 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import styles from "./LoginForm.module.css";
+
+function redirectForRole(router, role) {
+  if (role === "admin") {
+    router.push("/admin");
+  } else if (role === "staff") {
+    router.push("/staff");
+  } else {
+    router.push("/member");
+  }
+}
 
 export default function LoginForm() {
   const router = useRouter();
@@ -20,28 +30,25 @@ export default function LoginForm() {
     error,
   } = useAuth();
 
-  if(user){
-    router.push("/", user.role);
-  }
+  useEffect(() => {
+    if (user) {
+      redirectForRole(router, user.role);
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     //calling the login from useAuth
     const user = await login(email, password);
-   
-    //Add the loading buff if the user data is null or unreachable
-    //redirect based on role
+
+    //login() returns null on failure (error is already set by useAuth)
+    if (!user) {
+      return;
+    }
+
     //Where is the page for instructor/student? Is what the member page for?
-    if(user.role === "admin"){
-      router.push("/admin");
-    }
-    else if (user.role === "staff"){
-      router.push("/staff");
-    }
-    else {
-      router.push("/member");
-    }
+    redirectForRole(router, user.role);
   };
 
   return (
