@@ -1,3 +1,4 @@
+import { AuthProvider } from "@/context/AuthContext";
 import "@/styles/globals.css";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -21,7 +22,8 @@ export default function App({ Component, pageProps }) {
   const useSidebar = !NO_SIDEBAR_ROUTES.includes(router.pathname);
 
   return (
-    <>
+    
+    <AuthProvider>
       <Head>
         <title>The Crafty Studio</title>
         <meta name="description" content="The Crafty Studio - Makerspace Platform" />
@@ -42,6 +44,6 @@ export default function App({ Component, pageProps }) {
       ) : (
         <Component {...pageProps} />
       )}
-    </>
+    </AuthProvider>
   );
 }

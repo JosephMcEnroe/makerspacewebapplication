@@ -1,26 +1,53 @@
 "use client";
 
 import { useState } from "react";
+import { useAuthContext } from "@/context/AuthContext";
 
 /**
  * Custom hook for authentication state and operations.
  * Placeholder for future authentication logic (e.g., NextAuth, Supabase, JWT, session).
  */
 export function useAuth() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  //changed this for useAuthContext to keep user data
+  const {user, loading, setUser} = useAuthContext();
+  const [loginloading, setLoginLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const login = async (email, password) => {
-    setLoading(true);
+    setLoginLoading(true);
     setError(null);
     try {
-      // Future authentication implementation
-      console.log("Login attempt:", { email });
+      
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        
+        body: JSON.stringify({
+          email,
+          password
+        }),
+      });
+
+      console.log("Response:", response);
+
+      const data = await response.json();
+
+      //if authentication failed
+      if(!response.ok){
+        throw new Error(data.error || "Failed to log in");
+      }
+
+      //if auth successful
+      setUser(data.user);
+
+      return data.user;
     } catch (err) {
       setError(err.message || "Failed to log in");
+      return null;
     } finally {
-      setLoading(false);
+      setLoginLoading(false);
     }
   };
 
@@ -30,7 +57,8 @@ export function useAuth() {
 
   return {
     user,
-    loading,
+    loading, // AuthProvider's session check loading
+    loginloading, //Login request loading
     error,
     login,
     logout,

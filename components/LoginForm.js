@@ -1,11 +1,47 @@
 "use client";
 
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
 import Link from "next/link";
 import styles from "./LoginForm.module.css";
 
 export default function LoginForm() {
-  const handleSubmit = (e) => {
+  const router = useRouter();
+
+  //store the user inputs
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const {
+    user,
+    login,
+    loginloading,
+    error,
+  } = useAuth();
+
+  if(user){
+    router.push("/", user.role);
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    //calling the login from useAuth
+    const user = await login(email, password);
+   
+    //Add the loading buff if the user data is null or unreachable
+    //redirect based on role
+    //Where is the page for instructor/student? Is what the member page for?
+    if(user.role === "admin"){
+      router.push("/admin");
+    }
+    else if (user.role === "staff"){
+      router.push("/staff");
+    }
+    else {
+      router.push("/member");
+    }
   };
 
   return (
@@ -25,6 +61,12 @@ export default function LoginForm() {
             placeholder="your.email@example.com"
             className={styles.input}
             autoComplete="email"
+
+            value={email}
+
+            onChange={(e) => setEmail(e.target.value)}
+
+            required
           />
         </div>
 
@@ -39,6 +81,10 @@ export default function LoginForm() {
             placeholder="Enter your password"
             className={styles.input}
             autoComplete="current-password"
+
+            value={password}
+
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
 
@@ -53,8 +99,8 @@ export default function LoginForm() {
           </Link>
         </div>
 
-        <button type="submit" className={styles.submitBtn}>
-          Sign In
+        <button type="submit" className={styles.submitBtn} disabled={loginloading}>
+          {loginloading ? "Signing In..." : "Sign In"}
         </button>
 
         <div className={styles.divider}>
