@@ -23,7 +23,7 @@ export class UserRepository {
         return rows[0] || null;
     }
     //Find the role of the user that have userID + (maybe) membership_id
-    async findRoleById(userId){
+    async findRoleById(userId) {
         const { rows } = await query(
             `SELECT user_id, status, type_of_membership
             FROM "member"
@@ -90,6 +90,19 @@ export class UserRepository {
             user.rfidId,
         ]);
         return rows[0] || null;
+    }
+    // Delete user account using userID
+    async deleteUser(userId) {
+        const { rows } = await query(
+            `DELETE FROM "users"
+            WHERE user_id = $1
+            RETURNING user_id, first_name, last_name, phone_number,
+                      date_of_birth, email, notes, rfid_id, last_check_in
+            `, [userId]);
+
+        return rows[0] || null;
+        // True if not 0, else false
+        //return rows > 0;
     }
     // Login authentication
     // get data from user_id, email, password, and m.member
