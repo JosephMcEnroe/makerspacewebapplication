@@ -1,46 +1,17 @@
-.tabs {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.75rem;
-}
-
-.tab {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #382222;
-  background-color: #ffffff;
-  border: 1px solid #e7ded5;
-  border-radius: 9px;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.tab:hover {
-  background-color: #faf7f4;
-}
-
-.tabActive,
-.tabActive:hover {
-  background-color: #c9702f;
-  border-color: #c9702f;
-  color: #ffffff;
-}
-
 .section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.25rem;
 }
 
 .sectionTitle {
-  font-size: 1rem;
+  font-size: 1.3rem;
   font-weight: 800;
-  color: #382222;
+  color: #2b1916;
   margin: 0 0 1rem 0;
 }
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 1rem;
 }
 
@@ -54,80 +25,91 @@
   position: relative;
   background-color: #ffffff;
   border-radius: 14px;
-  padding: 1.25rem 1.4rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  padding: 1.1rem 1.4rem 1.2rem;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
 }
 
 .trainingBadge {
   display: inline-block;
-  padding: 0.3rem 0.7rem;
-  font-size: 0.7rem;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: #ffffff;
   background-color: #c0392b;
   border-radius: 999px;
-  margin-bottom: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.85rem;
 }
 
 .cardName {
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 700;
-  color: #382222;
-  margin: 0 0 0.3rem 0;
+  color: #2b1916;
+  margin: 0;
 }
 
 .cardTime {
   font-size: 0.8rem;
-  color: #a07865;
+  color: #905e49;
   font-weight: 600;
-  margin: 0 0 1rem 0;
+  margin: 0;
+  white-space: nowrap;
 }
 
 .cardActions {
   display: flex;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .editBtn,
 .cancelBtn {
-  padding: 0.5rem 1rem;
+  padding: 0.42rem 1rem;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   border-radius: 7px;
   cursor: pointer;
+  font-family: inherit;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .editBtn {
-  color: #382222;
+  color: #2b1916;
   background-color: #ffffff;
-  border: 1px solid #dfd3c7;
+  border: 1px solid #d8ccc2;
 }
 
 .editBtn:hover:not(:disabled) {
   background-color: #faf7f4;
-  border-color: #cfbfb0;
+  border-color: #c4b5a8;
 }
 
 .cancelBtn {
-  color: #ffffff;
-  background-color: #382222;
-  border: none;
+  color: #2b1916;
+  background-color: #ffffff;
+  border: 1px solid #d8ccc2;
 }
 
 .cancelBtn:hover:not(:disabled) {
-  background-color: #271616;
+  background-color: #faf7f4;
+  border-color: #c4b5a8;
 }
 
 .editBtn:disabled,
 .cancelBtn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 @media (max-width: 640px) {
-  .tabs {
-    flex-direction: column;
+  .cardGrid {
+    grid-template-columns: 1fr;
   }
 }

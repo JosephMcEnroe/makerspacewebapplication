@@ -1,5 +1,4 @@
 import Head from "next/head";
-import Navbar from "@/components/Navbar";
 import ResourceCard from "@/components/ResourceCard";
 import styles from "@/styles/Dashboard.module.css";
 
@@ -63,7 +62,6 @@ export default function DashboardPage() {
         <meta name="description" content="Browse equipment, rooms, and classes at The Crafty Studio" />
       </Head>
       <div className={styles.page}>
-        <Navbar />
 
         <section className={styles.section}>
           <div className={styles.sectionInner}>
