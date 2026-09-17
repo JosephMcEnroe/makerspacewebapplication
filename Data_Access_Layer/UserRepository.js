@@ -114,7 +114,7 @@ export class UserRepository {
             )
             VALUES ($1, $2, NOW() + INTERVAL '7 days')
             `, [sessionId, userId]);
-        return true;
+        return rows[0] || null;
     }
 
     async findByCookie(sessionId) {

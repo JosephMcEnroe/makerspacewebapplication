@@ -68,7 +68,7 @@ export default async function handler(req, res) {
 
         const isStored = await userQuery.insertCookie(sessionId, user.user_id);
 
-        if(!isStored){
+        if(!(isStored == null)){
             console.log("WARNING - the session isn't stored: ", isStored);
             return res.status(401).json({
                 ok: false,

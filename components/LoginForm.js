@@ -32,7 +32,6 @@ export default function LoginForm() {
    
     //Add the loading buff if the user data is null or unreachable
     //redirect based on role
-    //Where is the page for instructor/student? Is what the member page for?
     if(user.role === "admin"){
       router.push("/admin");
     }
