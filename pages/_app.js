@@ -8,6 +8,7 @@ const NO_SIDEBAR_ROUTES = [
   "/",
   "/login",
   "/register",
+  "/forgot-password",
   "/admin",
   "/staff",
 ];
