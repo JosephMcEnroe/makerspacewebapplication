@@ -1,0 +1,8 @@
+All repository should include:
+findAll() (Search all)
+findUserID (Can be any but specific search)
+create() (create new data)
+update() (update data)
+delete() (delete data from database)
+
+DSEC = latest data to old data

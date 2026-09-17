@@ -1,5 +1,4 @@
 import Head from "next/head";
-import DashboardLayout from "@/components/DashboardLayout";
 import AccountInfoForm from "@/components/AccountInfoForm";
 import styles from "@/styles/Account.module.css";
 
@@ -21,11 +20,9 @@ export default function AccountPage() {
         <title>Account Information - The Crafty Studio</title>
         <meta name="description" content="Manage your Crafty Studio account information" />
       </Head>
-      <DashboardLayout user={{ name: `${MOCK_ACCOUNT.firstName} ${MOCK_ACCOUNT.lastName}`, memberSince: MOCK_ACCOUNT.memberSince }}>
-        <h1 className={styles.title}>ACCOUNT INFORMATION</h1>
-        <p className={styles.subtitle}>Account ID: {MOCK_ACCOUNT.accountId}</p>
-        <AccountInfoForm account={MOCK_ACCOUNT} />
-      </DashboardLayout>
+      <h1 className={styles.title}>ACCOUNT INFORMATION</h1>
+      <p className={styles.subtitle}>Account ID: {MOCK_ACCOUNT.accountId}</p>
+      <AccountInfoForm account={MOCK_ACCOUNT} />
     </>
   );
 }

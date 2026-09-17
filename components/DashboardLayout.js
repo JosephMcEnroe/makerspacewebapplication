@@ -6,12 +6,12 @@ export default function DashboardLayout({ user, children }) {
   return (
     <div className={styles.pageContainer}>
       <Navbar />
-      <main className={styles.mainContent}>
-        <div className={styles.layout}>
+      <div className={styles.body}>
+        <div className={styles.sidebar}>
           <Sidebar user={user} />
-          <div className={styles.content}>{children}</div>
         </div>
-      </main>
+        <main className={styles.mainContent}>{children}</main>
+      </div>
     </div>
   );
 }

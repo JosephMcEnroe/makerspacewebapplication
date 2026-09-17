@@ -1,14 +1,16 @@
 .title {
-  font-size: 1.65rem;
-  font-weight: 800;
-  color: #382222;
+  font-family: "Oswald", sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2b1916;
   letter-spacing: 0.02em;
+  text-transform: uppercase;
   margin: 0 0 0.35rem 0;
 }
 
 .subtitle {
-  font-size: 0.9rem;
-  color: #a07865;
+  font-size: 0.88rem;
+  color: #905e49;
   font-weight: 600;
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1.75rem 0;
 }
