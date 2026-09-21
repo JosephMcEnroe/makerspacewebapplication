@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useAuth } from "@/hooks/useAuth";
 import styles from "./Sidebar.module.css";
 
 const NAV_ITEMS = [
@@ -45,12 +46,24 @@ function PersonIcon() {
   );
 }
 
-export default function Sidebar({ user = { name: "Alex Chen", memberSince: "2025" } }) {
+export default function Sidebar({ userTest = { name: "Alex Chen", memberSince: "2025" } }) {
   const router = useRouter();
 
-  const handleLogout = () => {
+  const {
+    user,
+    logout,
+    error
+  } = useAuth();
+
+  const handleLogout = async () => {
     // Future: clear auth session before redirecting
-    router.push("/login");
+    //Come back if error show up - check with user data, maybe passing it in?
+    const isTrue = await logout();
+
+    if(isTrue)
+      router.push("/login");
+    else
+      return;
   };
 
   return (
@@ -60,8 +73,8 @@ export default function Sidebar({ user = { name: "Alex Chen", memberSince: "2025
           <PersonIcon />
         </div>
         <div>
-          <p className={styles.userName}>{user.name}</p>
-          <p className={styles.userMeta}>Member since {user.memberSince}</p>
+          <p className={styles.userName}>{userTest.name}</p>
+          <p className={styles.userMeta}>Member since {userTest.memberSince}</p>
         </div>
       </div>
 
