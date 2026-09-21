@@ -12,7 +12,7 @@ function redirectForRole(router, role) {
   } else if (role === "staff") {
     router.push("/staff");
   } else {
-    router.push("/member");
+    router.push("/dashboard");
   }
 }
 
