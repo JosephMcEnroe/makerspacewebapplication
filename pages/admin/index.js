@@ -9,6 +9,9 @@ import ActionCard from "@/components/ActionCard";
 import styles from "@/styles/AdminDashboard.module.css";
 
 import { useAuth } from "@/hooks/useAuth";
+//Perhaps create a global redirect function?
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 const DATE_LABEL = "Mon, Mar 12, 2026";
 
@@ -77,6 +80,7 @@ const ExportIcon = (
   </svg>
 );
 
+//Add the redirect function
 export default function AdminDashboardPage() {
   const { user, loading, error } = useAuth();
 
@@ -84,6 +88,7 @@ export default function AdminDashboardPage() {
     return <p>Checking authentication...</p>;
   }
 
+  //This was to test the role authentication - use the redirect route back where it came from
   if(user.role !== "admin"){
     return <p>Not authorized</p>;
   }

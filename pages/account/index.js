@@ -25,9 +25,9 @@ export default function AccountPage() {
   }
 
   //Come back to this later
-  if(user.role !== "member"){
-    return <p>Not authorized...</p>;
-  }
+  // if(user.role !== "member"){
+  //   return <p>Not authorized...</p>;
+  // }
 
   return (
     <>
