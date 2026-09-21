@@ -2,6 +2,7 @@ import { useAuthContext } from "./AuthContext";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 
+//This is to differentiate the public pages and private pages depending on user's authentication role
 export default function AuthGuard({ children }){
     const { user, loading } = useAuthContext();
     const router = useRouter();
