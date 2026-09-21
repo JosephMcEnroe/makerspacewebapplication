@@ -84,7 +84,7 @@ export default function AdminDashboardPage() {
     return <p>Checking authentication...</p>;
   }
 
-  if(!user){
+  if(user.role !== "admin"){
     return <p>Not authorized</p>;
   }
 

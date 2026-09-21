@@ -145,5 +145,18 @@ export class UserRepository {
         return rows[0] || null;
     }
 
+    async deleteCookie(sessionId){
+        const result = await query(`
+            DELETE FROM sessions
+            WHERE session_id = $1
+            RETURNING session_id
+        `, [sessionId]);
+
+        console.log("Session ID:", sessionId);
+        console.log("Deleted rows:", result.rowCount);
+        console.log("Deleted session:", result.rows[0]);
+        return result.rows[0] || null;
+    }
+
 }
 export default UserRepository;

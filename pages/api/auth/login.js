@@ -1,10 +1,8 @@
 //npm install bcrypt.s (must otherwise cause error) to compare passwords later that have hash
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-//reminder to add cookie package to the package file
 import { serialize } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
-import { query } from "@/lib/db";
 
 export default async function handler(req, res) {
     //Instantiate UserRepository

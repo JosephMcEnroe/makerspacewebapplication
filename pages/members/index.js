@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export default function Users() {
   const [users, setUsers] = useState([]);
 
+  //erase this useEffect when using real data and implement authentication
   useEffect(() => {
     async function getUsers() {
       try {
