@@ -1,10 +1,20 @@
 import { query } from "@/lib/db";
 
 export default async function handler(req, res) {
+  // If visited via browser (GET), return a friendly status check
+  if (req.method === "GET") {
+    return res.status(200).json({
+      ok: true,
+      service: "Makerspace Check-in API",
+      status: "online",
+      message: "Ready to accept POST requests with { card_id }",
+    });
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({
       ok: false,
-      error: "Method not allowed",
+      error: "Method not allowed. Use POST.",
     });
   }
 
@@ -37,12 +47,13 @@ export default async function handler(req, res) {
 
   try {
     // 2. Query user and membership details by rfid_id
+    // Cast to text to prevent Postgres type mismatches if rfid_id is integer/varchar
     const userResult = await query(
       `SELECT u.user_id, u.first_name, u.last_name, u.email, u.rfid_id,
               m.status AS member_status, m.type_of_membership, m.period_end_date
        FROM users u
        LEFT JOIN member m ON u.user_id = m.user_id
-       WHERE LOWER(u.rfid_id) = LOWER($1)`,
+       WHERE LOWER(u.rfid_id::text) = LOWER($1::text)`,
       [normalizedCardId]
     );
 
@@ -112,7 +123,7 @@ export default async function handler(req, res) {
       ok: false,
       status: "red",
       error: "Internal server error during check-in",
+      details: error.message,
     });
   }
 }
-
