@@ -1,11 +1,54 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
 import Link from "next/link";
 import styles from "./LoginForm.module.css";
 
+function redirectForRole(router, role) {
+  if (role === "admin") {
+    router.push("/admin");
+  } else if (role === "staff") {
+    router.push("/staff");
+  } else {
+    router.push("/dashboard");
+  }
+}
+
 export default function LoginForm() {
-  const handleSubmit = (e) => {
+  const router = useRouter();
+
+  //store the user inputs
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const {
+    user,
+    login,
+    loginloading,
+    error,
+  } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      redirectForRole(router, user.role);
+    }
+  }, [user, router]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    //calling the login from useAuth
+    const user = await login(email, password);
+
+    //login() returns null on failure (error is already set by useAuth)
+    if (!user) {
+      return;
+    }
+
+    //Where is the page for instructor/student? Is what the member page for?
+    redirectForRole(router, user.role);
   };
 
   return (
@@ -25,6 +68,12 @@ export default function LoginForm() {
             placeholder="your.email@example.com"
             className={styles.input}
             autoComplete="email"
+
+            value={email}
+
+            onChange={(e) => setEmail(e.target.value)}
+
+            required
           />
         </div>
 
@@ -39,6 +88,10 @@ export default function LoginForm() {
             placeholder="Enter your password"
             className={styles.input}
             autoComplete="current-password"
+
+            value={password}
+
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
 
@@ -53,8 +106,8 @@ export default function LoginForm() {
           </Link>
         </div>
 
-        <button type="submit" className={styles.submitBtn}>
-          Sign In
+        <button type="submit" className={styles.submitBtn} disabled={loginloading}>
+          {loginloading ? "Signing In..." : "Sign In"}
         </button>
 
         <div className={styles.divider}>

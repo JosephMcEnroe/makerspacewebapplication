@@ -1,7 +1,8 @@
 import Head from "next/head";
-import DashboardLayout from "@/components/DashboardLayout";
 import AccountInfoForm from "@/components/AccountInfoForm";
 import styles from "@/styles/Account.module.css";
+
+import { useAuth } from "@/hooks/useAuth";
 
 // Placeholder until account data is wired up to the database
 const MOCK_ACCOUNT = {
@@ -15,17 +16,28 @@ const MOCK_ACCOUNT = {
 };
 
 export default function AccountPage() {
+  //add the user auth check here
+  const { user, loading } = useAuth();
+
+  //figure out how to block the page access (not just the page, include everything - the sidebar, the navigation bar, etc.)
+  if(loading){
+    return <p>Checking authentication...</p>;
+  }
+
+  //Come back to this later
+  // if(user.role !== "member"){
+  //   return <p>Not authorized...</p>;
+  // }
+
   return (
     <>
       <Head>
         <title>Account Information - The Crafty Studio</title>
         <meta name="description" content="Manage your Crafty Studio account information" />
       </Head>
-      <DashboardLayout user={{ name: `${MOCK_ACCOUNT.firstName} ${MOCK_ACCOUNT.lastName}`, memberSince: MOCK_ACCOUNT.memberSince }}>
-        <h1 className={styles.title}>ACCOUNT INFORMATION</h1>
-        <p className={styles.subtitle}>Account ID: {MOCK_ACCOUNT.accountId}</p>
-        <AccountInfoForm account={MOCK_ACCOUNT} />
-      </DashboardLayout>
+      <h1 className={styles.title}>ACCOUNT INFORMATION</h1>
+      <p className={styles.subtitle}>Account ID: {MOCK_ACCOUNT.accountId}</p>
+      <AccountInfoForm account={MOCK_ACCOUNT} />
     </>
   );
 }

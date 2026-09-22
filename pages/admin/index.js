@@ -8,6 +8,11 @@ import MachineUsageList from "@/components/MachineUsageList";
 import ActionCard from "@/components/ActionCard";
 import styles from "@/styles/AdminDashboard.module.css";
 
+import { useAuth } from "@/hooks/useAuth";
+//Perhaps create a global redirect function?
+import { useRouter } from "next/router";
+import { useEffect } from "react";
+
 const DATE_LABEL = "Mon, Mar 12, 2026";
 
 // Placeholder until revenue/usage data is wired up to the database
@@ -75,7 +80,20 @@ const ExportIcon = (
   </svg>
 );
 
+//Add the redirect function
 export default function AdminDashboardPage() {
+  const { user, loading, error } = useAuth();
+
+  if(loading) {
+    return <p>Checking authentication...</p>;
+  }
+
+  //This was to test the role authentication - use the redirect route back where it came from
+  if(user.role !== "admin"){
+    return <p>Not authorized</p>;
+  }
+
+
   return (
     <>
       <Head>
@@ -84,7 +102,9 @@ export default function AdminDashboardPage() {
       </Head>
       <div className={styles.page}>
         <StaffNavbar role="admin" />
-
+        {/* This h1 is to test the user data that is stored across the pages */}
+        {/* This is a good way to authenticate the user's role before it can access the page (not just admin page) */}
+        <h1>Hello, {user?.id}</h1>
         <div className={styles.content}>
           <p className={styles.date}>{DATE_LABEL}</p>
           <h1 className={styles.heading}>Revenue &amp; Operations</h1>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useAuth } from "@/hooks/useAuth";
 import styles from "./Sidebar.module.css";
 
 const NAV_ITEMS = [
@@ -45,8 +46,25 @@ function PersonIcon() {
   );
 }
 
-export default function Sidebar({ user = { name: "Alex Chen", memberSince: "2025" } }) {
+export default function Sidebar({ userTest = { name: "Alex Chen", memberSince: "2025" } }) {
   const router = useRouter();
+
+  const {
+    user,
+    logout,
+    error
+  } = useAuth();
+
+  const handleLogout = async () => {
+    // Future: clear auth session before redirecting
+    //Come back if error show up - check with user data, maybe passing it in?
+    const isTrue = await logout();
+
+    if(isTrue)
+      router.push("/login");
+    else
+      return;
+  };
 
   return (
     <aside className={styles.sidebar}>
@@ -55,8 +73,8 @@ export default function Sidebar({ user = { name: "Alex Chen", memberSince: "2025
           <PersonIcon />
         </div>
         <div>
-          <p className={styles.userName}>{user.name}</p>
-          <p className={styles.userMeta}>Member since {user.memberSince}</p>
+          <p className={styles.userName}>{userTest.name}</p>
+          <p className={styles.userMeta}>Member since {userTest.memberSince}</p>
         </div>
       </div>
 
@@ -86,6 +104,17 @@ export default function Sidebar({ user = { name: "Alex Chen", memberSince: "2025
           </span>
           Contact Us
         </Link>
+
+        <button type="button" className={styles.logoutBtn} onClick={handleLogout}>
+          <span className={styles.navIcon}>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </span>
+          Log Out
+        </button>
       </div>
     </aside>
   );

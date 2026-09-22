@@ -82,6 +82,32 @@
   margin-top: auto;
   padding-top: 1rem;
   border-top: 1px solid #f0e7dc;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.logoutBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #6b5347;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.logoutBtn:hover {
+  background-color: #fdeeee;
+  color: #b8412b;
 }
 
 @media (max-width: 900px) {
