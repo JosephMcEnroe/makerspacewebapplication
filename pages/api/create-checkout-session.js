@@ -16,6 +16,7 @@ export default async function handler(req, res) {
     const session = await stripe.checkout.sessions.create({
       ui_mode: "form",
       mode: "subscription",
+      // hardcoded for now, will need to setup cart system or equivalent for products
       line_items: [
         {
           price_data: {
