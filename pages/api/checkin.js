@@ -92,6 +92,7 @@ export default async function handler(req, res) {
     ) {
       decision = "yellow";
       message = `Notice: membership status is ${memberStatus}`;
+      console.log(user.rfid_id)
     }
 
     // 4. If access is granted (Green or Yellow), record check-in
