@@ -4,7 +4,19 @@ import Link from "next/link";
 import { useState } from "react";
 import styles from "./RegisterForm.module.css";
 
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
+
 export default function RegisterForm() {
+  const router = useRouter();
+
+  const {
+    user,
+    signup,
+    loginLoading,
+    error,
+  } = useAuth();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -18,10 +30,20 @@ export default function RegisterForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  /**Need to validate the confirm password & we need to add verification process here */
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Future: submit registration via API
     console.log("Register:", formData);
+
+    const user = await signup(formData.firstName, formData.lastName, formData.email, formData.confirmPassword);
+
+    if(!user){
+      return;
+    }
+
+    router.push("/dashboard");
   };
 
   return (

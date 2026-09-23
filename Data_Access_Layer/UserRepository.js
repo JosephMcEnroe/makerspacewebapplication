@@ -64,6 +64,13 @@ export class UserRepository {
         ]);
         return rows[0];
     }
+
+    //Check here
+    //Create a new member <- ONLY AFTER create a new data for membership
+    async createMember(userId, membership_id, cost){
+
+    }
+
     // Update user's information using userID
     async updateUser(userId, user) {
         const { rows } = await query(`
@@ -125,7 +132,7 @@ export class UserRepository {
               user_id,
               expires_at
             )
-            VALUES ($1, $2, NOW() + INTERVAL '7 days')
+            VALUES ($1, $2, NOW() + INTERVAL '30 minutes')
             `, [sessionId, userId]);
         return rows[0] || null;
     }
