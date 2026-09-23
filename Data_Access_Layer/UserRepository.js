@@ -64,6 +64,7 @@ export class UserRepository {
         ]);
         return rows[0];
     }
+
     // Update user's information using userID
     async updateUser(userId, user) {
         const { rows } = await query(`
@@ -125,7 +126,7 @@ export class UserRepository {
               user_id,
               expires_at
             )
-            VALUES ($1, $2, NOW() + INTERVAL '7 days')
+            VALUES ($1, $2, NOW() + INTERVAL '30 minutes')
             `, [sessionId, userId]);
         return rows[0] || null;
     }

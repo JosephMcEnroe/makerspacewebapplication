@@ -105,6 +105,39 @@ export function useAuth() {
     }
   };
 
+  const signup = async (fName, lName, email, password) => {
+      setLoginLoading(true);
+      setError(null);
+    
+    try{
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          fName,
+          lName,
+          email,
+          password
+        }),
+      });
+
+      const data = await response.json();
+
+      if(!response.ok){
+        throw new Error(data.error || "Failed to sign up");
+      }
+
+      setUser(data.user);
+      return data.user;
+    } catch (err){
+      setError(err.message || "Faile to sign up a new account");
+      return null;
+    }
+  }
+
   return {
     user,
     loading, // AuthProvider's session check loading or in general
@@ -113,6 +146,7 @@ export function useAuth() {
     sessionCheck,
     login,
     logout,
+    signup,
   };
 }
 
