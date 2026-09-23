@@ -5,16 +5,15 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import DashboardLayout from "@/components/DashboardLayout";
 
-// Pages that use their own full-page layout (no shared sidebar)
-const NO_SIDEBAR_ROUTES = [
-  "/",
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/admin",
-  "/staff",
-  "/checkout",
-  "/checkout/return"
+// Pages that use the shared sidebar layout
+const SIDEBAR_ROUTES = [
+  "/account",
+  "/membership",
+  "/reservations",
+  "/rooms",
+  "/classes",
+  "/equipment",
+  "/dashboard",
 ];
 
 // Placeholder user — replace with real auth session when backend is wired up
@@ -22,7 +21,9 @@ const MOCK_USER = { name: "Alex Chen", memberSince: "2025" };
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();
-  const useSidebar = !NO_SIDEBAR_ROUTES.includes(router.pathname);
+  const useSidebar = SIDEBAR_ROUTES.some(
+    (route) => router.pathname === route || router.pathname.startsWith(`${route}/`)
+  );
 
   return (
     
