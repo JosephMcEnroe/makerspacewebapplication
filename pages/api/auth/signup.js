@@ -2,9 +2,13 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { serialize } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
+import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
+import { memberRepositry } from "@/Data_Access_Layer/memberRepository";
 
 export default async function handler(req, res) {
     const userQuery = new UserRepository();
+    const mpQuery = new membershipRepositry();
+    const memberQuery = new memberRepositry();
 
     console.log("==== SIGNUP REQUEST ====");
     console.log("Method:", req.method);
@@ -38,6 +42,7 @@ export default async function handler(req, res) {
         }
 
         /**
+         * For frontend
          * IMPORTANT REMINDER: How to update the frontend page to pop up a block to verify and then 
          * receive confirmation before we can add user to the database? 
          */
@@ -72,16 +77,46 @@ export default async function handler(req, res) {
         );
 
         //Pause here until the userRepository queries is updated for createMember & createMembership
-        const member = await userQuery.findRoleById(user.user_id);
-        console.log("Role found: ", member);
+        const membership = {
+            user_id: newUser.user_id,
+            cost: 0.0 //hardcoded for now? New member hasn't pay anthing, correct?
+        }
+
+        const isNewmp = await mpQuery.createMembership(membership);
+
+        if(!isNewmp){
+            console.log("The database failed to add a new membership");
+        }
+
+        const newMp = await mpQuery.findUserMembership(newUser.user_id);
+
+        const member = {
+            user_id: newUser.user_id,
+            membership_id: newMp.membership_id,
+            period_start_date: null,
+            period_end_date: null,
+            status: "Inactive",
+            type_of_membership: "member",
+        }
+
+        const isNewmember = await memberQuery.createMember(member);
+
+        if(!isNewmember){
+            console.log("The database failed to add a new member");
+        }
+
+        const newMember = await memberQuery.findByIdMember(member.user_id);
+
+
+        //have a placeholder for waiver - additional for phone number, start/end date, & cost
 
         return res.status(200).json({
             ok: true,
 
             user: {
                 id: user.user_id ?? -1,
-                status: member.status ?? "null",
-                role: member.type_of_membership ?? ""
+                status: newMember.status ?? "null",
+                role: newMember.type_of_membership ?? ""
             },
         });
     } catch(error){

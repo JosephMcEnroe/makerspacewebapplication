@@ -17,7 +17,7 @@ export class membershipRepositry {
              WHERE user_id = $1`,
             [userId]
         );
-        return rows;
+        return rows[0] || null;
     }
 
     async createMembership(membership) {
