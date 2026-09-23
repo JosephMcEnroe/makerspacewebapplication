@@ -13,7 +13,8 @@ const NO_SIDEBAR_ROUTES = [
   "/forgot-password",
   "/admin",
   "/staff",
-  "/checkout"
+  "/checkout",
+  "/return"
 ];
 
 // Placeholder user — replace with real auth session when backend is wired up
