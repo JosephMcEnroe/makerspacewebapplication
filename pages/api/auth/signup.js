@@ -113,6 +113,7 @@ export default async function handler(req, res) {
         return res.status(200).json({
             ok: true,
 
+            //Update this and the one in login file for more data property - right now this is lazy user data
             user: {
                 id: user.user_id ?? -1,
                 status: newMember.status ?? "null",
