@@ -1,6 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import styles from "./ReservationsPanel.module.css";
+
+const TYPES = [
+  { key: "class", label: "Class Reservations" },
+  { key: "room", label: "Room Reservations" },
+  { key: "equipment", label: "Equipment Reservations" },
+];
 
 const SECTIONS = [
   { key: "upcoming", label: "Upcoming Reservations", editable: true },
@@ -21,9 +28,6 @@ function ReservationCard({ reservation, editable }) {
 
   return (
     <div className={styles.card}>
-      {reservation.trainingRequired && (
-        <span className={styles.trainingBadge}>Training Required</span>
-      )}
       <div className={styles.cardHeader}>
         <p className={styles.cardName}>{reservation.name}</p>
         <p className={styles.cardTime}>{reservation.time}</p>
@@ -46,16 +50,43 @@ function ReservationCard({ reservation, editable }) {
           Cancel
         </button>
       </div>
+      {reservation.trainingRequired && (
+        <span className={styles.trainingBadge}>Training Required</span>
+      )}
     </div>
   );
 }
 
 export default function ReservationsPanel({ reservations }) {
-  // Display equipment reservations directly (no tab UI as per design)
-  const data = reservations.equipment;
+  const [activeType, setActiveType] = useState("class");
+  const active = TYPES.find((type) => type.key === activeType);
+  const data = reservations[active.key] || {
+    upcoming: [],
+    previous: [],
+    cancelled: [],
+  };
 
   return (
     <div>
+      <div className={styles.typeToggle} role="tablist" aria-label="Reservation type">
+        {TYPES.map((type) => (
+          <button
+            key={type.key}
+            type="button"
+            role="tab"
+            aria-selected={activeType === type.key}
+            className={
+              activeType === type.key
+                ? `${styles.typeTab} ${styles.typeTabActive}`
+                : styles.typeTab
+            }
+            onClick={() => setActiveType(type.key)}
+          >
+            {type.label}
+          </button>
+        ))}
+      </div>
+
       {SECTIONS.map((section) => (
         <div key={section.key} className={styles.section}>
           <h2 className={styles.sectionTitle}>{section.label}</h2>
