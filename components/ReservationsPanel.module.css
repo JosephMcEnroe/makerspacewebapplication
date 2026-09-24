@@ -1,3 +1,35 @@
+.typeToggle {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.typeTab {
+  padding: 0.55rem 1.35rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #905e49;
+  background-color: #ffffff;
+  border: 1px solid #d8ccc2;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.typeTab:hover:not(.typeTabActive) {
+  background-color: #faf7f4;
+  border-color: #c4b5a8;
+}
+
+.typeTabActive,
+.typeTabActive:hover {
+  color: #ffffff;
+  background-color: #f0a752;
+  border-color: #f0a752;
+}
+
 .section {
   margin-bottom: 2.25rem;
 }
@@ -38,7 +70,7 @@
   color: #ffffff;
   background-color: #c0392b;
   border-radius: 999px;
-  margin-bottom: 0.6rem;
+  margin-top: 0.7rem;
 }
 
 .cardHeader {
