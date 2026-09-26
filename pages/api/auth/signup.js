@@ -4,6 +4,9 @@ import { serialize } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { memberRepositry } from "@/Data_Access_Layer/memberRepository";
+import { isValidEmail, isValidNewPassword, normalizeEmail, sanitizeName } from "@/lib/validation";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { verifyCsrfToken } from "@/lib/csrf";
 
 export default async function handler(req, res) {
     const userQuery = new UserRepository();
@@ -20,6 +23,23 @@ export default async function handler(req, res) {
         });
     }
 
+    if (!verifyCsrfToken(req)) {
+        return res.status(403).json({
+            ok: false,
+            error: "Invalid or missing CSRF token",
+        });
+    }
+
+    const ip = getClientIp(req);
+    const { allowed, retryAfterSeconds } = rateLimit(`signup:${ip}`, 5, 60 * 60 * 1000);
+    if (!allowed) {
+        res.setHeader("Retry-After", retryAfterSeconds);
+        return res.status(429).json({
+            ok: false,
+            error: "Too many signup attempts. Please try again later.",
+        });
+    }
+
     try{
         const { fName, lName, email, password } = req.body;
 
@@ -27,14 +47,48 @@ export default async function handler(req, res) {
         console.log("Email received from API:", JSON.stringify(email));
         console.log("Password received?", !!password);
 
+        const firstName = sanitizeName(fName);
+        const lastName = sanitizeName(lName);
+
+        if (!firstName || !lastName) {
+            return res.status(400).json({
+                ok: false,
+                error: "First and last name may only contain letters, spaces, hyphens and apostrophes",
+            });
+        }
+
+        if (!isValidEmail(email)) {
+            return res.status(400).json({
+                ok: false,
+                error: "Please provide a valid email address",
+            });
+        }
+
+        if (!isValidNewPassword(password)) {
+            return res.status(400).json({
+                ok: false,
+                error: "Password must be between 8 and 128 characters",
+            });
+        }
+
+        const normalizedEmail = normalizeEmail(email);
+
+        const existing = await userQuery.findEmailAuthentication(normalizedEmail);
+        if (existing) {
+            return res.status(409).json({
+                ok: false,
+                error: "An account with that email already exists",
+            });
+        }
+
         const hashedPassword = await bcrypt.hash(password, 12); //12 = reasonable balance of security & performance, 14 for more computationally expensive & slower
         const sessionId = crypto.randomBytes(32).toString("hex");
 
         const user = {
-            first_name: fName,
-            last_name: lName,
+            first_name: firstName,
+            last_name: lastName,
             phone_number: null,
-            email: email.toLowerCase(),
+            email: normalizedEmail,
             password: hashedPassword,
             notes: null,
             rfid_id: null,
@@ -121,6 +175,15 @@ export default async function handler(req, res) {
         });
     } catch(error){
         console.log("Signup error: ", error);
+
+        // Postgres unique_violation - handles the race where two signups for
+        // the same email land between the existence check and the insert.
+        if (error?.code === "23505") {
+            return res.status(409).json({
+                ok: false,
+                error: "An account with that email already exists",
+            });
+        }
 
         return res.status(500).json({
             ok: false,

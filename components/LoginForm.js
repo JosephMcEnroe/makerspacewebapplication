@@ -73,6 +73,8 @@ export default function LoginForm() {
 
             onChange={(e) => setEmail(e.target.value)}
 
+            maxLength={254}
+
             required
           />
         </div>
@@ -92,8 +94,18 @@ export default function LoginForm() {
             value={password}
 
             onChange={(e) => setPassword(e.target.value)}
+
+            maxLength={128}
+
+            required
           />
         </div>
+
+        {error && (
+          <p className={styles.errorText} role="alert">
+            {error}
+          </p>
+        )}
 
         <div className={styles.optionsRow}>
           <label className={styles.rememberMe}>
