@@ -3,6 +3,9 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { serialize } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
+import { isValidEmail, isValidLoginPassword, normalizeEmail } from "@/lib/validation";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { verifyCsrfToken } from "@/lib/csrf";
 
 export default async function handler(req, res) {
     //Instantiate UserRepository
@@ -16,6 +19,23 @@ export default async function handler(req, res) {
         return res.status(405).json({
             ok: false,
             error: "Method not allowed",
+        });
+    }
+
+    if (!verifyCsrfToken(req)) {
+        return res.status(403).json({
+            ok: false,
+            error: "Invalid or missing CSRF token",
+        });
+    }
+
+    const ip = getClientIp(req);
+    const { allowed, retryAfterSeconds } = rateLimit(`login:${ip}`, 10, 15 * 60 * 1000);
+    if (!allowed) {
+        res.setHeader("Retry-After", retryAfterSeconds);
+        return res.status(429).json({
+            ok: false,
+            error: "Too many login attempts. Please try again later.",
         });
     }
 
@@ -33,9 +53,16 @@ export default async function handler(req, res) {
             });
         }
 
+        if (!isValidEmail(email) || !isValidLoginPassword(password)) {
+            return res.status(400).json({
+                ok: false,
+                error: "Invalid email or password",
+            });
+        }
+
         console.log("Email type:", typeof email);
 
-        const result = await userQuery.findEmailAuthentication(email.toLowerCase()); //alway lowercase the data string
+        const result = await userQuery.findEmailAuthentication(normalizeEmail(email));
 
         const user = result;
         console.log("User found?", !!user);

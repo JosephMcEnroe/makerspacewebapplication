@@ -1,5 +1,6 @@
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { serialize } from "cookie";
+import { verifyCsrfToken } from "@/lib/csrf";
 
 export default async function handler(req, res){
     const logoutQuery = new UserRepository();
@@ -8,6 +9,13 @@ export default async function handler(req, res){
         return res.status(405).json({
             ok: false,
             error: "Method not allowed",
+        });
+    }
+
+    if (!verifyCsrfToken(req)) {
+        return res.status(403).json({
+            ok: false,
+            error: "Invalid or missing CSRF token",
         });
     }
 
