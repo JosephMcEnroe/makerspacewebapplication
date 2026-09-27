@@ -80,6 +80,13 @@
   box-shadow: 0 0 0 3px rgba(144, 94, 73, 0.1);
 }
 
+.errorText {
+  color: #b3261e;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
 .submitBtn {
   width: 100%;
   padding: 0.95rem;

@@ -24,20 +24,28 @@ export default function RegisterForm() {
     password: "",
     confirmPassword: "",
   });
+  const [formError, setFormError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  /**Need to validate the confirm password & we need to add verification process here */
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Future: submit registration via API
-    console.log("Register:", formData);
+    setFormError(null);
 
-    const user = await signup(formData.firstName, formData.lastName, formData.email, formData.confirmPassword);
+    if (formData.password !== formData.confirmPassword) {
+      setFormError("Passwords do not match");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setFormError("Password must be at least 8 characters");
+      return;
+    }
+
+    const user = await signup(formData.firstName, formData.lastName, formData.email, formData.password);
 
     if(!user){
       return;
@@ -66,6 +74,8 @@ export default function RegisterForm() {
               value={formData.firstName}
               onChange={handleChange}
               autoComplete="given-name"
+              maxLength={50}
+              required
             />
           </div>
 
@@ -82,6 +92,8 @@ export default function RegisterForm() {
               value={formData.lastName}
               onChange={handleChange}
               autoComplete="family-name"
+              maxLength={50}
+              required
             />
           </div>
         </div>
@@ -99,6 +111,8 @@ export default function RegisterForm() {
             value={formData.email}
             onChange={handleChange}
             autoComplete="email"
+            maxLength={254}
+            required
           />
         </div>
 
@@ -115,6 +129,9 @@ export default function RegisterForm() {
             value={formData.password}
             onChange={handleChange}
             autoComplete="new-password"
+            minLength={8}
+            maxLength={128}
+            required
           />
         </div>
 
@@ -131,11 +148,20 @@ export default function RegisterForm() {
             value={formData.confirmPassword}
             onChange={handleChange}
             autoComplete="new-password"
+            minLength={8}
+            maxLength={128}
+            required
           />
         </div>
 
-        <button type="submit" className={styles.submitBtn}>
-          Create Account
+        {(formError || error) && (
+          <p className={styles.errorText} role="alert">
+            {formError || error}
+          </p>
+        )}
+
+        <button type="submit" className={styles.submitBtn} disabled={loginLoading}>
+          {loginLoading ? "Creating Account..." : "Create Account"}
         </button>
 
         <div className={styles.divider}>
