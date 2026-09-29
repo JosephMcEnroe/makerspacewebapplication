@@ -64,3 +64,29 @@
   line-height: 1.45;
   margin: 0;
 }
+
+.cardUnavailable {
+  opacity: 0.62;
+  filter: grayscale(0.85);
+}
+
+.unavailableBadge {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6e5341;
+  background-color: rgba(43, 25, 22, 0.55);
+}
+
+.unavailableNote {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #a05c3a;
+  margin: 0.6rem 0 0 0;
+}

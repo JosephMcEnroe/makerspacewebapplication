@@ -105,6 +105,13 @@
   text-decoration: underline;
 }
 
+.errorText {
+  color: #b3261e;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
 .submitBtn {
   width: 100%;
   padding: 0.95rem;

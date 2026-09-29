@@ -13,6 +13,17 @@ export function useAuth() {
   const [loginloading, setLoginLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Fetches a fresh CSRF token (sets the csrf_token cookie) and returns it so
+  // it can be echoed back in the x-csrf-token header on the next request.
+  const getCsrfToken = async () => {
+    const response = await fetch("/api/auth/csrf", {
+      method: "GET",
+      credentials: "include",
+    });
+    const data = await response.json();
+    return data.csrfToken;
+  };
+
   //The AuthContext already have the session authentication process, this function is there to manually authenticate the cookie in some testing areas. Delete this when it become obselete.
   const sessionCheck = async () => {
     
@@ -48,13 +59,16 @@ export function useAuth() {
     setLoginLoading(true);
     setError(null);
     try {
-      
+      const csrfToken = await getCsrfToken();
+
       const response = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
         },
-        
+
         body: JSON.stringify({
           email,
           password
@@ -84,9 +98,14 @@ export function useAuth() {
 
   const logout = async () => {
     try{
+      const csrfToken = await getCsrfToken();
+
       const response = await fetch("/api/auth/logout", {
         method: "POST",
         credentials: "include",
+        headers: {
+          "x-csrf-token": csrfToken,
+        },
       });
 
       const data = await response.json();
@@ -108,12 +127,16 @@ export function useAuth() {
   const signup = async (fName, lName, email, password) => {
       setLoginLoading(true);
       setError(null);
-    
+
     try{
+      const csrfToken = await getCsrfToken();
+
       const response = await fetch("/api/auth/signup", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
         },
 
         body: JSON.stringify({
@@ -135,6 +158,8 @@ export function useAuth() {
     } catch (err){
       setError(err.message || "Faile to sign up a new account");
       return null;
+    } finally {
+      setLoginLoading(false);
     }
   }
 

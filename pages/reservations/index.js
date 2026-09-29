@@ -17,6 +17,11 @@ const MOCK_RESERVATIONS = {
     previous: [],
     cancelled: [],
   },
+  room: {
+    upcoming: [{ id: "rm-1", name: "Ceramics Studio", time: "4:15 PM - 6:15 PM", trainingRequired: false }],
+    previous: [{ id: "rm-2", name: "Woodshop", time: "4:15 PM - 6:15 PM", trainingRequired: false }],
+    cancelled: [],
+  },
 };
 
 export default function ReservationsPage() {
