@@ -25,8 +25,8 @@ export class UserRepository {
     //Find the role of the user that have userID + (maybe) membership_id
     async findRoleById(userId) {
         const { rows } = await query(
-            `SELECT user_id, status, type_of_membership
-            FROM "member"
+            `SELECT user_id, status, role_of_membership
+            FROM "membership"
             WHERE (user_id = $1)`,
             [userId]
         );

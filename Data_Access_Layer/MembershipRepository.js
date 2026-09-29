@@ -24,14 +24,13 @@ export class membershipRepositry {
         const { rows } = await query(
             `INSERT INTO "membership" (
                 user_id,
-                cost,
                 role_of_membership,
                 period_start_date,
                 period_end_date,
                 rfid_id,
                 status
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING membership_id, user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status`,
             [
                 membership.user_id,
