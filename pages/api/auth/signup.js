@@ -34,11 +34,11 @@ export default async function handler(req, res) {
             first_name: fName,
             last_name: lName,
             phone_number: null,
+            date_of_birth: "01-10-1998",
             email: email.toLowerCase(),
             password: hashedPassword,
             notes: null,
-            rfid_id: null,
-            last_check_in: null
+            waiver_status: true
         }
 
         /**

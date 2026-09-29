@@ -111,7 +111,7 @@ export class UserRepository {
         const { rows } = await query(`
             SELECT u.user_id, email, password, m.status
             FROM users u
-            LEFT JOIN member m
+            LEFT JOIN membership m
                 ON u.user_id = m.user_id
             WHERE email = $1
             `, [userEmail]);
