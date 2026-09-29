@@ -10,6 +10,8 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  /* Keep the header at full height inside the locked layout */
+  flex-shrink: 0;
 }
 
 .brand {
