@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import DashboardLayout from "@/components/DashboardLayout";
+import { MOCK_USER } from "@/lib/user";
 
 // Pages that use their own full-page layout (no shared sidebar)
 const NO_SIDEBAR_ROUTES = [
@@ -12,9 +13,6 @@ const NO_SIDEBAR_ROUTES = [
   "/admin",
   "/staff",
 ];
-
-// Placeholder user — replace with real auth session when backend is wired up
-const MOCK_USER = { name: "Alex Chen", memberSince: "2025" };
 
 export default function App({ Component, pageProps }) {
   const router = useRouter();

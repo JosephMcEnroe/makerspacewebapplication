@@ -6,26 +6,31 @@ const EQUIPMENT = [
     name: "Laser Cutter Pro",
     description:
       "High-precision laser cutting for wood, acrylic, and metal. Supports vector engraving and intricate pattern work.",
+    training: "Laser Safety Training",
   },
   {
     name: "Table Saw Station",
     description:
       "Professional-grade table saw with digital fence system. Perfect for precise straight cuts and joinery work.",
+    training: "Woodshop Safety Training",
   },
   {
     name: "3D Printer",
     description:
       "Ultra-detailed printing with 0.05mm layer resolution. Ideal for miniatures, jewelry, and prototypes.",
+    training: "3D Printer Training",
   },
   {
     name: "Vinyl Cutter",
     description:
       "Large-format vinyl cutting for decals, signs, and heat transfers. Includes weeding tools and application tape.",
+    training: "Vinyl Cutter Training",
   },
   {
     name: "CNC Router",
     description:
       "Computer-controlled router for carving wood, plastics, and soft metals. Great for signs, molds, and furniture parts.",
+    training: "Woodshop Safety Training",
     unavailable: true,
     unavailableNote: "Booked for the month — reservations reopen next month.",
   },

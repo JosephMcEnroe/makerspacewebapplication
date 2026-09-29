@@ -1,5 +1,6 @@
 import Head from "next/head";
 import ResourceCard from "./ResourceCard";
+import { MOCK_USER, hasTraining } from "@/lib/user";
 import styles from "./ExplorePage.module.css";
 
 /**
@@ -12,6 +13,7 @@ export default function ExplorePage({
   intro,
   bookingWindow,
   items,
+  user = MOCK_USER,
 }) {
   const available = items.filter((item) => !item.unavailable);
   const unavailable = items.filter((item) => item.unavailable);
@@ -35,7 +37,14 @@ export default function ExplorePage({
           <>
             <div className={styles.grid}>
               {available.map((item) => (
-                <ResourceCard key={item.name} {...item} />
+                <ResourceCard
+                  key={item.name}
+                  {...item}
+                  // Only required trainings get a badge; undefined hides it
+                  trainingComplete={
+                    item.training ? hasTraining(user, item.training) : undefined
+                  }
+                />
               ))}
             </div>
             <p className={styles.countNote}>
@@ -57,7 +66,13 @@ export default function ExplorePage({
           </h2>
           <div className={styles.grid}>
             {unavailable.map((item) => (
-              <ResourceCard key={item.name} {...item} />
+              <ResourceCard
+                key={item.name}
+                {...item}
+                trainingComplete={
+                  item.training ? hasTraining(user, item.training) : undefined
+                }
+              />
             ))}
           </div>
         </section>
