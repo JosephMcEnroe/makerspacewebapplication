@@ -1,14 +1,17 @@
 import styles from "./ResourceCard.module.css";
 
-export default function ResourceCard({ name, description, time, spots }) {
+export default function ResourceCard({ name, description, time, spots, unavailable, unavailableNote }) {
   return (
-    <div className={styles.card}>
+    <div className={unavailable ? `${styles.card} ${styles.cardUnavailable}` : styles.card}>
       <div className={styles.imagePlaceholder}>
         {(time || spots) && (
           <div className={styles.badgeRow}>
             {time && <span className={styles.timeBadge}>{time}</span>}
             {spots && <span className={styles.spotsBadge}>{spots}</span>}
           </div>
+        )}
+        {unavailable && (
+          <div className={styles.unavailableBadge}>Booked Indefinitely</div>
         )}
         <svg className={styles.placeholderIcon} width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -19,6 +22,11 @@ export default function ResourceCard({ name, description, time, spots }) {
       <div className={styles.body}>
         <h3 className={styles.title}>{name}</h3>
         <p className={styles.description}>{description}</p>
+        {unavailable && (
+          <p className={styles.unavailableNote}>
+            {unavailableNote || "Currently unavailable for reservation."}
+          </p>
+        )}
       </div>
     </div>
   );

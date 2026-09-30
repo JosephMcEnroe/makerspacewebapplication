@@ -1,6 +1,7 @@
 import Head from "next/head";
 import ResourceCard from "@/components/ResourceCard";
 import styles from "@/styles/Dashboard.module.css";
+import Navbar from "@/components/Navbar";
 
 // Placeholder until equipment/room/class data is wired up to the database
 const EQUIPMENT = [
@@ -62,7 +63,7 @@ export default function DashboardPage() {
         <meta name="description" content="Browse equipment, rooms, and classes at The Crafty Studio" />
       </Head>
       <div className={styles.page}>
-
+        <Navbar />
         <section className={styles.section}>
           <div className={styles.sectionInner}>
             <h1 className={styles.sectionTitle}>Equipment</h1>

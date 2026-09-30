@@ -4,7 +4,19 @@ import Link from "next/link";
 import { useState } from "react";
 import styles from "./RegisterForm.module.css";
 
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/router";
+
 export default function RegisterForm() {
+  const router = useRouter();
+
+  const {
+    user,
+    signup,
+    loginLoading,
+    error,
+  } = useAuth();
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -12,16 +24,34 @@ export default function RegisterForm() {
     password: "",
     confirmPassword: "",
   });
+  const [formError, setFormError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Future: submit registration via API
-    console.log("Register:", formData);
+    setFormError(null);
+
+    if (formData.password !== formData.confirmPassword) {
+      setFormError("Passwords do not match");
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setFormError("Password must be at least 8 characters");
+      return;
+    }
+
+    const user = await signup(formData.firstName, formData.lastName, formData.email, formData.password);
+
+    if(!user){
+      return;
+    }
+
+    router.push("/dashboard");
   };
 
   return (
@@ -44,6 +74,8 @@ export default function RegisterForm() {
               value={formData.firstName}
               onChange={handleChange}
               autoComplete="given-name"
+              maxLength={50}
+              required
             />
           </div>
 
@@ -60,6 +92,8 @@ export default function RegisterForm() {
               value={formData.lastName}
               onChange={handleChange}
               autoComplete="family-name"
+              maxLength={50}
+              required
             />
           </div>
         </div>
@@ -77,6 +111,8 @@ export default function RegisterForm() {
             value={formData.email}
             onChange={handleChange}
             autoComplete="email"
+            maxLength={254}
+            required
           />
         </div>
 
@@ -93,6 +129,9 @@ export default function RegisterForm() {
             value={formData.password}
             onChange={handleChange}
             autoComplete="new-password"
+            minLength={8}
+            maxLength={128}
+            required
           />
         </div>
 
@@ -109,11 +148,20 @@ export default function RegisterForm() {
             value={formData.confirmPassword}
             onChange={handleChange}
             autoComplete="new-password"
+            minLength={8}
+            maxLength={128}
+            required
           />
         </div>
 
-        <button type="submit" className={styles.submitBtn}>
-          Create Account
+        {(formError || error) && (
+          <p className={styles.errorText} role="alert">
+            {formError || error}
+          </p>
+        )}
+
+        <button type="submit" className={styles.submitBtn} disabled={loginLoading}>
+          {loginLoading ? "Creating Account..." : "Create Account"}
         </button>
 
         <div className={styles.divider}>

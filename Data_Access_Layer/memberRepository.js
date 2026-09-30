@@ -89,3 +89,5 @@ export class memberRepositry {
         return rows[0] || null;
     }
 }
+
+export default memberRepositry;

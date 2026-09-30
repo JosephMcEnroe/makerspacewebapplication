@@ -3,7 +3,7 @@ import { query } from "@/lib/db";
 export class StudentRepository {
     async findAllStudent() {
         const { rows } = await query(
-            `SELECT user_id, student_id, school
+            `SELECT user_id, student_id
              FROM "student"
              ORDER BY student_id`
         );
@@ -12,7 +12,7 @@ export class StudentRepository {
 
     async findByStudent(userId) {
         const { rows } = await query(
-            `SELECT user_id, student_id, school
+            `SELECT user_id, student_id
              FROM "student"
              WHERE user_id = $1`,
             [userId]
@@ -24,15 +24,13 @@ export class StudentRepository {
         const { rows } = await query(
             `INSERT INTO "student" (
                 user_id,
-                student_id,
-                school
+                student_id
             )
-            VALUES ($1, $2, $3)
-            RETURNING user_id, student_id, school`,
+            VALUES ($1, $2)
+            RETURNING user_id, student_id`,
             [
                 student.user_id,
-                student.student_id,
-                student.school
+                student.student_id
             ]
         );
         return rows[0];
@@ -41,14 +39,12 @@ export class StudentRepository {
     async updateStudent(userId, student) {
         const { rows } = await query(
             `UPDATE "student"
-             SET student_id = $2,
-                 school = $3
+             SET student_id = $2
              WHERE user_id = $1
-             RETURNING user_id, student_id, school`,
+             RETURNING user_id, student_id`,
             [
                 userId,
-                student.student_id,
-                student.school
+                student.student_id
             ]
         );
         return rows[0] || null;

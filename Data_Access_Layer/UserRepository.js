@@ -5,7 +5,7 @@ export class UserRepository {
     async findAll() {
         const { rows } = await query(
             `SELECT user_id, first_name, last_name, phone_number,
-                date_of_birth, email, notes, rfid_id, last_check_in
+                date_of_birth, email, notes, waiver_status
              FROM "users"
              ORDER BY last_name, first_name, email`
         );
@@ -15,7 +15,7 @@ export class UserRepository {
     async findById(userId) {
         const { rows } = await query(
             `SELECT user_id, first_name, last_name, phone_number,
-                date_of_birth, email, notes, rfid_id, last_check_in
+                date_of_birth, email, notes, waiver_status
             FROM "users"
             WHERE (user_id = $1)`,
             [userId]
@@ -25,32 +25,33 @@ export class UserRepository {
     //Find the role of the user that have userID + (maybe) membership_id
     async findRoleById(userId) {
         const { rows } = await query(
-            `SELECT user_id, status, type_of_membership
-            FROM "member"
+            `SELECT user_id, status, role_of_membership
+            FROM "membership"
             WHERE (user_id = $1)`,
             [userId]
         );
         return rows[0] || null;
     }
     // Update timestamp for check in after using rfid
-    async checkInByRfid(rfidId) {
-        const { rows } = await query(`
-        UPDATE users
-        SET last_check_in = CURRENT_TIMESTAMP
-        WHERE rfid_id = $1
-        RETURNING user_id, first_name, last_name, rfid_id, last_check_in`,
-            [rfidId]);
-        return rows[0] || null;
-    }
+    //UPDATE: Archive due to remove rfid in user repo
+    // async checkInByRfid(rfidId) {
+    //     const { rows } = await query(`
+    //     UPDATE users
+    //     SET last_check_in = CURRENT_TIMESTAMP
+    //     WHERE rfid_id = $1
+    //     RETURNING user_id, first_name, last_name, rfid_id, last_check_in`,
+    //         [rfidId]);
+    //     return rows[0] || null;
+    // }
 
     //create user account
     async createUser(user) {
         const { rows } = await query(`
             INSERT INTO "users" (
-            first_name, last_name, phone_number, date_of_birth, email, password, notes, rfid_id, last_check_in)
+            first_name, last_name, phone_number, date_of_birth, email, password, notes, waiver_status)
             VALUES
-                ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-            RETURNING user_id, first_name, last_name, phone_number, date_of_birth, email, password, notes, rfid_id, last_check_in
+                ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING user_id, first_name, last_name, phone_number, date_of_birth, email, password, notes, waiver_status
             `, [
             user.first_name,
             user.last_name,
@@ -59,11 +60,11 @@ export class UserRepository {
             user.email,
             user.password,
             user.notes,
-            user.rfid_id,
-            user.last_check_in
+            user.waiver_status
         ]);
         return rows[0];
     }
+
     // Update user's information using userID
     async updateUser(userId, user) {
         const { rows } = await query(`
@@ -75,9 +76,9 @@ export class UserRepository {
                 email = $6,
                 password = $7,
                 notes = $8,
-                rfid_id = $9,
+                waiver_status = $9,
                 WHERE user_id = $1
-                RETURNING user_id, first_name, last_name, phone_number, date_of_birth, email, password, notes, rfid_id, last_check_in
+                RETURNING user_id, first_name, last_name, phone_number, date_of_birth, email, password, notes, waiver_status
                 `, [
             userId,
             user.first_name,
@@ -87,7 +88,7 @@ export class UserRepository {
             user.email,
             user.password,
             user.notes,
-            user.rfidId,
+            user.waiver_status,
         ]);
         return rows[0] || null;
     }
@@ -97,7 +98,7 @@ export class UserRepository {
             `DELETE FROM "users"
             WHERE user_id = $1
             RETURNING user_id, first_name, last_name, phone_number,
-                      date_of_birth, email, notes, rfid_id, last_check_in
+                      date_of_birth, email, notes, waiver_status
             `, [userId]);
 
         return rows[0] || null;
@@ -110,7 +111,7 @@ export class UserRepository {
         const { rows } = await query(`
             SELECT u.user_id, email, password, m.status
             FROM users u
-            LEFT JOIN member m
+            LEFT JOIN membership m
                 ON u.user_id = m.user_id
             WHERE email = $1
             `, [userEmail]);
@@ -125,7 +126,7 @@ export class UserRepository {
               user_id,
               expires_at
             )
-            VALUES ($1, $2, NOW() + INTERVAL '7 days')
+            VALUES ($1, $2, NOW() + INTERVAL '30 minutes')
             `, [sessionId, userId]);
         return rows[0] || null;
     }

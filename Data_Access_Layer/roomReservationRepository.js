@@ -4,7 +4,7 @@ export class roomReservationRepository {
     async findAllRoomReservation() {
         const { rows } = await query(
             `SELECT reservation_id, user_id, room_id,
-                   start_date, end_date, status, date
+                   start_date, end_date, status
             FROM "room_reservation"
         `);
         return rows;
@@ -13,7 +13,7 @@ export class roomReservationRepository {
     async findRoomReservation(reservationID) {
         const { rows } = await query(
             `SELECT reservation_id, user_id, room_id,
-                   start_date, end_date, status, date
+                   start_date, end_date, status
             FROM "room_reservation"
             WHERE reservation_id = $1
         `, [reservationID]);
@@ -28,19 +28,17 @@ export class roomReservationRepository {
                 room_id,
                 start_date,
                 end_date,
-                status,
-                date
+                status
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING reservation_id, user_id, room_id,
-                      start_date, end_date, status, date
+                      start_date, end_date, status
         `, [
             reservation.user_id,
             reservation.room_id,
             reservation.start_date,
             reservation.end_date,
-            reservation.status,
-            reservation.date
+            reservation.status
         ]);
         return rows[0];
     }
@@ -51,19 +49,17 @@ export class roomReservationRepository {
                  room_id = $3,
                  start_date = $4,
                  end_date = $5,
-                 status = $6,
-                 date = $7
+                 status = $6
              WHERE reservation_id = $1
              RETURNING reservation_id, user_id, room_id,
-                       start_date, end_date, status, date`,
+                       start_date, end_date, status`,
             [
                 reservationID,
                 reservation.user_id,
                 reservation.room_id,
                 reservation.start_date,
                 reservation.end_date,
-                reservation.status,
-                reservation.date
+                reservation.status
             ]
         );
 
