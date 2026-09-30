@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function Debugging() {
   const [products, setProducts] = useState([]);
@@ -75,6 +76,24 @@ export default function Debugging() {
       }}
     >
       <h1>Stripe Debugging</h1>
+
+      <div style={{ margin: "20px 0 30px" }}>
+        <Link
+          href="/debugging/product-demo"
+          style={{
+            display: "inline-block",
+            padding: "12px 24px",
+            backgroundColor: "#2b1916",
+            color: "#ffffff",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: "bold",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          }}
+        >
+          🎨 View Styled Product Cards & Checkout Demo &rarr;
+        </Link>
+      </div>
 
       <p>
         <strong>{products.length}</strong> product
