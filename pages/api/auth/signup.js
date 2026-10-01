@@ -129,7 +129,6 @@ export default async function handler(req, res) {
             })
         );
 
-        //Pause here until the userRepository queries is updated for createMember & createMembership
         const membership = {
             user_id: newUser.user_id,
             role_of_membership: "MEMBER",
@@ -174,7 +173,7 @@ export default async function handler(req, res) {
             user: {
                 id: user.user_id ?? -1,
                 status: newMp.status ?? "null",
-                role: newMp.type_of_membership ?? ""
+                role: newMp.role_of_membership ?? ""
             },
         });
     } catch(error){

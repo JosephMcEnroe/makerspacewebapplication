@@ -7,9 +7,9 @@ import Link from "next/link";
 import styles from "./LoginForm.module.css";
 
 function redirectForRole(router, role) {
-  if (role === "admin") {
+  if (role === 'ADMIN') {
     router.push("/admin");
-  } else if (role === "staff") {
+  } else if (role === "STAFF") {
     router.push("/staff");
   } else {
     router.push("/dashboard");

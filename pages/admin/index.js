@@ -89,7 +89,7 @@ export default function AdminDashboardPage() {
   }
 
   //This was to test the role authentication - use the redirect route back where it came from
-  if(user.role !== "admin"){
+  if(user.role !== "ADMIN"){
     return <p>Not authorized</p>;
   }
 

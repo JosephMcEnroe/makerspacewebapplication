@@ -121,7 +121,7 @@ export default async function handler(req, res) {
             user: {
                 id: user.user_id ?? -1,
                 status: member.status ?? "null",
-                role: member.type_of_membership ?? ""
+                role: member.role_of_membership ?? ""
             },
         });
     } catch(error){
