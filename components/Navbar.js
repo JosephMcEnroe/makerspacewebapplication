@@ -1,7 +1,13 @@
 import Link from "next/link";
+import { useAuthContext } from "@/context/AuthContext";
 import styles from "./Navbar.module.css";
 
 export default function Navbar() {
+  const { user } = useAuthContext();
+  const initials = [user?.firstName, user?.lastName]
+    .map((name) => name?.charAt(0).toUpperCase() || "")
+    .join("");
+
   return (
     <header className={styles.navbar}>
       <Link href="/dashboard" className={styles.brand}>
@@ -22,7 +28,7 @@ export default function Navbar() {
         </nav>
 
         <Link href="/account" className={styles.avatar} aria-label="Account settings">
-          AC
+          {initials}
         </Link>
       </div>
     </header>

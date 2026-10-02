@@ -35,7 +35,7 @@ export default function ExplorePage({
           <>
             <div className={styles.grid}>
               {available.map((item) => (
-                <ResourceCard key={item.name} {...item} />
+                <ResourceCard key={item.id ?? item.name} {...item} />
               ))}
             </div>
             <p className={styles.countNote}>
@@ -57,7 +57,7 @@ export default function ExplorePage({
           </h2>
           <div className={styles.grid}>
             {unavailable.map((item) => (
-              <ResourceCard key={item.name} {...item} />
+              <ResourceCard key={item.id ?? item.name} {...item} />
             ))}
           </div>
         </section>

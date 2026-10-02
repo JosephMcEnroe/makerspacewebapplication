@@ -28,7 +28,7 @@ export function useAuth() {
   const sessionCheck = async () => {
     
     try{
-      const response = await fetch("api/auth/checkC", {
+      const response = await fetch("/api/auth/checkC", {
         method: "GET",
         credentials: "include",
         headers: {
@@ -84,10 +84,10 @@ export function useAuth() {
         throw new Error(data.error || "Failed to log in");
       }
 
-      //if auth successful
-      setUser(data.user);
-
-      return data.user;
+      //if auth successful - load the full session user (name, member since, etc.)
+      const sessionUser = await sessionCheck();
+      if (!sessionUser) setUser(data.user);
+      return sessionUser ?? data.user;
     } catch (err) {
       setError(err.message || "Failed to log in");
       return null;
@@ -153,8 +153,9 @@ export function useAuth() {
         throw new Error(data.error || "Failed to sign up");
       }
 
-      setUser(data.user);
-      return data.user;
+      const sessionUser = await sessionCheck();
+      if (!sessionUser) setUser(data.user);
+      return sessionUser ?? data.user;
     } catch (err){
       setError(err.message || "Faile to sign up a new account");
       return null;

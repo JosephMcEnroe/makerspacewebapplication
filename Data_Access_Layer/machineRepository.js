@@ -5,9 +5,10 @@ export class machineRepository {
         const { rows } = await query(
             `SELECT machine_id, name, type, cost, status
             FROM "machine"
+            ORDER BY name
             `
         );
-        return rows[0] || null;
+        return rows;
     }
 
     async findMachine(machineID) {
