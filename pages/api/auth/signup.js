@@ -1,12 +1,11 @@
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
-import { serialize } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { memberRepositry } from "@/Data_Access_Layer/memberRepository";
 import { isValidEmail, isValidNewPassword, normalizeEmail, sanitizeName } from "@/lib/validation";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { verifyCsrfToken } from "@/lib/csrf";
+import { sendVerificationEmail } from "@/lib/email";
 
 export default async function handler(req, res) {
     const userQuery = new UserRepository();
@@ -73,8 +72,10 @@ export default async function handler(req, res) {
 
         const normalizedEmail = normalizeEmail(email);
 
+        //An unverified account with this email can be signed up over (typo'd or
+        //someone else's address) - only verified accounts block a new signup
         const existing = await userQuery.findEmailAuthentication(normalizedEmail);
-        if (existing) {
+        if (existing?.email_verified) {
             return res.status(409).json({
                 ok: false,
                 error: "An account with that email already exists",
@@ -82,7 +83,6 @@ export default async function handler(req, res) {
         }
 
         const hashedPassword = await bcrypt.hash(password, 12); //12 = reasonable balance of security & performance, 14 for more computationally expensive & slower
-        const sessionId = crypto.randomBytes(32).toString("hex");
 
         const user = {
             first_name: firstName,
@@ -100,34 +100,29 @@ export default async function handler(req, res) {
          * receive confirmation before we can add user to the database? 
          */
 
-        const isAdded = await userQuery.createUser(user);
+        let newUser;
 
-        if(!isAdded){
-            console.log("The database has fail to add the new user");
+        if (existing) {
+            newUser = await userQuery.replaceUnverifiedUser(existing.user_id, user);
+
+            //Verified between the lookup and the update
+            if (!newUser) {
+                return res.status(409).json({
+                    ok: false,
+                    error: "An account with that email already exists",
+                });
+            }
+        } else {
+            const isAdded = await userQuery.createUser(user);
+
+            if(!isAdded){
+                console.log("The database has fail to add the new user");
+            }
+
+            newUser = await userQuery.findEmailAuthentication(user.email);
         }
 
-        const newUser = await userQuery.findEmailAuthentication(user.email);
-
-        const isStored = await userQuery.insertCookie(sessionId, newUser.user_id);
-
-        if(!(isStored == null)){
-            console.log("WARNING - the session isn't stored: ", isStored);
-            return res.status(401).json({
-                ok: false,
-                error: "Session cookie isn't stored",
-            });
-        }
-
-        res.setHeader(
-            "Set-Cookie",
-            serialize("session_id", sessionId, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
-                path: "/",
-                maxAge: 1800, //30 minutes
-            })
-        );
+        const existingMp = await mpQuery.findUserMembership(newUser.user_id);
 
         //Pause here until the userRepository queries is updated for createMember & createMembership
         const membership = {
@@ -139,13 +134,26 @@ export default async function handler(req, res) {
             status: "INACTIVE"
         }
 
-        const isNewmp = await mpQuery.createMembership(membership);
+        if (!existingMp) {
+            const isNewmp = await mpQuery.createMembership(membership);
 
-        if(!isNewmp){
-            console.log("The database failed to add a new membership");
+            if(!isNewmp){
+                console.log("The database failed to add a new membership");
+            }
         }
 
-        const newMp = await mpQuery.findUserMembership(newUser.user_id);
+        // No session yet - the user signs in after clicking the link in this email.
+        // If sending fails the account still exists; logging in re-sends the link.
+        try {
+            await sendVerificationEmail(req, {
+                userId: newUser.user_id,
+                email: newUser.email,
+                firstName: newUser.first_name,
+                passwordHash: newUser.password,
+            });
+        } catch (emailError) {
+            console.error("Verification email error:", emailError);
+        }
 
         // const member = {
         //     user_id: newUser.user_id,
@@ -169,13 +177,8 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
             ok: true,
-
-            //Update this and the one in login file for more data property - right now this is lazy user data
-            user: {
-                id: user.user_id ?? -1,
-                status: newMp.status ?? "null",
-                role: newMp.type_of_membership ?? ""
-            },
+            verificationRequired: true,
+            email: newUser.email,
         });
     } catch(error){
         console.log("Signup error: ", error);

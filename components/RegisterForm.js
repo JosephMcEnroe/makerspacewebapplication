@@ -5,15 +5,12 @@ import { useState } from "react";
 import styles from "./RegisterForm.module.css";
 
 import { useAuth } from "@/hooks/useAuth";
-import { useRouter } from "next/router";
 
 export default function RegisterForm() {
-  const router = useRouter();
-
   const {
     user,
     signup,
-    loginLoading,
+    loginloading,
     error,
   } = useAuth();
 
@@ -25,6 +22,7 @@ export default function RegisterForm() {
     confirmPassword: "",
   });
   const [formError, setFormError] = useState(null);
+  const [pendingEmail, setPendingEmail] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -45,14 +43,29 @@ export default function RegisterForm() {
       return;
     }
 
-    const user = await signup(formData.firstName, formData.lastName, formData.email, formData.password);
+    const result = await signup(formData.firstName, formData.lastName, formData.email, formData.password);
 
-    if(!user){
+    if(!result){
       return;
     }
 
-    router.push("/dashboard");
+    setPendingEmail(result.email);
   };
+
+  if (pendingEmail) {
+    return (
+      <div className={styles.card}>
+        <h1 className={styles.title}>CHECK YOUR EMAIL</h1>
+        <p className={styles.subtitle}>
+          We sent a verification link to <strong>{pendingEmail}</strong>. Click it to activate your
+          account, then sign in.
+        </p>
+        <Link href="/login" className={styles.signInBtn}>
+          Go to Sign In
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.card}>
@@ -160,8 +173,8 @@ export default function RegisterForm() {
           </p>
         )}
 
-        <button type="submit" className={styles.submitBtn} disabled={loginLoading}>
-          {loginLoading ? "Creating Account..." : "Create Account"}
+        <button type="submit" className={styles.submitBtn} disabled={loginloading}>
+          {loginloading ? "Creating Account..." : "Create Account"}
         </button>
 
         <div className={styles.divider}>

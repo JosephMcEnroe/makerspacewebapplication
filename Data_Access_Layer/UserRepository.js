@@ -109,13 +109,42 @@ export class UserRepository {
     // get data from user_id, email, password, and m.member
     async findEmailAuthentication(userEmail) {
         const { rows } = await query(`
-            SELECT u.user_id, email, password, m.status
+            SELECT u.user_id, u.first_name, email, password, u.email_verified, m.status
             FROM users u
             LEFT JOIN membership m
                 ON u.user_id = m.user_id
             WHERE email = $1
             `, [userEmail]);
 
+        return rows[0] || null;
+    }
+
+    // Re-signup over an account that never verified its email: take over the
+    // name and password. Verified accounts are never touched.
+    async replaceUnverifiedUser(userId, user) {
+        const { rows } = await query(`
+            UPDATE users
+            SET first_name = $2,
+                last_name = $3,
+                password = $4
+            WHERE user_id = $1
+              AND email_verified = FALSE
+            RETURNING user_id, first_name, email, password
+            `, [userId, user.first_name, user.last_name, user.password]);
+        return rows[0] || null;
+    }
+
+    // Marks the email verified. Returns the user only if this call flipped it,
+    // so callers can tell a first-time verification from a repeat click.
+    async markEmailVerified(userId, email) {
+        const { rows } = await query(`
+            UPDATE users
+            SET email_verified = TRUE
+            WHERE user_id = $1
+              AND email = $2
+              AND email_verified = FALSE
+            RETURNING user_id, first_name, email
+            `, [userId, email]);
         return rows[0] || null;
     }
 

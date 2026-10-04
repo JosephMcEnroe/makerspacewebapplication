@@ -6,6 +6,7 @@ import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { isValidEmail, isValidLoginPassword, normalizeEmail } from "@/lib/validation";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { verifyCsrfToken } from "@/lib/csrf";
+import { sendVerificationEmail } from "@/lib/email";
 
 export default async function handler(req, res) {
     //Instantiate UserRepository
@@ -86,6 +87,25 @@ export default async function handler(req, res) {
             return res.status(401).json({
                 ok: false,
                 error: "invalid email or password",
+            });
+        }
+
+        //Unverified accounts can't sign in - send them a fresh verification link
+        if (user.email_verified === false) {
+            try {
+                await sendVerificationEmail(req, {
+                    userId: user.user_id,
+                    email: user.email,
+                    firstName: user.first_name,
+                    passwordHash: user.password,
+                });
+            } catch (emailError) {
+                console.error("Verification email error:", emailError);
+            }
+
+            return res.status(403).json({
+                ok: false,
+                error: "Please verify your email before signing in. We've sent a new verification link to your inbox.",
             });
         }
 

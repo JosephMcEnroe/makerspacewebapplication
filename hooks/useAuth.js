@@ -153,9 +153,8 @@ export function useAuth() {
         throw new Error(data.error || "Failed to sign up");
       }
 
-      const sessionUser = await sessionCheck();
-      if (!sessionUser) setUser(data.user);
-      return sessionUser ?? data.user;
+      //No session yet - the user has to verify their email first
+      return data;
     } catch (err){
       setError(err.message || "Faile to sign up a new account");
       return null;

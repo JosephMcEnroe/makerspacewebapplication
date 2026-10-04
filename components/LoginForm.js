@@ -30,6 +30,14 @@ export default function LoginForm() {
     error,
   } = useAuth();
 
+  //Set by /api/auth/verify-email after the user clicks the link in their email
+  const verifiedMessage =
+    router.query.verified === "1"
+      ? "Your email is verified. You can sign in now."
+      : router.query.verified === "invalid"
+        ? "That verification link is invalid or has expired. Sign in to get a new one."
+        : null;
+
   useEffect(() => {
     if (user) {
       redirectForRole(router, user.role);
@@ -100,6 +108,15 @@ export default function LoginForm() {
             required
           />
         </div>
+
+        {verifiedMessage && !error && (
+          <p
+            className={router.query.verified === "1" ? styles.successText : styles.errorText}
+            role="status"
+          >
+            {verifiedMessage}
+          </p>
+        )}
 
         {error && (
           <p className={styles.errorText} role="alert">
