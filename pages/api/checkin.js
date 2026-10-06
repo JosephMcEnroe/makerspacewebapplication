@@ -107,11 +107,13 @@ export default async function handler(req, res) {
     //
     // last_check_in no longer exists in users.
     // The check_in table is now the source of truth
-    // for all check-in history.
+    // for each user's latest successful check-in.
     if (decision === "green") {
       await query(
         `INSERT INTO check_in (user_id, datetime)
-         VALUES ($1, CURRENT_TIMESTAMP)`,
+         VALUES ($1, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id)
+         DO UPDATE SET datetime = EXCLUDED.datetime`,
         [user.user_id]
       );
     }
