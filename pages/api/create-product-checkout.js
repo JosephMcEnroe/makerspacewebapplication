@@ -32,8 +32,8 @@ export default async function handler(req, res) {
         },
       ],
       mode,
-      success_url: `${origin}/debugging/product-demo/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/debugging/product-demo?canceled=true`,
+      success_url: `${origin}/stripe/product-demo/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/stripe/product-demo?canceled=true`,
     });
 
     return res.status(200).json({ url: session.url });

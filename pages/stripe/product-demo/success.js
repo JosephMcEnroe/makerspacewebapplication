@@ -35,7 +35,7 @@ export default function ProductCheckoutSuccess() {
           )}
 
           <div className={styles.actionRow}>
-            <Link href="/debugging/product-demo" className={styles.checkoutBtn} style={{ textDecoration: "none" }}>
+            <Link href="/stripe/product-demo" className={styles.checkoutBtn} style={{ textDecoration: "none" }}>
               Back to Products
             </Link>
             <Link href="/dashboard" className={styles.secondaryBtn}>

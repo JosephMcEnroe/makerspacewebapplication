@@ -90,7 +90,7 @@ export default function ProductDemoPage() {
 
       <div className={styles.pageContainer}>
         <div className={styles.header}>
-          <Link href="/debugging" className={styles.backLink}>
+          <Link href="/stripe" className={styles.backLink}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="m15 18-6-6 6-6" />
             </svg>

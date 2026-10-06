@@ -79,7 +79,7 @@ export default function Debugging() {
 
       <div style={{ margin: "20px 0 30px" }}>
         <Link
-          href="/debugging/product-demo"
+          href="/stripe/product-demo"
           style={{
             display: "inline-block",
             padding: "12px 24px",
