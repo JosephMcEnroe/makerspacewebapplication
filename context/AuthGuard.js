@@ -6,6 +6,7 @@ const publicRoutes = [
     "/",
     "/login",
     "/register",
+    "/reservations",
 ];
 
 //This is to differentiate the public pages and private pages depending on user's authentication role
