@@ -136,9 +136,9 @@ export class UserRepository {
             SELECT
               m.user_id,
               m.status,
-              m.type_of_membership
+              m.role_of_membership
             FROM sessions s
-            JOIN member m
+            JOIN membership m
               ON s.user_id = m.user_id
             WHERE s.session_id = $1
               AND s.expires_at > NOW()

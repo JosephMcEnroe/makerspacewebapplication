@@ -29,6 +29,8 @@ export class checkInRepository {
             datetime
         )
         VALUES ($1, $2)
+        ON CONFLICT (user_id)
+        DO UPDATE SET datetime = EXCLUDED.datetime
         RETURNING user_id, datetime
         `, [
             userId,
