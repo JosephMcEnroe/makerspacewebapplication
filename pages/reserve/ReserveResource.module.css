@@ -1,0 +1,234 @@
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.backLink {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #905e49;
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+}
+
+.backLink:hover {
+  color: #b8632b;
+}
+
+.typeLabel {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #b8632b;
+  margin: 0 0 0.35rem 0;
+}
+
+.title {
+  font-family: "Oswald", sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #2b1916;
+  margin: 0 0 0.6rem 0;
+}
+
+.description {
+  font-size: 0.92rem;
+  color: #5c4536;
+  line-height: 1.55;
+  max-width: 560px;
+  margin: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #905e49;
+  margin: 0.75rem 0 0 0;
+}
+
+.metaDot {
+  color: #d8ccc2;
+}
+
+.header {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2.25rem;
+}
+
+.imagePlaceholder {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 220px;
+  aspect-ratio: 16 / 10;
+  background-color: #d9cabb;
+  border-radius: 14px;
+  color: #a3907d;
+}
+
+.form {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+}
+
+.formTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #2b1916;
+  margin: 0 0 0.35rem 0;
+}
+
+.bookingWindow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #a07865;
+  margin: 0 0 1.5rem 0;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2b1916;
+  margin-bottom: 0.4rem;
+}
+
+.input,
+.textarea {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: #2b1916;
+  background-color: #ffffff;
+  border: 1px solid #d8ccc2;
+  border-radius: 8px;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: 2px solid #f0a752;
+  outline-offset: 1px;
+  border-color: #f0a752;
+}
+
+.hint {
+  font-size: 0.72rem;
+  color: #a07865;
+  margin: 0.35rem 0 0 0;
+}
+
+.selectedRoomSlots {
+  margin-bottom: 1.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: 8px;
+  background: #f2f8ef;
+  color: #2b1916;
+}
+
+.selectedRoomSlots .label {
+  margin: 0 0 0.35rem;
+}
+
+.selectedRoomSlots ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.84rem;
+  line-height: 1.6;
+}
+
+.classNote {
+  font-size: 0.8rem;
+  color: #905e49;
+  background-color: #fdf1e2;
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  margin: 0 0 1.25rem 0;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.submitBtn {
+  display: inline-block;
+  margin-top: 0.5rem;
+  padding: 0.7rem 1.6rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: inherit;
+  color: #ffffff;
+  background-color: #f0a752;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background-color: #e5943a;
+}
+
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.unavailablePanel {
+  background-color: #ffffff;
+  border-radius: 14px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+  text-align: center;
+}
+
+.unavailableTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #2b1916;
+  margin: 0 0 0.5rem 0;
+}
+
+.unavailableText {
+  font-size: 0.88rem;
+  color: #a05c3a;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .header {
+    flex-direction: column-reverse;
+  }
+
+  .imagePlaceholder {
+    width: 100%;
+  }
+
+  .fieldRow {
+    grid-template-columns: 1fr;
+  }
+}

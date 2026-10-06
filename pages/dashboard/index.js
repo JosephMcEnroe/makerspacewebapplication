@@ -22,7 +22,7 @@ const EQUIPMENT = [
 const ROOMS = [
   {
     name: "Main Studio",
-    description: "Spacious open workspace with natural lighting, perfect for larger projects and collaborative work. Features multiple workstations and ample storage.",
+    description: "Spacious open workspace with natural lighting. Features multiple workstations and plenty of storage for members.",
   },
   {
     name: "Podcast Recording Room",

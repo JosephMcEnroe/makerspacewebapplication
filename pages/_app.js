@@ -13,6 +13,7 @@ const SIDEBAR_ROUTES = [
   "/rooms",
   "/classes",
   "/equipment",
+  "/reserve",
 ];
 
 // Placeholder user — replace with real auth session when backend is wired up
