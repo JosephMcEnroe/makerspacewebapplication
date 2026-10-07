@@ -5,6 +5,7 @@ export class roomRepository {
         const { rows } = await query(
             `SELECT room_id, name, type, cost
             FROM "room"
+            ORDER BY name
         `);
         return rows;
     }

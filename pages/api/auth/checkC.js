@@ -1,5 +1,6 @@
 import { parse } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
+import { formatYear } from "@/lib/format";
 
 export default async function handler(req, res) {
     try {
@@ -30,7 +31,10 @@ export default async function handler(req, res) {
             user: {
                 id: user.user_id,
                 status: user.status,
-                role: user.type_of_membership,
+                role: user.role_of_membership,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                memberSince: formatYear(user.period_start_date),
             },
         });
     } catch (error) {

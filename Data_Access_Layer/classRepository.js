@@ -6,8 +6,9 @@ export class classRepository {
             `SELECT class_id, name_of_class, user_id, description,
                    class_date, class_time, max_capacity
             FROM "class"
+            ORDER BY class_date, class_time
         `);
-        return rows[0] || null;
+        return rows;
     }
 
     async findClass(classID) {
