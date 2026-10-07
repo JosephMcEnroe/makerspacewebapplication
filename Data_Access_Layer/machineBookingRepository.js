@@ -12,11 +12,12 @@ export class machineBookingRepository {
 
     async findUserBooking(userId) {
         const { rows } = await query(
-            `SELECT user_id, booking_id, machine_id, start_date_time,
-                end_date_time
-         FROM "machine_booking"
-         WHERE user_id = $1
-         ORDER BY start_date_time DESC`,
+            `SELECT b.user_id, b.booking_id, b.machine_id, b.start_date_time,
+                b.end_date_time, m.name AS machine_name
+         FROM "machine_booking" b
+         LEFT JOIN "machine" m ON m.machine_id = b.machine_id
+         WHERE b.user_id = $1
+         ORDER BY b.start_date_time DESC`,
             [userId]
         );
 

@@ -1,46 +1,17 @@
 import ExplorePage from "@/components/ExplorePage";
+import { loadClasses } from "@/lib/resources";
 
-// Placeholder until class data is wired up to the database
-const CLASSES = [
-  {
-    name: "Beginner Laser Cutting",
-    description:
-      "Learn vector design for laser cutting and master the cutter. Create custom projects from coasters to signage.",
-    time: "4:15 PM",
-    spots: "12/20",
-  },
-  {
-    name: "Advanced 3D Printing",
-    description:
-      "Complete introduction to FDM and resin printing. Covers CAD basics, slicing software, and post-processing techniques.",
-    time: "6:30 PM",
-    spots: "8/35",
-  },
-  {
-    name: "Woodworking Workshop",
-    description:
-      "Master table saw techniques, joinery methods, and finishing. Build a custom furniture piece from start to finish.",
-    time: "2:00 PM",
-    spots: "15/20",
-  },
-  {
-    name: "Intro to Ceramics",
-    description:
-      "Hands-on introduction to wheel throwing and hand building. All materials and firings included.",
-    time: "5:00 PM",
-    spots: "6/12",
-    unavailable: true,
-    unavailableNote: "Fully booked this month — join the waitlist at the front desk.",
-  },
-];
+export async function getServerSideProps() {
+  return { props: { classes: await loadClasses() } };
+}
 
-export default function ClassesPage() {
+export default function ClassesPage({ classes }) {
   return (
     <ExplorePage
       title="Classes"
       intro="Browse upcoming classes and workshops at The Crafty Studio — from first-timer introductions to advanced technique deep dives."
       bookingWindow="Classes can be reserved up to 1 month in advance."
-      items={CLASSES}
+      items={classes}
     />
   );
 }

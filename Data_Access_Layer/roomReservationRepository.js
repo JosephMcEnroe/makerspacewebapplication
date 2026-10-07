@@ -21,6 +21,19 @@ export class roomReservationRepository {
         return rows[0] || null;
     }
 
+    async findUserRoomReservations(userId) {
+        const { rows } = await query(
+            `SELECT rr.reservation_id, rr.user_id, rr.room_id,
+                   rr.start_date, rr.end_date, rr.status, r.name AS room_name
+            FROM "room_reservation" rr
+            LEFT JOIN "room" r ON r.room_id = rr.room_id
+            WHERE rr.user_id = $1
+            ORDER BY rr.start_date DESC
+        `, [userId]);
+
+        return rows;
+    }
+
     async createRoomReservation(reservation) {
         const { rows } = await query(
             `INSERT INTO "room_reservation" (

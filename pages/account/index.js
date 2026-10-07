@@ -3,19 +3,38 @@ import AccountInfoForm from "@/components/AccountInfoForm";
 import styles from "@/styles/Account.module.css";
 
 import { useAuth } from "@/hooks/useAuth";
+import { UserRepository } from "@/Data_Access_Layer/UserRepository";
+import { getSessionUser, loginRedirect } from "@/lib/session";
+import { formatYear, toISODate } from "@/lib/format";
 
-// Placeholder until account data is wired up to the database
-const MOCK_ACCOUNT = {
-  accountId: "123456",
-  firstName: "Alex",
-  lastName: "Chen",
-  dateOfBirth: "",
-  email: "alex.chen@email.com",
-  phoneNumber: "(555) 123-4567",
-  memberSince: "2025",
-};
+export async function getServerSideProps({ req, resolvedUrl }) {
+  const sessionUser = await getSessionUser(req);
+  if (!sessionUser) {
+    return loginRedirect(resolvedUrl);
+  }
 
-export default function AccountPage() {
+  const userQuery = new UserRepository();
+  const dbUser = await userQuery.findById(sessionUser.user_id);
+  if (!dbUser) {
+    return loginRedirect(resolvedUrl);
+  }
+
+  return {
+    props: {
+      account: {
+        accountId: String(dbUser.user_id),
+        firstName: dbUser.first_name ?? "",
+        lastName: dbUser.last_name ?? "",
+        dateOfBirth: toISODate(dbUser.date_of_birth),
+        email: dbUser.email ?? "",
+        phoneNumber: dbUser.phone_number ?? "",
+        memberSince: formatYear(sessionUser.period_start_date),
+      },
+    },
+  };
+}
+
+export default function AccountPage({ account }) {
   //add the user auth check here
   const { user, loading } = useAuth();
 
@@ -36,8 +55,8 @@ export default function AccountPage() {
         <meta name="description" content="Manage your Crafty Studio account information" />
       </Head>
       <h1 className={styles.title}>ACCOUNT INFORMATION</h1>
-      <p className={styles.subtitle}>Account ID: {MOCK_ACCOUNT.accountId}</p>
-      <AccountInfoForm account={MOCK_ACCOUNT} />
+      <p className={styles.subtitle}>Account ID: {account.accountId}</p>
+      <AccountInfoForm account={account} />
     </>
   );
 }

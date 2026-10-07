@@ -15,9 +15,6 @@ const SIDEBAR_ROUTES = [
   "/equipment",
 ];
 
-// Placeholder user — replace with real auth session when backend is wired up
-const MOCK_USER = { name: "Alex Chen", memberSince: "2025" };
-
 export default function App({ Component, pageProps }) {
   const router = useRouter();
   const useSidebar = SIDEBAR_ROUTES.some(
@@ -42,7 +39,7 @@ export default function App({ Component, pageProps }) {
         </Head>
 
         {useSidebar ? (
-          <DashboardLayout user={MOCK_USER}>
+          <DashboardLayout>
             <Component {...pageProps} />
           </DashboardLayout>
         ) : (

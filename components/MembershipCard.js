@@ -29,11 +29,13 @@ export default function MembershipCard({ membership }) {
         <div className={styles.details}>
           <div className={styles.detail}>
             <p className={styles.detailLabel}>Monthly Cost</p>
-            <p className={styles.detailValue}>${membership.monthlyCost.toFixed(2)}</p>
+            <p className={styles.detailValue}>
+              {membership.monthlyCost != null ? `$${membership.monthlyCost.toFixed(2)}` : "—"}
+            </p>
           </div>
           <div className={styles.detail}>
             <p className={styles.detailLabel}>Next Billing Date</p>
-            <p className={styles.detailValue}>{membership.nextBillingDate}</p>
+            <p className={styles.detailValue}>{membership.nextBillingDate || "—"}</p>
           </div>
         </div>
 
