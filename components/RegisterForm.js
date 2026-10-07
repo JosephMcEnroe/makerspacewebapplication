@@ -5,8 +5,12 @@ import { useState } from "react";
 import styles from "./RegisterForm.module.css";
 
 import { useAuth } from "@/hooks/useAuth";
+// DEV ONLY - see EMAIL VERIFICATION note below
+import { useRouter } from "next/router";
 
 export default function RegisterForm() {
+  const router = useRouter();
+
   const {
     user,
     signup,
@@ -49,7 +53,13 @@ export default function RegisterForm() {
       return;
     }
 
-    setPendingEmail(result.email);
+    // EMAIL VERIFICATION DISABLED - commented out for now for easier development
+    // (Resend needs a verified domain before prod). Swap the DEV ONLY line for this
+    // to show the "Check your email" screen again. See pages/api/auth/signup.js.
+    // setPendingEmail(result.email);
+
+    // DEV ONLY - signup logs the user straight in
+    router.push("/dashboard");
   };
 
   if (pendingEmail) {

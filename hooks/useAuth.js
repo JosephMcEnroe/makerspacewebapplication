@@ -153,8 +153,16 @@ export function useAuth() {
         throw new Error(data.error || "Failed to sign up");
       }
 
-      //No session yet - the user has to verify their email first
-      return data;
+      // EMAIL VERIFICATION DISABLED - commented out for now for easier development
+      // (Resend needs a verified domain before prod). Swap the DEV ONLY lines for
+      // this when turning it back on. See pages/api/auth/signup.js.
+      // //No session yet - the user has to verify their email first
+      // return data;
+
+      // DEV ONLY - signup logs the user in, so load the session user
+      const sessionUser = await sessionCheck();
+      if (!sessionUser) setUser(data.user);
+      return sessionUser ?? data.user;
     } catch (err){
       setError(err.message || "Faile to sign up a new account");
       return null;
