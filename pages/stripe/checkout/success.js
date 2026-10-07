@@ -1,12 +1,8 @@
 import Head from "next/head";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import styles from "@/styles/ProductDemo.module.css";
+import styles from "@/styles/StripeCheckout.module.css";
 
 export default function ProductCheckoutSuccess() {
-  const router = useRouter();
-  const { session_id } = router.query;
-
   return (
     <>
       <Head>
@@ -24,22 +20,15 @@ export default function ProductCheckoutSuccess() {
 
           <h1 className={styles.successTitle}>Payment Successful!</h1>
           <p className={styles.successText}>
-            Thank you for your order. Your Stripe payment has been confirmed and processed successfully.
+            Payment confirmed and processed successfully. Thank you for choosing Crafty Studio!
           </p>
 
-          {session_id && (
-            <div className={styles.sessionBox}>
-              <strong>Stripe Session ID:</strong>
-              <div>{session_id}</div>
-            </div>
-          )}
-
           <div className={styles.actionRow}>
-            <Link href="/stripe/product-demo" className={styles.checkoutBtn} style={{ textDecoration: "none" }}>
-              Back to Products
+            <Link href="/dashboard" className={styles.checkoutBtn} style={{ textDecoration: "none" }}>
+              View Available Equipment
             </Link>
-            <Link href="/dashboard" className={styles.secondaryBtn}>
-              Go to Dashboard
+            <Link href="/membership" className={styles.secondaryBtn}>
+              Return to Dashboard
             </Link>
           </div>
         </div>

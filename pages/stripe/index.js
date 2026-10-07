@@ -88,7 +88,7 @@ export default function Debugging() {
 
       <div style={{ margin: "20px 0 30px" }}>
         <Link
-          href="/stripe/product-demo"
+          href="/stripe/checkout"
           style={{
             display: "inline-block",
             padding: "12px 24px",
@@ -100,7 +100,7 @@ export default function Debugging() {
             boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
           }}
         >
-          🎨 View Styled Product Cards & Checkout Demo &rarr;
+          🎨 View Product Checkout &rarr;
         </Link>
       </div>
 
