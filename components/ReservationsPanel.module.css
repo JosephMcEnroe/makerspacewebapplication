@@ -75,31 +75,25 @@
 
 .cardHeader {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
-  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
   margin-bottom: 0.85rem;
 }
 
 .cardName {
-  max-width: 100%;
   font-size: 0.92rem;
   font-weight: 700;
   color: #2b1916;
-  overflow-wrap: anywhere;
   margin: 0;
 }
 
 .cardTime {
-  max-width: 100%;
   font-size: 0.8rem;
   color: #905e49;
   font-weight: 600;
-  line-height: 1.4;
-  white-space: normal;
-  overflow-wrap: anywhere;
   margin: 0;
+  white-space: nowrap;
 }
 
 .cardActions {
@@ -108,8 +102,7 @@
 }
 
 .editBtn,
-.cancelBtn,
-.deleteBtn {
+.cancelBtn {
   padding: 0.42rem 1rem;
   font-size: 0.8rem;
   font-weight: 600;
@@ -141,100 +134,14 @@
   border-color: #c4b5a8;
 }
 
-.deleteBtn {
-  color: #a73623;
-  background-color: #ffffff;
-  border: 1px solid #d9a79e;
-}
-
-.deleteBtn:hover {
-  background-color: #fff2ef;
-  border-color: #b8412b;
-}
-
 .editBtn:disabled,
-.cancelBtn:disabled,
-.deleteBtn:disabled {
+.cancelBtn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-
-.confirmationBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 1100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.25rem;
-  background: rgba(31, 20, 16, 0.62);
-}
-
-.confirmationCard {
-  width: min(440px, 100%);
-  padding: 1.75rem;
-  border-radius: 14px;
-  background: #fffaf3;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
-}
-
-.confirmationTitle {
-  margin: 0 0 0.65rem;
-  color: #2b1916;
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-
-.confirmationText {
-  margin: 0;
-  color: #6b5347;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-
-.confirmationActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.65rem;
-  margin-top: 1.5rem;
-}
-
-.keepReservationBtn,
-.confirmCancelBtn,
-.confirmDeleteBtn {
-  padding: 0.6rem 0.9rem;
-  border-radius: 8px;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.keepReservationBtn {
-  color: #6b5347;
-  background: #ffffff;
-  border: 1px solid #d8ccc2;
-}
-
-.confirmCancelBtn,
-.confirmDeleteBtn {
-  color: #ffffff;
-  background: #b8412b;
-  border: 1px solid #a73623;
-}
-
-.confirmCancelBtn:hover,
-.confirmDeleteBtn:hover {
-  background: #9f3422;
 }
 
 @media (max-width: 640px) {
   .cardGrid {
     grid-template-columns: 1fr;
-  }
-
-  .confirmationActions {
-    flex-direction: column-reverse;
   }
 }

@@ -8,9 +8,8 @@ export async function getServerSideProps() {
 export default function ClassesPage({ classes }) {
   return (
     <ExplorePage
-      type="classes"
       title="Classes"
-      intro="Browse upcoming classes and workshops at The Crafty Studio — from first-timer introductions to advanced technique deep dives. Click any class to reserve a spot."
+      intro="Browse upcoming classes and workshops at The Crafty Studio — from first-timer introductions to advanced technique deep dives."
       bookingWindow="Classes can be reserved up to 1 month in advance."
       items={classes}
     />
