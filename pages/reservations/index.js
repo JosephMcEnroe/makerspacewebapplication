@@ -1,10 +1,5 @@
 import Head from "next/head";
 import ReservationsPanel from "@/components/ReservationsPanel";
-import WeeklyAvailability from "@/components/WeeklyAvailability";
-import { useAuthContext } from "@/context/AuthContext";
-import { saveClientReservations, subscribeClientReservations, getClientReservationsSnapshot } from "@/lib/clientReservations";
-import { getResource, RESOURCE_TYPES } from "@/lib/resources";
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
 import styles from "@/styles/Account.module.css";
 import { machineBookingRepository } from "@/Data_Access_Layer/machineBookingRepository";
 import { roomReservationRepository } from "@/Data_Access_Layer/roomReservationRepository";
@@ -87,6 +82,5 @@ export default function ReservationsPage({ reservations }) {
       <h1 className={styles.title}>RESERVATIONS</h1>
       <ReservationsPanel reservations={reservations} />
     </>
-
   );
 }

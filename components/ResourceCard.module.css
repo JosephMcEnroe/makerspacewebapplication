@@ -3,8 +3,6 @@
   overflow: hidden;
   background-color: #f0a752;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-  /* Fill the grid cell so all cards in a row share the same height */
-  height: 100%;
 }
 
 .imagePlaceholder {
