@@ -1,0 +1,13 @@
+.page { color: #f5e9df; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 1.75rem; }
+.toolbar h1 { margin-bottom: .5rem; }
+.description, .notice { color: #bda99a; font-size: .9rem; line-height: 1.6; }
+.description { max-width: 560px; }
+.notice { margin: 1rem 0 1.75rem; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.button, .secondaryButton { display: inline-block; border: 1px solid #f0a752; border-radius: 8px; padding: .7rem 1rem; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.button { background: #f0a752; color: #211510; }
+.secondaryButton { background: transparent; color: #f0a752; }
+.button:disabled { opacity: .55; cursor: wait; }
+.button:focus-visible, .secondaryButton:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+.error { color: #f2a6a0; margin: 1rem 0; }

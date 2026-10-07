@@ -2,16 +2,16 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import styles from "./StaffNavbar.module.css";
 
-const NAV_ITEMS = (role) => [
+const NAV_ITEMS = (role, reportsHref) => [
   { label: "Dashboard", href: `/${role}` },
   { label: "Members", href: "/members" },
   { label: "Equipment", href: "/equipment" },
-  { label: "Reports", href: "/reports" },
+  { label: "Reports", href: reportsHref },
 ];
 
-export default function StaffNavbar({ role = "staff", initials = "AC" }) {
+export default function StaffNavbar({ role = "staff", initials = "AC", reportsHref = "/reports" }) {
   const router = useRouter();
-  const navItems = NAV_ITEMS(role);
+  const navItems = NAV_ITEMS(role, reportsHref);
 
   return (
     <header className={styles.navbar}>

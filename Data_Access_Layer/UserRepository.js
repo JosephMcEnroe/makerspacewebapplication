@@ -163,14 +163,14 @@ export class UserRepository {
     async findByCookie(sessionId) {
         const { rows } = await query(`
             SELECT
-              m.user_id,
+              u.user_id,
               m.status,
               m.role_of_membership,
               m.period_start_date,
               u.first_name,
               u.last_name
             FROM sessions s
-            JOIN membership m
+            LEFT JOIN membership m
               ON s.user_id = m.user_id
             JOIN users u
               ON u.user_id = s.user_id

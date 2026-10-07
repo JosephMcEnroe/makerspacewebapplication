@@ -42,6 +42,7 @@ export default function Debugging() {
     return (
       <div style={{ padding: "40px" }}>
         <h1>Stripe Debugging</h1>
+        <Link href="/stripe/reports">View Stripe Reports &rarr;</Link>
         <p>Loading products...</p>
       </div>
     );
@@ -51,6 +52,7 @@ export default function Debugging() {
     return (
       <div style={{ padding: "40px" }}>
         <h1>Stripe Debugging</h1>
+        <Link href="/stripe/reports">View Stripe Reports &rarr;</Link>
 
         <h2>Error</h2>
 
@@ -77,9 +79,16 @@ export default function Debugging() {
     >
       <h1>Stripe Debugging</h1>
 
+      <Link
+        href="/stripe/reports"
+        style={{ display: "inline-block", padding: "12px 24px", backgroundColor: "#2b1916", color: "#fff", borderRadius: "8px", textDecoration: "none", fontWeight: "bold" }}
+      >
+        View Stripe Reports &rarr;
+      </Link>
+
       <div style={{ margin: "20px 0 30px" }}>
         <Link
-          href="/stripe/product-demo"
+          href="/stripe/checkout"
           style={{
             display: "inline-block",
             padding: "12px 24px",
@@ -91,7 +100,7 @@ export default function Debugging() {
             boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
           }}
         >
-          🎨 View Styled Product Cards & Checkout Demo &rarr;
+          🎨 View Product Checkout &rarr;
         </Link>
       </div>
 

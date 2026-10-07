@@ -2,7 +2,7 @@
 
 import styles from "./MembershipCard.module.css";
 
-export default function MembershipCard({ membership }) {
+export default function MembershipCard({ membership, showActions = true }) {
   const handleAutoRenewToggle = () => {
     // Future: persist auto-renew preference via API
     console.log("Toggle auto-renew");
@@ -30,23 +30,23 @@ export default function MembershipCard({ membership }) {
           <div className={styles.detail}>
             <p className={styles.detailLabel}>Monthly Cost</p>
             <p className={styles.detailValue}>
-              {membership.monthlyCost != null ? `$${membership.monthlyCost.toFixed(2)}` : "—"}
+              {membership.monthlyCost != null ? new Intl.NumberFormat("en-US", { style: "currency", currency: membership.currency || "usd" }).format(membership.monthlyCost) : "Unavailable"}
             </p>
           </div>
           <div className={styles.detail}>
             <p className={styles.detailLabel}>Next Billing Date</p>
-            <p className={styles.detailValue}>{membership.nextBillingDate || "—"}</p>
+            <p className={styles.detailValue}>{membership.nextBillingDate || "Unavailable"}</p>
           </div>
         </div>
 
-        <div className={styles.actions}>
+        {showActions && (<div className={styles.actions}>
           <button type="button" className={styles.autoRenewBtn} onClick={handleAutoRenewToggle}>
             {membership.autoRenew ? "Disable Auto-Renew" : "Enable Auto-Renew"}
           </button>
           <button type="button" className={styles.cancelBtn} onClick={handleCancelMembership}>
             Cancel Membership
           </button>
-        </div>
+        </div>)}
       </div>
 
       <div className={styles.promoCard}>

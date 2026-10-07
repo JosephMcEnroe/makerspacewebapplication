@@ -22,7 +22,6 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   return {
     props: {
       account: {
-        accountId: String(dbUser.user_id),
         firstName: dbUser.first_name ?? "",
         lastName: dbUser.last_name ?? "",
         dateOfBirth: toISODate(dbUser.date_of_birth),
@@ -55,7 +54,6 @@ export default function AccountPage({ account }) {
         <meta name="description" content="Manage your Crafty Studio account information" />
       </Head>
       <h1 className={styles.title}>ACCOUNT INFORMATION</h1>
-      <p className={styles.subtitle}>Account ID: {account.accountId}</p>
       <AccountInfoForm account={account} />
     </>
   );

@@ -60,8 +60,8 @@ export default async function handler(req, res) {
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode,
-      success_url: `${origin}/stripe/product-demo/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/stripe/product-demo?canceled=true`,
+      success_url: `${origin}/stripe/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/stripe/checkout?canceled=true`,
     });
 
     return res.status(200).json({ url: session.url });
