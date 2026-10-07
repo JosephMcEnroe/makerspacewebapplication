@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import MembershipCard from "@/components/MembershipCard";
 import StripeProductCard from "@/components/StripeProductCard";
 import productStyles from "@/styles/StripeCheckout.module.css";
-import { MEMBERSHIP_PRODUCT_ID, selectMembershipProducts, getMonthlyMembershipCost } from "@/lib/membershipProducts";
+import { selectMembershipProducts, getMonthlyMembershipProduct, getMonthlyMembershipCost, hasMembershipOptions } from "@/lib/membershipProducts";
 import styles from "@/styles/Account.module.css";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { getSessionUser, loginRedirect } from "@/lib/session";
@@ -74,7 +74,7 @@ export default function MembershipPage({ membership }) {
     }
   }
 
-  const monthlyProduct = products.find((product) => product.id === MEMBERSHIP_PRODUCT_ID);
+  const monthlyProduct = getMonthlyMembershipProduct(products);
   const billingMembership = {
     ...membership,
     monthlyCost: getMonthlyMembershipCost(monthlyProduct),
@@ -95,7 +95,7 @@ export default function MembershipPage({ membership }) {
         <>
           <p className={styles.subtitle}>Choose a monthly membership or a day pass.</p>
           {checkoutError && <p role="alert" className={`${productStyles.noticeBanner} ${productStyles.errorBanner}`}>{checkoutError}</p>}
-          {!loading && !error && products.length < 2 && <p role="status">Some membership options are currently unavailable.</p>}
+          {!loading && !error && !hasMembershipOptions(products) && <p role="status">Some membership options are currently unavailable.</p>}
           <div className={styles.membershipGrid}>
             {products.map((product) => (
               <StripeProductCard key={product.id} product={product} loadingPriceId={loadingPriceId} onCheckout={handleCheckout} />
