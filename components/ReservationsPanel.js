@@ -15,15 +15,10 @@ const SECTIONS = [
   { key: "cancelled", label: "Cancelled Reservations", editable: false },
 ];
 
-function ReservationCard({ reservation, editable }) {
+function ReservationCard({ reservation, editable, showDelete, onCancel, onDelete, onEdit }) {
   const handleEdit = () => {
     // Future: open edit flow via API
     console.log("Edit reservation:", reservation.id);
-  };
-
-  const handleCancel = () => {
-    // Future: cancel reservation via API
-    console.log("Cancel reservation:", reservation.id);
   };
 
   return (
@@ -36,19 +31,28 @@ function ReservationCard({ reservation, editable }) {
         <button
           type="button"
           className={styles.editBtn}
-          onClick={handleEdit}
-          disabled={!editable}
+          onClick={() => reservation.canEdit ? onEdit(reservation) : handleEdit()}
+          disabled={!editable || reservation.canEdit === false}
         >
           Edit
         </button>
         <button
           type="button"
           className={styles.cancelBtn}
-          onClick={handleCancel}
-          disabled={!editable}
+          onClick={() => onCancel(reservation)}
+          disabled={!editable || reservation.canCancel === false}
         >
           Cancel
         </button>
+        {showDelete && reservation.canDelete && (
+          <button
+            type="button"
+            className={styles.deleteBtn}
+            onClick={() => onDelete(reservation)}
+          >
+            Delete
+          </button>
+        )}
       </div>
       {reservation.trainingRequired && (
         <span className={styles.trainingBadge}>Training Required</span>
@@ -57,8 +61,9 @@ function ReservationCard({ reservation, editable }) {
   );
 }
 
-export default function ReservationsPanel({ reservations }) {
+export default function ReservationsPanel({ reservations, onCancelReservation, onDeleteCancelledReservation, onEditReservation }) {
   const [activeType, setActiveType] = useState("class");
+  const [pendingAction, setPendingAction] = useState(null);
   const active = TYPES.find((type) => type.key === activeType);
   const data = reservations[active.key] || {
     upcoming: [],
@@ -97,6 +102,10 @@ export default function ReservationsPanel({ reservations }) {
                   key={reservation.id}
                   reservation={reservation}
                   editable={section.editable}
+                  showDelete={section.key === "cancelled"}
+                  onCancel={(reservation) => setPendingAction({ type: "cancel", reservation })}
+                  onDelete={(reservation) => setPendingAction({ type: "delete", reservation })}
+                  onEdit={onEditReservation}
                 />
               ))}
             </div>
@@ -105,6 +114,53 @@ export default function ReservationsPanel({ reservations }) {
           )}
         </div>
       ))}
+
+      {pendingAction && (
+        <div
+          className={styles.confirmationBackdrop}
+          onClick={() => setPendingAction(null)}
+        >
+          <section
+            className={styles.confirmationCard}
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="reservation-confirm-title"
+            aria-describedby="reservation-confirm-description"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="reservation-confirm-title" className={styles.confirmationTitle}>
+              {pendingAction.type === "delete" ? "Delete this cancelled reservation?" : "Cancel this reservation?"}
+            </h2>
+            <p id="reservation-confirm-description" className={styles.confirmationText}>
+              {pendingAction.reservation.name} — {pendingAction.reservation.time}
+              {pendingAction.type === "delete" && " This cannot be undone."}
+            </p>
+            <div className={styles.confirmationActions}>
+              <button
+                type="button"
+                className={styles.keepReservationBtn}
+                onClick={() => setPendingAction(null)}
+              >
+                {pendingAction.type === "delete" ? "Keep Cancelled Reservation" : "Keep Reservation"}
+              </button>
+              <button
+                type="button"
+                className={pendingAction.type === "delete" ? styles.confirmDeleteBtn : styles.confirmCancelBtn}
+                onClick={() => {
+                  if (pendingAction.type === "delete") {
+                    onDeleteCancelledReservation?.(pendingAction.reservation);
+                  } else {
+                    onCancelReservation?.(pendingAction.reservation);
+                  }
+                  setPendingAction(null);
+                }}
+              >
+                {pendingAction.type === "delete" ? "Yes, Delete Reservation" : "Yes, Cancel Reservation"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

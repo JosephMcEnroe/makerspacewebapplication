@@ -13,6 +13,7 @@ const SIDEBAR_ROUTES = [
   "/rooms",
   "/classes",
   "/equipment",
+  "/reserve",
 ];
 
 export default function App({ Component, pageProps }) {
