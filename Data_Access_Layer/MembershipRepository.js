@@ -20,6 +20,55 @@ export class membershipRepositry {
         return rows[0] || null;
     }
 
+    //Returns true if the user is an active member
+    async isActiveMember(userId) {
+        const { rows } = await query(
+            `SELECT EXISTS (
+                SELECT 1
+                FROM "membership"
+                WHERE user_id = $1
+                  AND UPPER(TRIM(status)) = 'ACTIVE'
+             ) AS is_member`,
+            [userId]
+        );
+        return rows[0]?.is_member === true;
+    }
+
+    //Marks the user's membership ACTIVE for the given period (used by the Stripe webhook).
+    //Creates the membership row if the user somehow doesn't have one yet.
+    async activateMembership(userId, periodStartDate, periodEndDate) {
+        const updated = await query(
+            `UPDATE "membership"
+             SET status = 'ACTIVE',
+                 period_start_date = $2,
+                 period_end_date = $3
+             WHERE user_id = $1
+             RETURNING membership_id, user_id, status, period_start_date, period_end_date`,
+            [userId, periodStartDate, periodEndDate]
+        );
+        if (updated.rows[0]) return updated.rows[0];
+
+        const inserted = await query(
+            `INSERT INTO "membership" (user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status)
+             VALUES ($1, 'MEMBER', $2, $3, NULL, 'ACTIVE')
+             RETURNING membership_id, user_id, status, period_start_date, period_end_date`,
+            [userId, periodStartDate, periodEndDate]
+        );
+        return inserted.rows[0] || null;
+    }
+
+    //Marks the user's membership is inactive
+    async deactivateMembership(userId) {
+        const { rows } = await query(
+            `UPDATE "membership"
+             SET status = 'INACTIVE'
+             WHERE user_id = $1
+             RETURNING membership_id, user_id, status`,
+            [userId]
+        );
+        return rows[0] || null;
+    }
+
     async createMembership(membership) {
         const { rows } = await query(
             `INSERT INTO "membership" (

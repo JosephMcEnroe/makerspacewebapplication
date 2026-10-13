@@ -8,12 +8,22 @@ import MachineUsageList from "@/components/MachineUsageList";
 import ActionCard from "@/components/ActionCard";
 import styles from "@/styles/AdminDashboard.module.css";
 
-import { useAuth } from "@/hooks/useAuth";
-//Perhaps create a global redirect function?
-import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { adminRepository } from "@/Data_Access_Layer/adminRepository";
+import { getSessionUser, loginRedirect } from "@/lib/session";
 
-const DATE_LABEL = "Mon, Mar 12, 2026";
+// Only admins can open this page; everyone else is sent to their dashboard
+export async function getServerSideProps({ req, resolvedUrl }) {
+  const sessionUser = await getSessionUser(req);
+  if (!sessionUser) {
+    return loginRedirect(resolvedUrl);
+  }
+
+  if (!(await new adminRepository().isAdmin(sessionUser.user_id))) {
+    return { redirect: { destination: "/dashboard", permanent: false } };
+  }
+
+  return { props: {} };
+}
 
 // Placeholder until revenue/usage data is wired up to the database
 // Dummy data — once a database is connected, these stat cards should pull
@@ -80,20 +90,7 @@ const ExportIcon = (
   </svg>
 );
 
-//Add the redirect function
 export default function AdminDashboardPage() {
-  const { user, loading, error } = useAuth();
-
-  if(loading) {
-    return <p>Checking authentication...</p>;
-  }
-
-  //This was to test the role authentication - use the redirect route back where it came from
-  if(user.role !== "admin"){
-    return <p>Not authorized</p>;
-  }
-
-
   return (
     <>
       <Head>
@@ -102,11 +99,11 @@ export default function AdminDashboardPage() {
       </Head>
       <div className={styles.page}>
         <StaffNavbar role="admin" />
-        {/* This h1 is to test the user data that is stored across the pages */}
-        {/* This is a good way to authenticate the user's role before it can access the page (not just admin page) */}
-        <h1>Hello, {user?.id}</h1>
         <div className={styles.content}>
-          <p className={styles.date}>{DATE_LABEL}</p>
+          {/* Server and browser clocks can differ, so let the browser's date win */}
+          <p className={styles.date} suppressHydrationWarning>
+            {new Date().toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+          </p>
           <h1 className={styles.heading}>Revenue &amp; Operations</h1>
 
           {/* Dummy data — see REVENUE_STATS above; wire up to the database once it exists */}

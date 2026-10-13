@@ -20,6 +20,22 @@ export class StaffRepository {
         return rows[0] || null;
     }
 
+    //Returns true if the user is staff (staff table or STAFF membership role)
+    async isStaff(userId) {
+        const { rows } = await query(
+            `SELECT EXISTS (
+                SELECT 1 FROM "staff" WHERE user_id = $1
+             ) OR EXISTS (
+                SELECT 1
+                FROM "membership"
+                WHERE user_id = $1
+                  AND UPPER(TRIM(role_of_membership)) = 'STAFF'
+             ) AS is_staff`,
+            [userId]
+        );
+        return rows[0]?.is_staff === true;
+    }
+
     async createStaff(userId) {
         const { rows } = await query(
             `INSERT INTO "staff" (user_id)

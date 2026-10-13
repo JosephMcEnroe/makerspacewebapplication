@@ -55,11 +55,18 @@ export default async function handler(req, res) {
     const price = await stripe.prices.retrieve(priceId);
     const mode = price.type === "recurring" ? "subscription" : "payment";
 
+    // user_id is attached so the Stripe webhook knows whose membership to activate.
+    // For subscriptions it is also copied onto the subscription so renewals/cancellations can be matched.
+    const userId = String(user.user_id);
+
     const session = await stripe.checkout.sessions.create({
       customer_email: user.email,
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode,
+      client_reference_id: userId,
+      metadata: { user_id: userId },
+      ...(mode === "subscription" && { subscription_data: { metadata: { user_id: userId } } }),
       success_url: `${origin}/stripe/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/stripe/checkout?canceled=true`,
     });
