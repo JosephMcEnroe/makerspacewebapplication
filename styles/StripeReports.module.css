@@ -11,3 +11,9 @@
 .button:disabled { opacity: .55; cursor: wait; }
 .button:focus-visible, .secondaryButton:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
 .error { color: #f2a6a0; margin: 1rem 0; }
+
+.revenueChart {
+  width: 100%;
+  height: clamp(280px, 35vw, 380px);
+  min-width: 0;
+}
