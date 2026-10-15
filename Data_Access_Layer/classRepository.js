@@ -4,9 +4,9 @@ export class classRepository {
     async findAllClass() {
         const { rows } = await query(
             `SELECT class_id, name_of_class, user_id, description,
-                   class_date, class_time, max_capacity
+                   class_date, max_capacity
             FROM "class"
-            ORDER BY class_date, class_time
+            ORDER BY class_date
         `);
         return rows;
     }
@@ -14,7 +14,7 @@ export class classRepository {
     async findClass(classID) {
         const { rows } = await query(
             `SELECT class_id, name_of_class, user_id, description,
-                   class_date, class_time, max_capacity
+                   class_date, max_capacity
             FROM "class"
             WHERE class_id = $1
         `, [classID]);
@@ -28,18 +28,16 @@ export class classRepository {
                 user_id,
                 description,
                 class_date,
-                class_time,
                 max_capacity
             )
-            VALUES ($1, $2, $3, $4, $5, $6)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING class_id, name_of_class, user_id, description,
-                      class_date, class_time, max_capacity
+                      class_date, max_capacity
         `, [
             classData.name_of_class,
             classData.user_id,
             classData.description,
             classData.class_date,
-            classData.class_time,
             classData.max_capacity
         ]);
         return rows[0];
@@ -51,18 +49,16 @@ export class classRepository {
                  user_id = $3,
                  description = $4,
                  class_date = $5,
-                 class_time = $6,
-                 max_capacity = $7
+                 max_capacity = $6
              WHERE class_id = $1
              RETURNING class_id, name_of_class, user_id, description,
-                       class_date, class_time, max_capacity
+                       class_date, max_capacity
         `, [
             classID,
             classData.name_of_class,
             classData.user_id,
             classData.description,
             classData.class_date,
-            classData.class_time,
             classData.max_capacity
         ]);
         return rows[0] || null;
