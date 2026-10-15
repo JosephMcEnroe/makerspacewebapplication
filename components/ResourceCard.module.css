@@ -97,6 +97,26 @@
   filter: grayscale(0.85);
 }
 
+.cardInteractive {
+  cursor: pointer;
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.cardInteractive:hover,
+.cardInteractive:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.14);
+  outline: 3px solid rgba(240, 167, 82, 0.55);
+  outline-offset: 2px;
+}
+
+.reserveHint {
+  margin: 0.65rem 0 0;
+  color: #6b5347;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
 .unavailableBadge {
   z-index: 2;
   position: absolute;

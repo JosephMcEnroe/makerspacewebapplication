@@ -1,20 +1,114 @@
 import Head from "next/head";
+import { useState } from "react";
+import { useRouter } from "next/router";
+import { useAuthContext } from "@/context/AuthContext";
 import ResourceCard from "./ResourceCard";
+import WeeklyAvailability from "./WeeklyAvailability";
+import { formatMinutesAsTime } from "@/lib/reservationPeriods";
 import styles from "./ExplorePage.module.css";
 
-/**
- * Shared "explore" page for a resource type (rooms / classes / equipment).
- * Shows everything available to book, plus items that are booked
- * indefinitely and currently unavailable for reservation.
- */
 export default function ExplorePage({
   title,
   intro,
   bookingWindow,
+  resourceType,
   items,
 }) {
+  const router = useRouter();
+  const { user } = useAuthContext();
+  const [selectedResource, setSelectedResource] = useState(null);
+  const [bookingError, setBookingError] = useState("");
   const available = items.filter((item) => !item.unavailable);
   const unavailable = items.filter((item) => item.unavailable);
+
+  const confirmReservation = async (periods) => {
+    if (!user?.id) throw new Error("Please sign in before making a reservation.");
+    setBookingError("");
+
+    if (resourceType === "classes") {
+      let classCsrfResponse;
+      try {
+        classCsrfResponse = await fetch("/api/auth/csrf");
+      } catch {
+        throw new Error("Could not connect to the reservation service. Please try again.");
+      }
+      const classCsrfData = await classCsrfResponse.json();
+      if (!classCsrfResponse.ok || !classCsrfData.csrfToken) {
+        throw new Error("Could not verify the reservation request. Please try again.");
+      }
+      const classMinute = String(selectedResource.scheduledTime || "").match(/:(\d{2})/)?.[1] || "00";
+      let classResponse;
+      try {
+        classResponse = await fetch("/api/reservations/class", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-csrf-token": classCsrfData.csrfToken },
+          body: JSON.stringify({
+            resourceId: selectedResource.resourceId,
+            start: `${periods[0].date}T${String(Math.floor(periods[0].startMinute / 60)).padStart(2, "0")}:${String(periods[0].startMinute % 60).padStart(2, "0")}:00`,
+          }),
+        });
+      } catch {
+        throw new Error("Could not connect to the reservation service. Please try again.");
+      }
+      let classResult;
+      try {
+        classResult = await classResponse.json();
+      } catch {
+        throw new Error("The reservation service returned an invalid response.");
+      }
+      if (!classResponse.ok) throw new Error(classResult.error || "Could not reserve this class.");
+      setSelectedResource(null);
+      setBookingError("");
+      await router.replace({ pathname: "/reservations", query: { type: resourceType, reservationId: [classResult.reservationId] } });
+      return;
+    }
+
+    let csrfResponse;
+    try {
+      csrfResponse = await fetch("/api/auth/csrf");
+    } catch {
+      throw new Error("Could not connect to the reservation service. Please try again.");
+    }
+    let csrfData;
+    try {
+      csrfData = await csrfResponse.json();
+    } catch {
+      throw new Error("Could not verify the reservation request. Please try again.");
+    }
+    if (!csrfResponse.ok || !csrfData.csrfToken) {
+      throw new Error("Could not verify the reservation request. Please try again.");
+    }
+
+    const startsAndEnds = periods.map(({ date, startMinute, endDate: endDateKey, endMinute }) => {
+      const startDate = new Date(`${date}T00:00:00`);
+      startDate.setHours(Math.floor(startMinute / 60), startMinute % 60, 0, 0);
+      const endDate = new Date(`${endDateKey}T00:00:00`);
+      endDate.setHours(Math.floor(endMinute / 60), endMinute % 60, 0, 0);
+      const toLocalDateTime = (value) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}T${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}:00`;
+      return { start: toLocalDateTime(startDate), end: toLocalDateTime(endDate) };
+    });
+    let response;
+    try {
+      response = await fetch("/api/reservations/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-csrf-token": csrfData.csrfToken },
+        body: JSON.stringify({ type: resourceType, resourceId: selectedResource.resourceId, periods: startsAndEnds }),
+      });
+    } catch {
+      throw new Error("Could not connect to the reservation service. Please try again.");
+    }
+    let result;
+    try {
+      result = await response.json();
+    } catch {
+      throw new Error("The reservation service returned an invalid response.");
+    }
+    if (!response.ok) throw new Error(result.error || "Could not create the reservation.");
+
+    setSelectedResource(null);
+    setBookingError("");
+    await router.replace({ pathname: "/reservations", query: { type: resourceType, reservationId: result.reservationIds || [] } });
+  };
 
   return (
     <div className={styles.page}>
@@ -29,13 +123,21 @@ export default function ExplorePage({
         <p className={styles.bookingWindow}>{bookingWindow}</p>
       </header>
 
+      {bookingError && <p role="alert">{bookingError}</p>}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Available for Reservation</h2>
         {available.length > 0 ? (
           <>
             <div className={styles.grid}>
               {available.map((item) => (
-                <ResourceCard key={item.id ?? item.name} {...item} />
+                <ResourceCard
+                  key={item.id ?? item.name}
+                  {...item}
+                  onSelect={() => {
+                    setBookingError("");
+                    setSelectedResource(item);
+                  }}
+                />
               ))}
             </div>
             <p className={styles.countNote}>
@@ -51,16 +153,23 @@ export default function ExplorePage({
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>
             Currently Unavailable{" "}
-            <span className={styles.sectionHint}>
-              (booked for the month indefinitely)
-            </span>
+            <span className={styles.sectionHint}>(booked for the month indefinitely)</span>
           </h2>
           <div className={styles.grid}>
-            {unavailable.map((item) => (
-              <ResourceCard key={item.id ?? item.name} {...item} />
-            ))}
+            {unavailable.map((item) => <ResourceCard key={item.id ?? item.name} {...item} />)}
           </div>
         </section>
+      )}
+
+      {selectedResource && (
+        <WeeklyAvailability
+          resource={selectedResource}
+          type={resourceType}
+          initialDate={selectedResource.scheduledDate || undefined}
+          unavailableIntervals={selectedResource.unavailableIntervals}
+          onClose={() => setSelectedResource(null)}
+          onConfirm={confirmReservation}
+        />
       )}
     </div>
   );

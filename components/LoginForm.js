@@ -5,15 +5,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import styles from "./LoginForm.module.css";
+import { getPostLoginDestination } from "@/lib/authRedirect";
 
 function redirectForRole(router, role) {
-  if (role === "admin") {
-    router.push("/admin");
-  } else if (role === "staff") {
-    router.push("/staff");
-  } else {
-    router.push("/dashboard");
-  }
+  void router.replace(getPostLoginDestination(router.query.next, role));
 }
 
 export default function LoginForm() {
@@ -25,6 +20,8 @@ export default function LoginForm() {
 
   const {
     user,
+    loading,
+    authCheckFailed,
     login,
     loginloading,
     error,
@@ -39,7 +36,7 @@ export default function LoginForm() {
         : null;
 
   useEffect(() => {
-    if (user) {
+    if (user && router.isReady) {
       redirectForRole(router, user.role);
     }
   }, [user, router]);
@@ -55,9 +52,18 @@ export default function LoginForm() {
       return;
     }
 
-    //Where is the page for instructor/student? Is what the member page for?
-    redirectForRole(router, user.role);
+    if (router.isReady) {
+      redirectForRole(router, user.role);
+    }
   };
+
+  if (loading || user) {
+    return (
+      <div className={styles.card} role="status">
+        <p className={styles.subtitle}>{user ? "Returning to your page…" : "Checking your session…"}</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.card}>
@@ -108,6 +114,12 @@ export default function LoginForm() {
             required
           />
         </div>
+
+        {authCheckFailed && !error && (
+          <p className={styles.errorText} role="status">
+            We couldn’t verify your existing session. You can still sign in below.
+          </p>
+        )}
 
         {verifiedMessage && !error && (
           <p
