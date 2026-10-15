@@ -64,7 +64,9 @@ export default function StripeReports() {
               <StatCard label="This Month" value={formatMoney(data.thisMonth)} />
             </div>
             <ChartCard title="Revenue Trend" subtitle="Last 7 days · USD">
-              <LineChart data={data.dailyRevenue} formatValue={formatMoney} />
+              <div className={reportsStyles.revenueChart}>
+                <LineChart data={data.dailyRevenue} formatValue={formatMoney} responsive />
+              </div>
             </ChartCard>
             <p className={reportsStyles.notice}>
               Updated {new Intl.DateTimeFormat("en-US", { timeZone: data.timezone, dateStyle: "medium", timeStyle: "short" }).format(new Date(data.updatedAt))} ET.

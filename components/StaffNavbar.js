@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useAuthContext } from "@/context/AuthContext";
 import styles from "./StaffNavbar.module.css";
 
 const NAV_ITEMS = (role, reportsHref) => [
@@ -9,8 +10,12 @@ const NAV_ITEMS = (role, reportsHref) => [
   { label: "Reports", href: reportsHref },
 ];
 
-export default function StaffNavbar({ role = "staff", initials = "AC", reportsHref = "/reports" }) {
+export default function StaffNavbar({ role = "staff", reportsHref = "/reports" }) {
   const router = useRouter();
+  const { user } = useAuthContext();
+  const initials = [user?.firstName, user?.lastName]
+    .map((name) => name?.charAt(0).toUpperCase() || "")
+    .join("");
   const navItems = NAV_ITEMS(role, reportsHref);
 
   return (
