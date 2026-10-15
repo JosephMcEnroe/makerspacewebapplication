@@ -6,6 +6,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import styles from "./LoginForm.module.css";
 
+//Add dynamic redirect instead of dashboard
 function redirectForRole(router, role) {
   if (role === 'ADMIN') {
     router.push("/admin");

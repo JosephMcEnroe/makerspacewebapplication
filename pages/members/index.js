@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export default function Users() {
   const [users, setUsers] = useState([]);
 
+  //Change this into sql callback with authentication
   //erase this useEffect when using real data and implement authentication
   useEffect(() => {
     async function getUsers() {
@@ -34,7 +35,7 @@ export default function Users() {
           <h2>{user.first_name}</h2>
           <p>Phone numbers: {user.phone_number}</p>
           <p>Email: {user.email}</p>
-          <p>rfid: {user.rfid_id}</p>
+          <p>last name: {user.last_name}</p>
         </div>
       ))}
     </main>
