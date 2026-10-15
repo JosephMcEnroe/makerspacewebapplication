@@ -1,0 +1,266 @@
+.backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(31, 20, 16, 0.68);
+}
+
+.dialog {
+  position: relative;
+  width: min(100%, 980px);
+  max-height: min(92vh, 1000px);
+  overflow: auto;
+  padding: 1.6rem;
+  border-radius: 16px;
+  background: #fffaf3;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
+}
+
+.closeButton {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  border: 0;
+  background: transparent;
+  color: #6b5347;
+  font-size: 1.8rem;
+  cursor: pointer;
+}
+
+.eyebrow {
+  margin: 0 0 0.3rem;
+  color: #a05c3a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #2b1916;
+  font-size: 1.5rem;
+}
+
+.instructions {
+  margin: 0.5rem 0 1rem;
+  color: #6b5347;
+  font-size: 0.88rem;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+  color: #6b5347;
+  font-size: 0.75rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend i {
+  width: 0.85rem;
+  height: 0.75rem;
+  border-radius: 3px;
+}
+
+.availableSwatch {
+  background: #a8d5a2;
+}
+
+.available {
+  background: #a8d5a2;
+}
+
+.unavailableSwatch,
+.unavailable {
+  background: #d6d4d2;
+}
+
+.selectedSwatch {
+  background: #f0a752;
+}
+
+.selected {
+  background: #f0a752;
+}
+
+.weekControls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0 0.65rem;
+  color: #382222;
+}
+
+.weekControls button {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid #d8ccc2;
+  border-radius: 8px;
+  background: #fff;
+  color: #382222;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.tableScroller {
+  max-height: 48vh;
+  overflow: auto;
+  border: 1px solid #e1d8cf;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.table {
+  width: 100%;
+  min-width: 600px;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.table th,
+.table td {
+  height: 2rem;
+  padding: 0.15rem 0.25rem;
+  border-right: 1px solid #eee9e4;
+  border-bottom: 1px solid #eee9e4;
+  text-align: center;
+}
+
+.table thead th {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  background: #fffaf3;
+  color: #6b5347;
+  font-size: 0.75rem;
+}
+
+.table thead th:first-child {
+  left: 0;
+  z-index: 3;
+}
+
+.table thead small {
+  display: block;
+  font-size: 0.7rem;
+}
+
+.table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: 6.5rem;
+  background: #fffaf3;
+  color: #6b5347;
+  font-size: 0.67rem;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.slot {
+  display: block;
+  width: 100%;
+  min-height: 1.4rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.slot:hover:not(:disabled) {
+  border-color: #4d8b45;
+  filter: brightness(0.95);
+}
+
+.slot:disabled {
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.selectionSummary {
+  margin: 0.85rem 0 0.4rem;
+  color: #382222;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.periodList {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #6b5347;
+  font-size: 0.8rem;
+}
+
+.error {
+  margin: 0.75rem 0 0;
+  color: #a73623;
+  font-size: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.2rem;
+}
+
+.secondaryButton,
+.primaryButton {
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondaryButton {
+  border: 1px solid #d8ccc2;
+  background: #fff;
+  color: #6b5347;
+}
+
+.primaryButton {
+  border: 1px solid #a05c3a;
+  background: #f0a752;
+  color: #2b1916;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.roomTable .available {
+  background-color: #a8d5a2;
+}
+
+@media (max-width: 640px) {
+  .dialog {
+    padding: 1.2rem 0.8rem;
+  }
+
+  .table {
+    min-width: 560px;
+  }
+
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+}

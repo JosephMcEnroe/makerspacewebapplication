@@ -3,12 +3,17 @@ import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { formatYear } from "@/lib/format";
 
 export default async function handler(req, res) {
+    res.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.removeHeader("ETag");
+
     try {
         const cookies = parse(req.headers.cookie || "");
 
         const sessionId = cookies.session_id;
 
-        if(!sessionId){
+        if (!sessionId) {
             return res.status(401).json({
                 ok: false,
                 user: null,
@@ -19,7 +24,7 @@ export default async function handler(req, res) {
 
         const user = await query.findByCookie(sessionId);
 
-        if(!user){
+        if (!user) {
             return res.status(401).json({
                 ok: false,
                 user: null,
@@ -42,6 +47,7 @@ export default async function handler(req, res) {
 
         return res.status(500).json({
             ok: false,
+            user: null,
             error: "Authentication check failed",
         });
     }
