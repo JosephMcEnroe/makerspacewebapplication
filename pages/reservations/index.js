@@ -1,3 +1,4 @@
+import { businessTime, businessDateTime } from "@/lib/businessTime";
 import Head from "next/head";
 import ReservationsPanel from "@/components/ReservationsPanel";
 import styles from "@/styles/Account.module.css";
@@ -87,10 +88,10 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   const classReservations = groupReservations(
     classEnrollments.map((enrollment) => {
       const date = enrollment.class_date instanceof Date
-        ? enrollment.class_date.toISOString().slice(0, 10)
+        ? businessDateTime(enrollment.class_date).slice(0, 10)
         : String(enrollment.class_date).slice(0, 10);
       const time = String(enrollment.class_time || "00:00").slice(0, 8);
-      const startsAt = new Date(`${date}T${time}`);
+      const startsAt = new Date(businessTime(`${date}T${time}`));
       return { ...enrollment, start: startsAt, end: startsAt };
     }),
     (enrollment) => ({

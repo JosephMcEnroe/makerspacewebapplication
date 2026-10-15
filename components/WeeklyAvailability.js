@@ -1,3 +1,4 @@
+import { businessTime, businessCalendarDate } from "@/lib/businessTime";
 import { useMemo, useState } from "react";
 import styles from "./WeeklyAvailability.module.css";
 import { buildReservationPeriods, formatMinutesAsTime, getReservationSlotStartMinutes, isUnavailableInterval, toggleReservationSlot } from "@/lib/reservationPeriods";
@@ -18,7 +19,7 @@ function parseLocalDate(value) {
     const [year, month, day] = value.split("-").map(Number);
     return new Date(year, month - 1, day);
   }
-  return new Date(value);
+  return businessCalendarDate(value);
 }
 
 function getWeekStart(value) {
@@ -84,12 +85,13 @@ export default function WeeklyAvailability({
     bookingCutoff.setDate(bookingCutoff.getDate() + advanceDays);
     if (isClass) {
       if (date !== classDate || startMinute !== classHour * 60 + classMinute) return false;
-      const classStartsAt = new Date(`${date}T${pad(classHour)}:${pad(classMinute)}:00`);
+      const classStartsAt = new Date(businessTime(`${date}T${pad(classHour)}:${pad(classMinute)}:00`));
       return classStartsAt > now && classStartsAt <= bookingCutoff;
     }
-    if (slotStart <= now || slotStart > bookingCutoff) return false;
+    const easternStart = businessTime(`${date}T${pad(Math.floor(startMinute / 60))}:${pad(startMinute % 60)}:00`);
+    if (!Number.isFinite(easternStart) || easternStart <= now.getTime() || easternStart > bookingCutoff.getTime()) return false;
     return !unavailableIntervals.some((interval) =>
-      isUnavailableInterval(interval, resource.reservationId, slotStart.getTime(), slotEnd.getTime())
+      isUnavailableInterval(interval, resource.reservationId, easternStart, easternStart + 60 * 60 * 1000)
     );
   };
 
@@ -118,6 +120,7 @@ export default function WeeklyAvailability({
         <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close availability">×</button>
         <p className={styles.eyebrow}>{type === "classes" ? "Class" : isRoom ? "Room" : "Equipment"} Reservation</p>
         <h2 id="availability-title" className={styles.title}>{resource.name}</h2>
+        <p>All times are Eastern Time (America/New_York).</p>
         <p className={styles.instructions}>{type === "classes" ? "Select the scheduled class time to reserve your spot." : `Choose one or more green time slots. Each reservation lasts one hour and requires a 15-minute buffer before the next; the last slot is 10:30–11:30 PM with a 30-minute closing buffer. ${isRoom ? "Rooms are bookable 24 hours a day." : ""}`}</p>
         <div className={styles.legend}>
           <span><i className={styles.availableSwatch} /> Available</span>

@@ -80,12 +80,8 @@ export default function ExplorePage({
     }
 
     const startsAndEnds = periods.map(({ date, startMinute, endDate: endDateKey, endMinute }) => {
-      const startDate = new Date(`${date}T00:00:00`);
-      startDate.setHours(Math.floor(startMinute / 60), startMinute % 60, 0, 0);
-      const endDate = new Date(`${endDateKey}T00:00:00`);
-      endDate.setHours(Math.floor(endMinute / 60), endMinute % 60, 0, 0);
-      const toLocalDateTime = (value) => `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}T${String(value.getHours()).padStart(2, "0")}:${String(value.getMinutes()).padStart(2, "0")}:00`;
-      return { start: toLocalDateTime(startDate), end: toLocalDateTime(endDate) };
+      const wallTime = (day, minute) => day + 'T' + String(Math.floor(minute / 60)).padStart(2, '0') + ':' + String(minute % 60).padStart(2, '0') + ':00';
+      return { start: wallTime(date, startMinute), end: wallTime(endDateKey, endMinute) };
     });
     let response;
     try {

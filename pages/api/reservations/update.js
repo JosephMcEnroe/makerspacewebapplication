@@ -1,3 +1,4 @@
+import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -31,7 +32,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Reservations must have at least a 15-minute buffer between periods." });
   }
   const maxAdvance = type === "rooms" ? 90 : 31;
-  if (periods.some(({ start }) => new Date(start).getTime() <= Date.now() || new Date(start).getTime() > Date.now() + maxAdvance * 86400000)) {
+  if (periods.some(({ start }) => !Number.isFinite(businessTime(start)) || businessTime(start) <= Date.now() || businessTime(start) > Date.now() + maxAdvance * 86400000)) {
     return res.status(400).json({ error: `Reservations can be changed up to ${maxAdvance} days in advance.` });
   }
 

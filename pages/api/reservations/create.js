@@ -1,3 +1,4 @@
+import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -38,9 +39,9 @@ export default async function handler(req, res) {
   const now = Date.now();
   const maxAdvance = type === "rooms" ? 90 : 31;
   if (periods.some(({ start, end }) => {
-    const startTime = new Date(start).getTime();
-    const endTime = new Date(end).getTime();
-    return startTime <= now || startTime > now + maxAdvance * 24 * 60 * 60 * 1000 || endTime - startTime > 24 * 60 * 60 * 1000;
+    const startTime = businessTime(start);
+    const endTime = businessTime(end);
+    return !Number.isFinite(startTime) || !Number.isFinite(endTime) || startTime <= now || startTime > now + maxAdvance * 24 * 60 * 60 * 1000 || endTime - startTime > 24 * 60 * 60 * 1000;
   })) {
     return res.status(400).json({ error: `Reservations can be made up to ${maxAdvance} days ahead and may last up to 24 hours.` });
   }

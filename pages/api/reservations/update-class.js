@@ -1,3 +1,5 @@
+import { businessDateTime } from "@/lib/businessTime";
+import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -35,7 +37,7 @@ export default async function handler(req, res) {
       [newClassId]
     );
     const targetDate = target.rowCount
-      ? new Date(`${target.rows[0].class_date instanceof Date ? target.rows[0].class_date.toISOString().slice(0, 10) : String(target.rows[0].class_date).slice(0, 10)}T${String(target.rows[0].class_time || "00:00").slice(0, 5)}:00`)
+      ? new Date(businessTime(`${target.rows[0].class_date instanceof Date ? businessDateTime(target.rows[0].class_date).slice(0, 10) : String(target.rows[0].class_date).slice(0, 10)}T${String(target.rows[0].class_time || "00:00").slice(0, 5)}:00`))
       : null;
     if (!target.rowCount || Number.isNaN(targetDate.getTime()) || targetDate <= new Date()) {
       await client.query("ROLLBACK");

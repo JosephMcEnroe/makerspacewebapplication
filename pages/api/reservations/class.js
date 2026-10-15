@@ -1,3 +1,5 @@
+import { businessDateTime } from "@/lib/businessTime";
+import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -43,12 +45,12 @@ export default async function handler(req, res) {
     }
     const classRow = classResult.rows[0];
     const classDate = classRow.class_date instanceof Date
-      ? classRow.class_date.toISOString().slice(0, 10)
+      ? businessDateTime(classRow.class_date).slice(0, 10)
       : String(classRow.class_date).slice(0, 10);
     const classTime = String(classRow.class_time).slice(0, 5);
     const [classHour, classMinute] = classTime.split(":").map(Number);
     const selectedDate = startsAt.slice(0, 10);
-    if (selectedDate !== classDate || requestedHour !== classHour || requestedMinute !== classMinute || new Date(startsAt) <= new Date()) {
+    if (selectedDate !== classDate || requestedHour !== classHour || requestedMinute !== classMinute || businessTime(startsAt) <= Date.now()) {
       await client.query("ROLLBACK");
       transactionStarted = false;
       return res.status(400).json({ error: "The selected time does not match this class schedule." });
