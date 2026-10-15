@@ -12,7 +12,7 @@ export class membershipRepositry {
 
     async findUserMembership(userId) {
         const { rows } = await query(
-            `SELECT membership_id, user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status
+            `SELECT membership_id, user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status, stripe_subscription_id, auto_renew
              FROM "membership"
              WHERE user_id = $1`,
             [userId]
@@ -36,34 +36,50 @@ export class membershipRepositry {
 
     //Marks the user's membership ACTIVE for the given period (used by the Stripe webhook).
     //Creates the membership row if the user somehow doesn't have one yet.
-    async activateMembership(userId, periodStartDate, periodEndDate) {
+    //autoRenew should be TRUE for monthly subscriptions and FALSE for day passes.
+    async activateMembership(userId, periodStartDate, periodEndDate, stripeSubscriptionId = null, autoRenew = true) {
         const updated = await query(
             `UPDATE "membership"
              SET status = 'ACTIVE',
                  period_start_date = $2,
-                 period_end_date = $3
+                 period_end_date = $3,
+                 auto_renew = $5,
+                 stripe_subscription_id = COALESCE($4, stripe_subscription_id)
              WHERE user_id = $1
-             RETURNING membership_id, user_id, status, period_start_date, period_end_date`,
-            [userId, periodStartDate, periodEndDate]
+             RETURNING membership_id, user_id, status, period_start_date, period_end_date, stripe_subscription_id, auto_renew`,
+            [userId, periodStartDate, periodEndDate, stripeSubscriptionId, autoRenew]
         );
         if (updated.rows[0]) return updated.rows[0];
 
         const inserted = await query(
-            `INSERT INTO "membership" (user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status)
-             VALUES ($1, 'MEMBER', $2, $3, NULL, 'ACTIVE')
-             RETURNING membership_id, user_id, status, period_start_date, period_end_date`,
-            [userId, periodStartDate, periodEndDate]
+            `INSERT INTO "membership" (user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status, stripe_subscription_id, auto_renew)
+             VALUES ($1, 'MEMBER', $2, $3, NULL, 'ACTIVE', $4, $5)
+             RETURNING membership_id, user_id, status, period_start_date, period_end_date, stripe_subscription_id, auto_renew`,
+            [userId, periodStartDate, periodEndDate, stripeSubscriptionId, autoRenew]
         );
         return inserted.rows[0] || null;
+    }
+
+    //Updates the auto_renew flag for the user's membership
+    async updateAutoRenew(userId, autoRenew) {
+        const { rows } = await query(
+            `UPDATE "membership"
+             SET auto_renew = $2
+             WHERE user_id = $1
+             RETURNING membership_id, user_id, auto_renew, status`,
+            [userId, autoRenew]
+        );
+        return rows[0] || null;
     }
 
     //Marks the user's membership is inactive
     async deactivateMembership(userId) {
         const { rows } = await query(
             `UPDATE "membership"
-             SET status = 'INACTIVE'
+             SET status = 'INACTIVE',
+                 auto_renew = FALSE
              WHERE user_id = $1
-             RETURNING membership_id, user_id, status`,
+             RETURNING membership_id, user_id, status, auto_renew`,
             [userId]
         );
         return rows[0] || null;

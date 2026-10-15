@@ -55,7 +55,7 @@ export default function StripeProductCard({ product, loadingPriceId = null, onCh
         <h2 className={styles.productName}>{product.name}</h2>
 
         <p className={styles.productDescription}>
-          {product.description || "Crafty Studio makerspace resource and materials."}
+          {product.description || "Everything you need to bring your next idea to life."}
         </p>
 
         <div className={styles.cardFooter}>
