@@ -3,8 +3,28 @@ import StaffNavbar from "@/components/StaffNavbar";
 import ActionCard from "@/components/ActionCard";
 import StatCard from "@/components/StatCard";
 import styles from "@/styles/StaffDashboard.module.css";
+import { useAuthContext } from "@/context/AuthContext";
+import { StaffRepository } from "@/Data_Access_Layer/staffRepository";
+import { adminRepository } from "@/Data_Access_Layer/adminRepository";
+import { getSessionUser, loginRedirect } from "@/lib/session";
 
-const TODAY_LABEL = "Monday, March 12";
+// Staff and admins can open this page; everyone else is sent to their dashboard
+export async function getServerSideProps({ req, resolvedUrl }) {
+  const sessionUser = await getSessionUser(req);
+  if (!sessionUser) {
+    return loginRedirect(resolvedUrl);
+  }
+
+  const [isStaff, isAdmin] = await Promise.all([
+    new StaffRepository().isStaff(sessionUser.user_id),
+    new adminRepository().isAdmin(sessionUser.user_id),
+  ]);
+  if (!isStaff && !isAdmin) {
+    return { redirect: { destination: "/dashboard", permanent: false } };
+  }
+
+  return { props: {} };
+}
 
 // Dummy data — once a database is connected, these stat cards should pull
 // live reservation, member, and class counts instead of hardcoded values.
@@ -44,6 +64,8 @@ const InfoIcon = (
 );
 
 export default function StaffDashboardPage() {
+  const { user } = useAuthContext();
+
   return (
     <>
       <Head>
@@ -54,8 +76,11 @@ export default function StaffDashboardPage() {
         <StaffNavbar role="staff" />
 
         <div className={styles.content}>
-          <p className={styles.date}>{TODAY_LABEL}</p>
-          <h1 className={styles.greeting}>Hello, Staff!</h1>
+          {/* Server and browser clocks can differ, so let the browser's date win */}
+          <p className={styles.date} suppressHydrationWarning>
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+          </p>
+          <h1 className={styles.greeting}>Hello, {user?.firstName || "Staff"}!</h1>
 
           {/* Static quick-action links — no data to wire up, just handlers */}
           <div className={styles.actionsGrid}>
