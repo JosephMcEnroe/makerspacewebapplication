@@ -13,7 +13,7 @@ export default function Navbar() {
     <header className={styles.navbar}>
       <Link href="/dashboard" className={styles.brand}>
         <Image
-          src="/images/Collaboratory Logo.jpg"
+          src="/images/collaboratory_logo.jpg"
           alt="The Collaboratory"
           width={670}
           height={670}
