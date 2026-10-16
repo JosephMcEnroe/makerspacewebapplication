@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { useAuthContext } from "@/context/AuthContext";
 import styles from "./Navbar.module.css";
 
@@ -11,7 +12,14 @@ export default function Navbar() {
   return (
     <header className={styles.navbar}>
       <Link href="/dashboard" className={styles.brand}>
-        THE CRAFTY STUDIO
+        <Image
+          src="/images/Collaboratory Logo.jpg"
+          alt="The Collaboratory"
+          width={670}
+          height={670}
+          className={styles.brandLogo}
+          priority
+        />
       </Link>
 
       <div className={styles.navRight}>

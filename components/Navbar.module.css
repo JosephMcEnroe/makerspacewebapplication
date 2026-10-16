@@ -83,3 +83,12 @@
     font-size: 0.95rem;
   }
 }
+
+.brand { display: flex; flex-shrink: 0; align-items: center; }
+.brandLogo { width: 180px; height: 72px; object-fit: cover; }
+@media (max-width: 640px) {
+  .navbar { padding: 0.75rem 1rem; flex-wrap: wrap; gap: 0.75rem; }
+  .brandLogo { width: 140px; height: 56px; }
+  .navRight { gap: 0.75rem; }
+  .navLinks { gap: 0.75rem; }
+}

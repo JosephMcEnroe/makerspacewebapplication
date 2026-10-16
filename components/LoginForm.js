@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./LoginForm.module.css";
 import { getPostLoginDestination } from "@/lib/authRedirect";
 
@@ -67,8 +68,16 @@ export default function LoginForm() {
 
   return (
     <div className={styles.card}>
+      <Image
+        src="/images/Collaboratory Logo.jpg"
+        alt="The Collaboratory"
+        width={670}
+        height={670}
+        className={styles.logo}
+        priority
+      />
       <h1 className={styles.title}>WELCOME BACK</h1>
-      <p className={styles.subtitle}>Sign in to your Crafty Studio account</p>
+      <p className={styles.subtitle}>Sign in to your Collaboratory account</p>
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
