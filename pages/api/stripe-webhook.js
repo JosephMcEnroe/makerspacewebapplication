@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { fulfillReservation } from "@/lib/reservationCheckout";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { paymentRepository } from "@/Data_Access_Layer/paymentRepository";
 
@@ -75,6 +76,10 @@ async function getMembershipType(session) {
 }
 
 async function handleCheckoutCompleted(session) {
+  if (session.metadata?.purchase_type === "reservation") {
+    await fulfillReservation(session);
+    return;
+  }
   console.log(`[Webhook] Processing checkout.session.completed for session: ${session.id}`);
 
   // Delayed payment methods complete checkout before the money arrives;

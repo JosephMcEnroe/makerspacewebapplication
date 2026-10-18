@@ -2,9 +2,10 @@ import Head from "next/head";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import { useAuthContext } from "@/context/AuthContext";
-import ResourceCard from "./ResourceCard";
+import ResourceCard from "./ReservationProductCard";
+
 import WeeklyAvailability from "./WeeklyAvailability";
-import { formatMinutesAsTime } from "@/lib/reservationPeriods";
+
 import styles from "./ExplorePage.module.css";
 
 export default function ExplorePage({
@@ -16,7 +17,7 @@ export default function ExplorePage({
 }) {
   const router = useRouter();
   const { user } = useAuthContext();
-  const [selectedResource, setSelectedResource] = useState(null);
+  const [selectedResource, setSelectedResource] = useState(() => items.find(item => !item.unavailable && String(item.resourceId) === String(router.query.resourceId)) || null);
   const [bookingError, setBookingError] = useState("");
   const available = items.filter((item) => !item.unavailable);
   const unavailable = items.filter((item) => item.unavailable);
@@ -101,11 +102,16 @@ export default function ExplorePage({
     }
     if (!response.ok) throw new Error(result.error || "Could not create the reservation.");
 
-    setSelectedResource(null);
-    setBookingError("");
-    await router.replace({ pathname: "/reservations", query: { type: resourceType, reservationId: result.reservationIds || [] } });
+    if (resourceType === "rooms") {
+      setSelectedResource(null);
+      await router.replace({ pathname: "/reservations", query: { type: resourceType, reservationId: result.reservationIds || [] } });
+      return;
+    }
+    if (!result.url) throw new Error("Checkout did not return a redirect URL.");
+    window.location.assign(result.url);
   };
 
+  const Availability = WeeklyAvailability;
   return (
     <div className={styles.page}>
       <Head>
@@ -119,6 +125,7 @@ export default function ExplorePage({
         <p className={styles.bookingWindow}>{bookingWindow}</p>
       </header>
 
+      {router.query.canceled && <p role="status">Checkout canceled. No reservation was created.</p>}
       {bookingError && <p role="alert">{bookingError}</p>}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Available for Reservation</h2>
@@ -149,7 +156,7 @@ export default function ExplorePage({
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>
             Currently Unavailable{" "}
-            <span className={styles.sectionHint}>(booked for the month indefinitely)</span>
+            <span className={styles.sectionHint}>(not currently bookable)</span>
           </h2>
           <div className={styles.grid}>
             {unavailable.map((item) => <ResourceCard key={item.id ?? item.name} {...item} />)}
@@ -158,7 +165,8 @@ export default function ExplorePage({
       )}
 
       {selectedResource && (
-        <WeeklyAvailability
+        <Availability
+          confirmLabel={resourceType === "classes" ? "Confirm Reservation" : "Create Reservation"}
           resource={selectedResource}
           type={resourceType}
           initialDate={selectedResource.scheduledDate || undefined}

@@ -17,13 +17,30 @@ const formatPrice = (product) => {
 };
 
 
-export default function StripeProductCard({ product, loadingPriceId = null, onCheckout }) {
+export default function StripeProductCard({ product, loadingPriceId = null, onCheckout, actionLabel = "Checkout", disabled = false, priceSuffix = "", wholeCard = false }) {
   const displayPrice = formatPrice(product);
   const imageUrl = product.image || product.images?.[0];
   const isProcessing = loadingPriceId === product.priceId;
   const canCheckout = product.active === true && product.default_price?.active === true;
+  const canActivate = !disabled && canCheckout && !!product.priceId && loadingPriceId === null;
+  const activate = () => {
+    if (canActivate) onCheckout?.(product.priceId);
+  };
   return (
-    <div className={styles.card}>
+    <div
+      className={`${styles.card} ${wholeCard ? canActivate ? styles.cardInteractive : styles.cardDisabled : ""}`}
+      role={wholeCard ? "button" : undefined}
+      tabIndex={wholeCard ? canActivate ? 0 : -1 : undefined}
+      aria-label={wholeCard ? `${actionLabel} ${product.name}` : undefined}
+      aria-disabled={wholeCard ? !canActivate : undefined}
+      onClick={wholeCard ? activate : undefined}
+      onKeyDown={wholeCard ? event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activate();
+        }
+      } : undefined}
+    >
       <div className={styles.imageWrapper}>
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -46,7 +63,7 @@ export default function StripeProductCard({ product, loadingPriceId = null, onCh
 
         {displayPrice && (
           <div className={styles.priceTag}>
-            {displayPrice}
+            {displayPrice}{priceSuffix}
           </div>
         )}
       </div>
@@ -58,13 +75,13 @@ export default function StripeProductCard({ product, loadingPriceId = null, onCh
           {product.description || "Everything you need to bring your next idea to life."}
         </p>
 
-        <div className={styles.cardFooter}>
+        {wholeCard ? (!canActivate && <p className={styles.noPriceNote}>Currently unavailable</p>) : <div className={styles.cardFooter}>
           {product.priceId ? (
             <button
               type="button"
               className={styles.checkoutBtn}
               onClick={() => onCheckout(product.priceId)}
-              disabled={loadingPriceId !== null || !canCheckout}
+              disabled={disabled || loadingPriceId !== null || !canCheckout}
             >
               {isProcessing ? (
                 <>
@@ -79,7 +96,7 @@ export default function StripeProductCard({ product, loadingPriceId = null, onCh
                     <rect x="2" y="5" width="20" height="14" rx="2" />
                     <line x1="2" y1="10" x2="22" y2="10" />
                   </svg>
-                  {canCheckout ? "Checkout" : "Currently unavailable"}
+                  {canCheckout && !disabled ? actionLabel : "Currently unavailable"}
                 </>
               )}
             </button>
@@ -88,7 +105,7 @@ export default function StripeProductCard({ product, loadingPriceId = null, onCh
               No default price assigned in Stripe
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );
