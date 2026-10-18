@@ -28,7 +28,7 @@ export class adminRepository {
                 SELECT 1
                 FROM "membership"
                 WHERE user_id = $1
-                  AND UPPER(TRIM(role_of_membership)) = 'ADMIN'
+                  AND UPPER(TRIM(role_of_membership::text)) = 'ADMIN'
              ) AS is_admin`,
             [userId]
         );

@@ -22,6 +22,34 @@ export class UserRepository {
         );
         return rows[0] || null;
     }
+    // Staff member directory: every user with their membership (if any)
+    async findAllWithMembership() {
+        const { rows } = await query(
+            `SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone_number,
+                u.waiver_status, m.membership_id, m.role_of_membership, m.status,
+                m.period_start_date, m.period_end_date
+             FROM "users" u
+             LEFT JOIN "membership" m ON m.user_id = u.user_id
+             ORDER BY u.last_name, u.first_name, u.email`
+        );
+        return rows;
+    }
+    // Staff-editable profile fields; never touches password or email verification
+    async updateUserDetails(userId, user) {
+        const { rows } = await query(
+            `UPDATE "users"
+             SET first_name = $2,
+                 last_name = $3,
+                 phone_number = $4,
+                 email = $5,
+                 notes = $6,
+                 waiver_status = $7
+             WHERE user_id = $1
+             RETURNING user_id, first_name, last_name, phone_number, email, notes, waiver_status`,
+            [userId, user.first_name, user.last_name, user.phone_number, user.email, user.notes, user.waiver_status]
+        );
+        return rows[0] || null;
+    }
     //Find the role of the user that have userID + (maybe) membership_id
     async findRoleById(userId) {
         const { rows } = await query(
@@ -174,6 +202,32 @@ export class UserRepository {
               ON s.user_id = m.user_id
             JOIN users u
               ON u.user_id = s.user_id
+            WHERE s.session_id = $1
+              AND s.expires_at > NOW()
+            `, [sessionId]);
+        return rows[0] || null;
+    }
+
+    // Session lookup plus staff/admin flags in one round trip (staff pages)
+    async findStaffSessionByCookie(sessionId) {
+        const { rows } = await query(`
+            SELECT
+              u.user_id,
+              m.status,
+              m.role_of_membership,
+              u.first_name,
+              u.last_name,
+              EXISTS (SELECT 1 FROM "staff" st WHERE st.user_id = u.user_id)
+                OR EXISTS (SELECT 1 FROM "membership" ms WHERE ms.user_id = u.user_id
+                           AND UPPER(TRIM(ms.role_of_membership::text)) = 'STAFF') AS is_staff,
+              EXISTS (SELECT 1 FROM "admin" a WHERE a.user_id = u.user_id)
+                OR EXISTS (SELECT 1 FROM "membership" ma WHERE ma.user_id = u.user_id
+                           AND UPPER(TRIM(ma.role_of_membership::text)) = 'ADMIN') AS is_admin
+            FROM sessions s
+            JOIN users u
+              ON u.user_id = s.user_id
+            LEFT JOIN membership m
+              ON m.user_id = u.user_id
             WHERE s.session_id = $1
               AND s.expires_at > NOW()
             `, [sessionId]);
