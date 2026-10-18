@@ -69,7 +69,7 @@ export default function LoginForm() {
   return (
     <div className={styles.card}>
       <Image
-        src="/images/Collaboratory Logo.jpg"
+        src="/images/collaboratory_logo.jpg"
         alt="The Collaboratory"
         width={670}
         height={670}

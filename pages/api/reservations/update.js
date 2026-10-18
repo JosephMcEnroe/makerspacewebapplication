@@ -1,8 +1,16 @@
+import { monthlyPeriod, isMonthlyReservation } from "@/lib/monthlyReservation";
 import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
 import { hasReservationBuffer, isValidReservationPeriod } from "@/lib/reservationPeriods";
+
+function isMonthlyPeriod(periods) {
+  try {
+    const expected = monthlyPeriod(periods[0]?.start?.slice(0, 10));
+    return periods.length === 1 && periods[0].start === expected.start && periods[0].end === expected.end;
+  } catch { return false; }
+}
 
 function validDateTime(value) {
   if (typeof value !== "string" || value.length !== 19 || value[4] !== "-" || value[7] !== "-" || value[10] !== "T" || value.slice(16) !== ":00") return false;
@@ -25,10 +33,10 @@ export default async function handler(req, res) {
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
 
   const { type, reservationId, periods } = req.body || {};
-  if (!["rooms", "equipment"].includes(type) || !/^\d+$/.test(String(reservationId)) || !Array.isArray(periods) || periods.length < 1 || periods.length > 21 || periods.some((period) => !validDateTime(period?.start) || !validDateTime(period?.end) || !isValidReservationPeriod(type, period))) {
+  if (!["rooms", "equipment"].includes(type) || !/^\d+$/.test(String(reservationId)) || !Array.isArray(periods) || periods.length < 1 || periods.length > 21 || (!(type === "rooms" && isMonthlyPeriod(periods)) && periods.some((period) => !validDateTime(period?.start) || !validDateTime(period?.end) || !isValidReservationPeriod(type, period)))) {
     return res.status(400).json({ error: "Choose valid one-hour reservation slots." });
   }
-  if (!hasReservationBuffer(periods)) {
+  if (!(type === "rooms" && isMonthlyPeriod(periods)) && !hasReservationBuffer(periods)) {
     return res.status(400).json({ error: "Reservations must have at least a 15-minute buffer between periods." });
   }
   const maxAdvance = type === "rooms" ? 90 : 31;
@@ -50,7 +58,7 @@ export default async function handler(req, res) {
     const endColumn = room ? "end_date" : "end_date_time";
     const statusClause = room ? "AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%')" : "";
     const current = await client.query(
-      `SELECT ${resourceColumn} AS resource_id FROM ${table}
+      `SELECT ${resourceColumn} AS resource_id, stripe_checkout_session_id, ${startColumn} AS start_time, ${endColumn} AS end_time FROM ${table}
        WHERE ${idColumn} = $1 AND user_id = $2 ${statusClause} FOR UPDATE`,
       [Number(reservationId), user.user_id]
     );
@@ -59,14 +67,21 @@ export default async function handler(req, res) {
       transactionStarted = false;
       return res.status(404).json({ error: "Reservation not found." });
     }
+    const monthly = room && isMonthlyReservation(current.rows[0].start_time, current.rows[0].end_time);
+    if ((monthly && !isMonthlyPeriod(periods)) || (current.rows[0].stripe_checkout_session_id && (room ? !isMonthlyPeriod(periods) : periods.length !== 1))) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+      return res.status(400).json({ error: room ? "A monthly room rental must remain one month." : "Reschedule each purchased one-hour booking separately." });
+    }
+    const buffer = room && isMonthlyPeriod(periods) ? "0 minutes" : "15 minutes";
     const resourceId = Number(current.rows[0].resource_id);
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1), $2)", [type, resourceId]);
     for (const period of periods) {
       const conflict = await client.query(
         `SELECT 1 FROM ${table}
          WHERE ${resourceColumn} = $1 AND ${idColumn} <> $2
-           AND ${startColumn} < $4::timestamp + INTERVAL '15 minutes'
-           AND ${endColumn} > $3::timestamp - INTERVAL '15 minutes' ${statusClause}
+           AND ${startColumn} < $4::timestamp + INTERVAL '${buffer}'
+           AND ${endColumn} > $3::timestamp - INTERVAL '${buffer}' ${statusClause}
          LIMIT 1`,
         [resourceId, Number(reservationId), period.start, period.end]
       );

@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { isMonthlyReservation } from "@/lib/monthlyReservation";
 import ReservationEditor from "@/components/ReservationEditor";
 import { query } from "@/lib/db";
 import { getSessionUser, loginRedirect } from "@/lib/session";
@@ -23,7 +24,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
   if (type === "room") {
     const { rows } = await query(
       `SELECT rr.reservation_id, rr.room_id AS resource_id, rr.start_date AS start_time, rr.end_date AS end_time,
-              r.name, r.type AS description
+              r.name, r.type AS description, rr.stripe_checkout_session_id
        FROM "room_reservation" rr
        JOIN "room" r ON r.room_id = rr.room_id
        WHERE rr.reservation_id = $1 AND rr.user_id = $2
@@ -43,7 +44,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
       [reservationId, user.user_id]
     );
     reservation = rows[0];
-    resources = await loadEquipment();
+    resources = await loadEquipment({ stripe: false });
   } else {
     const { rows } = await query(
       `SELECT e.class_id AS reservation_id, e.class_id, c.name_of_class AS name,
@@ -64,6 +65,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
     props: {
       type,
       reservation: {
+        monthly: type === "room" && isMonthlyReservation(startDate, endDate),
         reservationId: reservation.reservation_id,
         classId: reservation.class_id ?? reservation.reservation_id,
         resourceId: reservation.resource_id ?? reservation.class_id,
@@ -75,6 +77,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
         resourceId: String(reservation.resource_id),
         name: reservation.name,
         description: reservation.description ?? "",
+        monthly: type === "room" && isMonthlyReservation(startDate, endDate),
         reservationId: reservation.reservation_id,
         unavailableIntervals: resources
           .find((item) => String(item.resourceId) === String(reservation.resource_id))?.unavailableIntervals ?? [],
