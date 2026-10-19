@@ -28,8 +28,8 @@ export class adminRepository {
                 SELECT 1
                 FROM "membership"
                 WHERE user_id = $1
-                    AND UPPER(TRIM(role_of_membership::TEXT)) = 'ADMIN'
-             ) AS is_admin`, //OR you can implement "role_of_membership = 'ADMIN'::role_of_membership" for direct enum comparison
+                  AND UPPER(TRIM(role_of_membership::text)) = 'ADMIN'
+             ) AS is_admin`,
             [userId]
         );
         return rows[0]?.is_admin === true;

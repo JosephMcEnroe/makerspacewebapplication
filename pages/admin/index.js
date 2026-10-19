@@ -8,17 +8,17 @@ import MachineUsageList from "@/components/MachineUsageList";
 import ActionCard from "@/components/ActionCard";
 import styles from "@/styles/AdminDashboard.module.css";
 
-import { adminRepository } from "@/Data_Access_Layer/adminRepository";
-import { getSessionUser, loginRedirect } from "@/lib/session";
+import { loginRedirect } from "@/lib/session";
+import { getStaffSession } from "@/lib/staffAuth";
 
 // Only admins can open this page; everyone else is sent to their dashboard
 export async function getServerSideProps({ req, resolvedUrl }) {
-  const sessionUser = await getSessionUser(req);
-  if (!sessionUser) {
+  const session = await getStaffSession(req);
+  if (!session) {
     return loginRedirect(resolvedUrl);
   }
 
-  if (!(await new adminRepository().isAdmin(sessionUser.user_id))) {
+  if (!session.isAdmin) {
     return { redirect: { destination: "/dashboard", permanent: false } };
   }
 

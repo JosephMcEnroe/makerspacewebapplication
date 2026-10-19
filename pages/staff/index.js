@@ -1,38 +1,20 @@
 import Head from "next/head";
+import Link from "next/link";
 import StaffNavbar from "@/components/StaffNavbar";
 import ActionCard from "@/components/ActionCard";
 import StatCard from "@/components/StatCard";
 import styles from "@/styles/StaffDashboard.module.css";
 import { useAuthContext } from "@/context/AuthContext";
 import { StaffRepository } from "@/Data_Access_Layer/staffRepository";
-import { adminRepository } from "@/Data_Access_Layer/adminRepository";
-import { getSessionUser, loginRedirect } from "@/lib/session";
+import { requireStaffPage } from "@/lib/staffAuth";
 
 // Staff and admins can open this page; everyone else is sent to their dashboard
 export async function getServerSideProps({ req, resolvedUrl }) {
-  const sessionUser = await getSessionUser(req);
-  if (!sessionUser) {
-    return loginRedirect(resolvedUrl);
-  }
+  const guard = await requireStaffPage(req, resolvedUrl);
+  if (guard.deny) return guard.deny;
 
-  const [isStaff, isAdmin] = await Promise.all([
-    new StaffRepository().isStaff(sessionUser.user_id),
-    new adminRepository().isAdmin(sessionUser.user_id),
-  ]);
-  if (!isStaff && !isAdmin) {
-    return { redirect: { destination: "/dashboard", permanent: false } };
-  }
-
-  return { props: {} };
+  return { props: { stats: await new StaffRepository().getDashboardStats() } };
 }
-
-// Dummy data — once a database is connected, these stat cards should pull
-// live reservation, member, and class counts instead of hardcoded values.
-const STATS = [
-  { label: "Active Reservations Today", value: "24" },
-  { label: "Total Members", value: "148" },
-  { label: "Upcoming Classes", value: "7" },
-];
 
 const CalendarIcon = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -63,8 +45,13 @@ const InfoIcon = (
   </svg>
 );
 
-export default function StaffDashboardPage() {
+export default function StaffDashboardPage({ stats }) {
   const { user } = useAuthContext();
+  const statCards = [
+    { label: "Active Reservations", value: stats.activeReservations },
+    { label: "Active Members", value: stats.activeMembers },
+    { label: "Upcoming Classes", value: stats.upcomingClasses },
+  ];
 
   return (
     <>
@@ -82,32 +69,30 @@ export default function StaffDashboardPage() {
           </p>
           <h1 className={styles.greeting}>Hello, {user?.firstName || "Staff"}!</h1>
 
-          {/* Static quick-action links — no data to wire up, just handlers */}
           <div className={styles.actionsGrid}>
             <ActionCard
               icon={CalendarIcon}
               title="Create a reservation"
               description="Book equipment, rooms, or classes"
-              onClick={() => console.log("Create a reservation")}
+              href="/staff/reservations/new"
             />
             <ActionCard
               icon={MembershipIcon}
               title="Manage a membership"
               description="Update member details and status"
-              onClick={() => console.log("Manage a membership")}
+              href="/members"
             />
           </div>
 
           <div className={styles.viewAllWrapper}>
-            <button type="button" className={styles.viewAllBtn} onClick={() => console.log("View all members")}>
+            <Link href="/members" className={styles.viewAllBtn}>
               {PersonIcon}
               View All Members
-            </button>
+            </Link>
           </div>
 
-          {/* Dummy data — see STATS above; wire up to the database once it exists */}
           <div className={styles.statsGrid}>
-            {STATS.map((stat) => (
+            {statCards.map((stat) => (
               <StatCard key={stat.label} label={stat.label} value={stat.value} icon={InfoIcon} />
             ))}
           </div>

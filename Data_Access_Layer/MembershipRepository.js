@@ -27,7 +27,7 @@ export class membershipRepositry {
                 SELECT 1
                 FROM "membership"
                 WHERE user_id = $1
-                  AND UPPER(TRIM(status)) = 'ACTIVE'
+                  AND UPPER(TRIM(status::text)) = 'ACTIVE'
              ) AS is_member`,
             [userId]
         );
@@ -83,6 +83,38 @@ export class membershipRepositry {
             [userId]
         );
         return rows[0] || null;
+    }
+
+    //Staff update of a user's membership; creates the row if they don't have one yet
+    async saveMembershipForUser(userId, membership) {
+        const params = [
+            userId,
+            membership.role_of_membership,
+            membership.period_start_date,
+            membership.period_end_date,
+            membership.rfid_id,
+            membership.status
+        ];
+        const updated = await query(
+            `UPDATE "membership"
+             SET role_of_membership = $2,
+                 period_start_date = $3,
+                 period_end_date = $4,
+                 rfid_id = $5,
+                 status = $6
+             WHERE user_id = $1
+             RETURNING membership_id, user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status`,
+            params
+        );
+        if (updated.rows[0]) return updated.rows[0];
+
+        const inserted = await query(
+            `INSERT INTO "membership" (user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status)
+             VALUES ($1, $2, $3, $4, $5, $6)
+             RETURNING membership_id, user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status`,
+            params
+        );
+        return inserted.rows[0] || null;
     }
 
     async createMembership(membership) {

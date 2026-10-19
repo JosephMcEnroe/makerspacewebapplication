@@ -3,14 +3,15 @@ import { useRouter } from "next/router";
 import { useAuthContext } from "@/context/AuthContext";
 import styles from "./StaffNavbar.module.css";
 
+// Reports (Stripe revenue) is admin-only, so it's hidden when there's no href
 const NAV_ITEMS = (role, reportsHref) => [
   { label: "Dashboard", href: `/${role}` },
   { label: "Members", href: "/members" },
   { label: "Equipment", href: "/equipment" },
   { label: "Reports", href: reportsHref },
-];
+].filter((item) => item.href);
 
-export default function StaffNavbar({ role = "staff", reportsHref = "/reports" }) {
+export default function StaffNavbar({ role = "staff", reportsHref = role === "admin" ? "/stripe/reports" : null }) {
   const router = useRouter();
   const { user } = useAuthContext();
   const initials = [user?.firstName, user?.lastName]
@@ -29,7 +30,7 @@ export default function StaffNavbar({ role = "staff", reportsHref = "/reports" }
 
       <nav className={styles.navLinks}>
         {navItems.map((item) => {
-          const isActive = router.pathname === item.href;
+          const isActive = router.pathname === item.href || router.pathname.startsWith(`${item.href}/`);
           return (
             <Link
               key={item.href}
