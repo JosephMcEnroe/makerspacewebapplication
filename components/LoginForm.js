@@ -9,7 +9,8 @@ import styles from "./LoginForm.module.css";
 import { getPostLoginDestination } from "@/lib/authRedirect";
 
 function redirectForRole(router, role) {
-  void router.replace(getPostLoginDestination(router.query.next, role));
+  // void router.replace(getPostLoginDestination(router.query.next, role)); //closed this for forcing users to their main page based on their roles
+  void router.replace(getPostLoginDestination(null, role));
 }
 
 export default function LoginForm() {
