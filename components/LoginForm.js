@@ -50,11 +50,11 @@ export default function LoginForm() {
         ? "That verification link is invalid or has expired. Sign in to get a new one."
         : null;
 
-  // useEffect(() => {
-  //   if (user && router.isReady) {
-  //     redirectForRole(router, user.role);
-  //   }
-  // }, [user, router]);
+  useEffect(() => {
+    if (user && router.isReady) {
+      redirectForRole(router, user.role);
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
