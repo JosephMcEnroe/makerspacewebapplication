@@ -28,10 +28,23 @@ function ResourceImage({ image, name }) {
   );
 }
 
-export default function ResourceCard({ name, image, description, time, spots, unavailable, unavailableNote }) {
+export default function ResourceCard({ name, image, description, time, spots, unavailable, unavailableNote, onSelect }) {
   const source = image || DEFAULT_RESOURCE_IMAGE;
+  const handleKeyDown = (event) => {
+    if (onSelect && (event.key === "Enter" || event.key === " ")) {
+      event.preventDefault();
+      onSelect();
+    }
+  };
   return (
-    <div className={unavailable ? `${styles.card} ${styles.cardUnavailable}` : styles.card}>
+    <div
+      className={`${unavailable ? `${styles.card} ${styles.cardUnavailable}` : styles.card} ${onSelect ? styles.cardInteractive : ""}`}
+      role={onSelect ? "button" : undefined}
+      tabIndex={onSelect ? 0 : undefined}
+      onClick={onSelect}
+      onKeyDown={handleKeyDown}
+      aria-label={onSelect ? `Reserve ${name}` : undefined}
+    >
       <div className={styles.imagePlaceholder}>
         <ResourceImage key={source} image={source} name={name} />
         {(time || spots) && (
@@ -52,6 +65,7 @@ export default function ResourceCard({ name, image, description, time, spots, un
             {unavailableNote || "Currently unavailable for reservation."}
           </p>
         )}
+        {onSelect && <p className={styles.reserveHint}>Select to view available times</p>}
       </div>
     </div>
   );
