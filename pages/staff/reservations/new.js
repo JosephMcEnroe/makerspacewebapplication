@@ -50,7 +50,8 @@ export async function getServerSideProps({ req, resolvedUrl, query: params }) {
 
   const [users, equipment, rooms, classes] = await Promise.all([
     new UserRepository().findAllWithMembership(),
-    loadEquipment(),
+    // Staff bookings skip Stripe, so list every machine without loading Stripe products
+    loadEquipment({ stripe: false }),
     loadRooms(),
     loadUpcomingClasses(),
   ]);

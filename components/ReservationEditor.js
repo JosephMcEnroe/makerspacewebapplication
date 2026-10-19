@@ -2,6 +2,7 @@ import { businessCalendarDate } from "@/lib/businessTime";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import ResourceCard from "@/components/ResourceCard";
+import MonthlyAvailability from "@/components/MonthlyAvailability";
 import WeeklyAvailability from "@/components/WeeklyAvailability";
 import styles from "@/components/ExplorePage.module.css";
 import { getReservationSlotStartMinutes } from "@/lib/reservationPeriods";
@@ -49,7 +50,7 @@ export default function ReservationEditor({ type, reservation, resource, resourc
     setError("");
     try {
       const csrfToken = await getCsrfToken();
-      const formattedPeriods = periods.map(({ date, startMinute, endDate, endMinute }) => {
+      const formattedPeriods = reservation.monthly ? periods : periods.map(({ date, startMinute, endDate, endMinute }) => {
         const wallTime = (day, minute) => day + 'T' + pad(Math.floor(minute / 60)) + ':' + pad(minute % 60) + ':00';
         return { start: wallTime(date, startMinute), end: wallTime(endDate, endMinute) };
       });
@@ -103,6 +104,7 @@ export default function ReservationEditor({ type, reservation, resource, resourc
     }
   };
 
+  const Availability = reservation.monthly ? MonthlyAvailability : WeeklyAvailability;
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -134,10 +136,10 @@ export default function ReservationEditor({ type, reservation, resource, resourc
           </div>
         </>
       ) : (
-        <WeeklyAvailability
+        <Availability
           resource={resource}
           type={resourceType}
-          initialDate={reservation.startDate}
+          initialDate={reservation.monthly ? (() => { const d = businessCalendarDate(reservation.startDate); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; })() : reservation.startDate}
           initialSlots={createInitialSlots(resourceType, reservation.startDate, reservation.endDate)}
           unavailableIntervals={resource.unavailableIntervals}
           confirmLabel={submitting ? "Saving…" : "Confirm Changes"}
