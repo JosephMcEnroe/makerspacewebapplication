@@ -29,8 +29,8 @@ export class StaffRepository {
                 SELECT 1
                 FROM "membership"
                 WHERE user_id = $1
-                  AND UPPER(TRIM(role_of_membership)) = 'STAFF'
-             ) AS is_staff`,
+                  AND UPPER(TRIM(role_of_membership::TEXT)) = 'STAFF'
+             ) AS is_staff`, //OR you can implement "role_of_membership = 'STAFF'::role_of_membership" for direct enum comparison
             [userId]
         );
         return rows[0]?.is_staff === true;

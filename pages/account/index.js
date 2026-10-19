@@ -42,11 +42,6 @@ export default function AccountPage({ account }) {
     return <p>Checking authentication...</p>;
   }
 
-  //Come back to this later
-  // if(user.role !== "member"){
-  //   return <p>Not authorized...</p>;
-  // }
-
   return (
     <>
       <Head>

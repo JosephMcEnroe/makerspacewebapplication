@@ -9,8 +9,21 @@ import styles from "./LoginForm.module.css";
 import { getPostLoginDestination } from "@/lib/authRedirect";
 
 //Add dynamic redirect instead of dashboard
+//this function has never been touch...
 function redirectForRole(router, role) {
-  void router.replace(getPostLoginDestination(router.query.next, role));
+  // const requestedPath = router.query.next; //This is to force users back to the main page based on their role - need discussion about this for future reference
+  const requestedPath = null;
+  const destination = getPostLoginDestination(requestedPath, role);
+
+  console.log("Login redirect debug:", {
+    currentUrl: router.asPath,
+    requestedPath,
+    role,
+    destination,
+  });
+  
+  void router.replace(destination);
+  //void router.replace(getPostLoginDestination(router.query.next, role));
 }
 
 export default function LoginForm() {
@@ -37,11 +50,11 @@ export default function LoginForm() {
         ? "That verification link is invalid or has expired. Sign in to get a new one."
         : null;
 
-  useEffect(() => {
-    if (user && router.isReady) {
-      redirectForRole(router, user.role);
-    }
-  }, [user, router]);
+  // useEffect(() => {
+  //   if (user && router.isReady) {
+  //     redirectForRole(router, user.role);
+  //   }
+  // }, [user, router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,6 +66,10 @@ export default function LoginForm() {
     if (!user) {
       return;
     }
+
+    console.log("Router ready:", router.isReady);
+    console.log("Current URL:", router.asPath);
+    console.log("Next destination:", router.query.next);
 
     if (router.isReady) {
       redirectForRole(router, user.role);

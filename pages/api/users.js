@@ -7,7 +7,8 @@ export default async function handler(req, res) {
       error: "Method not allowed",
     });
   }
-
+  
+  //reformat this whole function or use the sql queries fromd repositories
   try {
     const result = await query(`
       SELECT user_id, first_name, last_name, email

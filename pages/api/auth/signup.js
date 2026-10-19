@@ -215,15 +215,6 @@ export default async function handler(req, res) {
             })
         );
 
-        const membership = {
-            user_id: newUser.user_id,
-            role_of_membership: "MEMBER",
-            period_start_date: '2026-09-29', //Hardcoded for now for login/signup to work - update to use DATE.NOW()
-            period_end_date: '2026-12-01',
-            rfid_id: null,
-            status: "INACTIVE"
-        }
-
         const isNewmp = await mpQuery.createMembership(membership);
 
         if(!isNewmp){

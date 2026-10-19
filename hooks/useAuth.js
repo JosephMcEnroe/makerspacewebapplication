@@ -84,8 +84,12 @@ export function useAuth() {
         throw new Error(data.error || "Failed to log in");
       }
 
+      console.log("Login API succeeded; checking session now");
+
       //if auth successful - load the full session user (name, member since, etc.)
       const sessionUser = await sessionCheck();
+
+      console.log("Session check returned:", sessionUser);
       if (!sessionUser) setUser(data.user);
       return sessionUser ?? data.user;
     } catch (err) {

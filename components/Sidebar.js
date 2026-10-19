@@ -62,8 +62,8 @@ export default function Sidebar() {
 
     if(isTrue)
       router.push("/login");
-    else
-      return;
+    // else
+    //   return;
   };
 
   return (
