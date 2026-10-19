@@ -8,6 +8,7 @@ import Image from "next/image";
 import styles from "./LoginForm.module.css";
 import { getPostLoginDestination } from "@/lib/authRedirect";
 
+//Add dynamic redirect instead of dashboard
 function redirectForRole(router, role) {
   void router.replace(getPostLoginDestination(router.query.next, role));
 }

@@ -1,5 +1,6 @@
 import { businessTime, businessDateTime } from "@/lib/businessTime";
 import Head from "next/head";
+import { parse } from "cookie";
 import ReservationsPanel from "@/components/ReservationsPanel";
 import styles from "@/styles/Account.module.css";
 import { query } from "@/lib/db";

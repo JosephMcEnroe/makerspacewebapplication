@@ -91,6 +91,18 @@ const ExportIcon = (
 );
 
 export default function AdminDashboardPage() {
+  const { user, loading, error } = useAuth();
+
+  if(loading) {
+    return <p>Checking authentication...</p>;
+  }
+
+  //This was to test the role authentication - use the redirect route back where it came from
+  if(user.role !== "ADMIN"){
+    return <p>Not authorized</p>;
+  }
+
+
   return (
     <>
       <Head>
