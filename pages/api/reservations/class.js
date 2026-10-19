@@ -1,3 +1,5 @@
+import { businessDateTime } from "@/lib/businessTime";
+import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -43,27 +45,18 @@ export default async function handler(req, res) {
     }
     const classRow = classResult.rows[0];
     const classDate = classRow.class_date instanceof Date
-      ? classRow.class_date.toISOString().slice(0, 10)
+      ? businessDateTime(classRow.class_date).slice(0, 10)
       : String(classRow.class_date).slice(0, 10);
     const classTime = String(classRow.class_time).slice(0, 5);
     const [classHour, classMinute] = classTime.split(":").map(Number);
     const selectedDate = startsAt.slice(0, 10);
-    if (selectedDate !== classDate || requestedHour !== classHour || requestedMinute !== classMinute || new Date(startsAt) <= new Date()) {
+    if (selectedDate !== classDate || requestedHour !== classHour || requestedMinute !== classMinute || businessTime(startsAt) <= Date.now()) {
       await client.query("ROLLBACK");
       transactionStarted = false;
       return res.status(400).json({ error: "The selected time does not match this class schedule." });
     }
-    const enrollmentTable = '"class_enrollment"';
-    const enrollmentColumn = "user_id";
-    const enrollmentClassColumn = "class_id";
-    await client.query(`CREATE TABLE IF NOT EXISTS ${enrollmentTable} (
-      user_id INTEGER NOT NULL REFERENCES "users"(user_id) ON DELETE CASCADE,
-      class_id INTEGER NOT NULL REFERENCES "class"(class_id) ON DELETE CASCADE,
-      enrolled_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      PRIMARY KEY (user_id, class_id)
-    )`);
     const existing = await client.query(
-      `SELECT 1 FROM ${enrollmentTable} WHERE ${enrollmentColumn} = $1 AND ${enrollmentClassColumn} = $2`,
+      `SELECT 1 FROM "class_enrollment" WHERE user_id = $1 AND class_id = $2`,
       [user.user_id, classId]
     );
     if (existing.rowCount > 0) {
@@ -72,7 +65,7 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: "You are already enrolled in this class." });
     }
     const enrollmentCount = await client.query(
-      `SELECT COUNT(*)::integer AS count FROM ${enrollmentTable} WHERE ${enrollmentClassColumn} = $1`,
+      `SELECT COUNT(*)::integer AS count FROM "class_enrollment" WHERE class_id = $1`,
       [classId]
     );
     const capacity = classRow.max_capacity;
@@ -82,7 +75,7 @@ export default async function handler(req, res) {
       return res.status(409).json({ error: "This class is full." });
     }
     const enrollment = await client.query(
-      `INSERT INTO ${enrollmentTable} (${enrollmentColumn}, ${enrollmentClassColumn}) VALUES ($1, $2)
+      `INSERT INTO "class_enrollment" (user_id, class_id) VALUES ($1, $2)
        RETURNING class_id`,
       [user.user_id, classId]
     );

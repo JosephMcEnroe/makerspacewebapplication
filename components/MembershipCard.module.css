@@ -158,3 +158,25 @@
     width: 100%;
   }
 }
+
+.noticeBanner {
+  margin-top: 1.25rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.noticeSuccess {
+  background-color: #f5ede4;
+  color: #7a3e1b;
+  border: 1px solid #e8d0b8;
+}
+
+.noticeError {
+  background-color: #fde8e8;
+  color: #9b1c1c;
+  border: 1px solid #f8b4b4;
+}
+

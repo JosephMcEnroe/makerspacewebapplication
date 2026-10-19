@@ -1,3 +1,5 @@
+import { businessDateTime } from "@/lib/businessTime";
+import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -22,7 +24,9 @@ export default async function handler(req, res) {
     await client.query("BEGIN");
     transactionStarted = true;
     const existing = await client.query(
-      `SELECT 1 FROM "class_enrollment" WHERE user_id = $1 AND class_id = $2 FOR UPDATE`,
+      `SELECT c.class_date + COALESCE(c.class_time::time, '00:00'::time) AS starts_at
+       FROM "class_enrollment" e JOIN "class" c ON c.class_id = e.class_id
+       WHERE e.user_id = $1 AND e.class_id = $2 FOR UPDATE OF e`,
       [user.user_id, oldClassId]
     );
     if (!existing.rowCount) {
@@ -30,12 +34,17 @@ export default async function handler(req, res) {
       transactionStarted = false;
       return res.status(404).json({ error: "Class reservation not found." });
     }
+    if (new Date(existing.rows[0].starts_at) <= new Date()) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+      return res.status(400).json({ error: "Classes that have already started can't be changed." });
+    }
     const target = await client.query(
       `SELECT class_id, class_date, class_time, max_capacity FROM "class" WHERE class_id = $1 FOR UPDATE`,
       [newClassId]
     );
     const targetDate = target.rowCount
-      ? new Date(`${target.rows[0].class_date instanceof Date ? target.rows[0].class_date.toISOString().slice(0, 10) : String(target.rows[0].class_date).slice(0, 10)}T${String(target.rows[0].class_time || "00:00").slice(0, 5)}:00`)
+      ? new Date(businessTime(`${target.rows[0].class_date instanceof Date ? businessDateTime(target.rows[0].class_date).slice(0, 10) : String(target.rows[0].class_date).slice(0, 10)}T${String(target.rows[0].class_time || "00:00").slice(0, 5)}:00`))
       : null;
     if (!target.rowCount || Number.isNaN(targetDate.getTime()) || targetDate <= new Date()) {
       await client.query("ROLLBACK");

@@ -1,6 +1,8 @@
+import { businessCalendarDate } from "@/lib/businessTime";
 import { useState } from "react";
 import { useRouter } from "next/router";
 import ResourceCard from "@/components/ResourceCard";
+import MonthlyAvailability from "@/components/MonthlyAvailability";
 import WeeklyAvailability from "@/components/WeeklyAvailability";
 import styles from "@/components/ExplorePage.module.css";
 import { getReservationSlotStartMinutes } from "@/lib/reservationPeriods";
@@ -8,8 +10,8 @@ import { getReservationSlotStartMinutes } from "@/lib/reservationPeriods";
 const pad = (value) => String(value).padStart(2, "0");
 
 function createInitialSlots(type, startValue, endValue) {
-  const start = new Date(startValue);
-  const end = new Date(endValue);
+  const start = businessCalendarDate(startValue);
+  const end = businessCalendarDate(endValue);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return [];
 
   if (end.getTime() - start.getTime() !== 60 * 60 * 1000) return [];
@@ -48,13 +50,9 @@ export default function ReservationEditor({ type, reservation, resource, resourc
     setError("");
     try {
       const csrfToken = await getCsrfToken();
-      const formattedPeriods = periods.map(({ date, startMinute, endDate, endMinute }) => {
-        const startDate = new Date(`${date}T00:00:00`);
-        startDate.setHours(Math.floor(startMinute / 60), startMinute % 60, 0, 0);
-        const finishDate = new Date(`${endDate}T00:00:00`);
-        finishDate.setHours(Math.floor(endMinute / 60), endMinute % 60, 0, 0);
-        const localDateTime = (value) => `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00`;
-        return { start: localDateTime(startDate), end: localDateTime(finishDate) };
+      const formattedPeriods = reservation.monthly ? periods : periods.map(({ date, startMinute, endDate, endMinute }) => {
+        const wallTime = (day, minute) => day + 'T' + pad(Math.floor(minute / 60)) + ':' + pad(minute % 60) + ':00';
+        return { start: wallTime(date, startMinute), end: wallTime(endDate, endMinute) };
       });
       const response = await fetch("/api/reservations/update", {
         method: "POST",
@@ -106,6 +104,7 @@ export default function ReservationEditor({ type, reservation, resource, resourc
     }
   };
 
+  const Availability = reservation.monthly ? MonthlyAvailability : WeeklyAvailability;
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -137,10 +136,10 @@ export default function ReservationEditor({ type, reservation, resource, resourc
           </div>
         </>
       ) : (
-        <WeeklyAvailability
+        <Availability
           resource={resource}
           type={resourceType}
-          initialDate={reservation.startDate}
+          initialDate={reservation.monthly ? (() => { const d = businessCalendarDate(reservation.startDate); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; })() : reservation.startDate}
           initialSlots={createInitialSlots(resourceType, reservation.startDate, reservation.endDate)}
           unavailableIntervals={resource.unavailableIntervals}
           confirmLabel={submitting ? "Saving…" : "Confirm Changes"}

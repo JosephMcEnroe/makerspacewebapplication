@@ -3,7 +3,7 @@ import { query } from "@/lib/db";
 export class machineRepository {
     async findAllMachine() {
         const { rows } = await query(
-            `SELECT machine_id, name, type, cost, status
+            `SELECT machine_id, name, type, cost, status, stripe_machine_id
             FROM "machine"
             ORDER BY name
             `
@@ -13,7 +13,7 @@ export class machineRepository {
 
     async findMachine(machineID) {
         const { rows } = await query(
-            `SELECT machine_id, name, type, cost, status
+            `SELECT machine_id, name, type, cost, status, stripe_machine_id
             FROM "machine"
             WHERE machine_id = $1
             `,

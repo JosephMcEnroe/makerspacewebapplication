@@ -1,3 +1,5 @@
+import { useRouter } from "next/router";
+import ReservationProductCard from "@/components/ReservationProductCard";
 import Head from "next/head";
 import ResourceCard from "@/components/ResourceCard";
 import styles from "@/styles/Dashboard.module.css";
@@ -15,6 +17,7 @@ export async function getServerSideProps() {
 }
 
 export default function DashboardPage({ equipment, rooms, classes }) {
+  const router = useRouter();
   return (
     <>
       <Head>
@@ -28,7 +31,7 @@ export default function DashboardPage({ equipment, rooms, classes }) {
             <h1 className={styles.sectionTitle}>Equipment</h1>
             <div className={styles.grid}>
               {equipment.map((item) => (
-                <ResourceCard key={item.id} {...item} />
+                <ReservationProductCard key={item.id} {...item} onSelect={() => router.push({ pathname: "/equipment", query: { resourceId: item.resourceId } })} />
               ))}
             </div>
           </div>
@@ -39,7 +42,7 @@ export default function DashboardPage({ equipment, rooms, classes }) {
             <h2 className={`${styles.sectionTitle} ${styles.sectionTitleLight}`}>Rooms</h2>
             <div className={styles.grid}>
               {rooms.map((item) => (
-                <ResourceCard key={item.id} {...item} />
+                <ReservationProductCard key={item.id} {...item} onSelect={() => router.push({ pathname: "/rooms", query: { resourceId: item.resourceId } })} />
               ))}
             </div>
           </div>

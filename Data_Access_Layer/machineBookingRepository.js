@@ -13,7 +13,7 @@ export class machineBookingRepository {
     async findUserBooking(userId) {
         const { rows } = await query(
             `SELECT b.user_id, b.booking_id, b.machine_id, b.start_date_time,
-                b.end_date_time, m.name AS machine_name
+                b.end_date_time, b.stripe_checkout_session_id, m.name AS machine_name
          FROM "machine_booking" b
          LEFT JOIN "machine" m ON m.machine_id = b.machine_id
          WHERE b.user_id = $1

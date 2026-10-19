@@ -1,3 +1,4 @@
+import { businessTime, businessDateTime } from "@/lib/businessTime";
 import Head from "next/head";
 import ReservationsPanel from "@/components/ReservationsPanel";
 import styles from "@/styles/Account.module.css";
@@ -66,6 +67,7 @@ export async function getServerSideProps({ req, resolvedUrl }) {
       endDate: booking.end_date_time instanceof Date ? booking.end_date_time.toISOString() : String(booking.end_date_time),
       name: booking.machine_name ?? "Equipment",
       time: formatTimeRange(booking.start_date_time, booking.end_date_time),
+      paid: Boolean(booking.stripe_checkout_session_id),
       trainingRequired: false,
     })
   );
@@ -87,10 +89,10 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   const classReservations = groupReservations(
     classEnrollments.map((enrollment) => {
       const date = enrollment.class_date instanceof Date
-        ? enrollment.class_date.toISOString().slice(0, 10)
+        ? businessDateTime(enrollment.class_date).slice(0, 10)
         : String(enrollment.class_date).slice(0, 10);
       const time = String(enrollment.class_time || "00:00").slice(0, 8);
-      const startsAt = new Date(`${date}T${time}`);
+      const startsAt = new Date(businessTime(`${date}T${time}`));
       return { ...enrollment, start: startsAt, end: startsAt };
     }),
     (enrollment) => ({
@@ -164,6 +166,7 @@ export default function ReservationsPage({ reservations, initialType, initialRes
           <section className={stylesPanel.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="cancel-title">
             <h2 id="cancel-title">Cancel this reservation?</h2>
             <p>Are you sure you want to cancel {confirmation.reservation.name}? This cannot be undone.</p>
+            {confirmation.reservation.paid && <p><strong>This booking was paid for, and cancelling does not refund the payment.</strong></p>}
             {actionError && <p role="alert">{actionError}</p>}
             <div className={stylesPanel.cardActions}>
               <button type="button" className={stylesPanel.editBtn} disabled={isCancelling} onClick={() => setConfirmation(null)}>Keep Reservation</button>

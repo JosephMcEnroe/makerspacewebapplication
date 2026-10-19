@@ -17,13 +17,33 @@ export async function getServerSideProps({ req, resolvedUrl }) {
 
   const membership = await new membershipRepositry().findUserMembership(sessionUser.user_id);
 
+  // Determine if this is a day pass (no subscription, no auto-renew) and check if it has expired
+  const isDayPass = membership?.status?.toUpperCase() === "ACTIVE"
+    && !membership.stripe_subscription_id
+    && membership.auto_renew === false;
+
+  // Day passes expire after period_end_date
+  const periodEndDate = membership?.period_end_date
+    ? new Date(membership.period_end_date).toISOString().slice(0, 10)
+    : null;
+  const today = new Date().toISOString().slice(0, 10);
+  const dayPassExpired = isDayPass && periodEndDate && periodEndDate < today;
+
+  // If the day pass has expired, the member should see the purchase options (treated as inactive)
+  const effectiveStatus = dayPassExpired ? "inactive" : (membership?.status ?? "").toLowerCase();
+
   return {
     props: {
       membership: {
-        planName: sessionUser.first_name ? `${sessionUser.first_name}'s Membership` : "Membership",
-        status: (membership?.status ?? "").toLowerCase(),
+        planName: isDayPass && !dayPassExpired
+          ? "Day Pass"
+          : sessionUser.first_name ? `${sessionUser.first_name}'s Membership` : "Membership",
+        status: effectiveStatus,
         monthlyCost: null,
         nextBillingDate: formatDate(membership?.period_end_date),
+        autoRenew: membership?.auto_renew ?? true,
+        isDayPass: isDayPass && !dayPassExpired,
+        stripeSubscriptionId: membership?.stripe_subscription_id || null,
       },
     },
   };

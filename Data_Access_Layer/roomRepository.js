@@ -3,7 +3,7 @@ import { query } from "@/lib/db";
 export class roomRepository {
     async findAllRoom() {
         const { rows } = await query(
-            `SELECT room_id, name, type, cost
+            `SELECT room_id, name, type, cost, stripe_room_id
             FROM "room"
             ORDER BY name
         `);
@@ -12,7 +12,7 @@ export class roomRepository {
 
     async findRoom(roomID) {
         const { rows } = await query(
-            `SELECT room_id, name, type, cost
+            `SELECT room_id, name, type, cost, stripe_room_id
             FROM "room"
             WHERE room_id = $1
         `, [roomID]);

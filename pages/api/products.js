@@ -62,9 +62,9 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log("=== STRIPE PRODUCTS FOUND ===");
-    console.dir(allProducts, { depth: null });
-    console.log("=============================");
+    // console.log("=== STRIPE PRODUCTS FOUND ===");
+    // console.dir(allProducts, { depth: null });
+    // console.log("=============================");
 
     return res.status(200).json({
       products: allProducts,

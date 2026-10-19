@@ -1,0 +1,23 @@
+import { getSessionUser } from "@/lib/session";
+import { getStripe } from "@/lib/stripeCatalog";
+import { query } from "@/lib/db";
+import { REFUNDED_PAYMENT_METHOD, bookingColumns } from "@/lib/reservationCheckout";
+
+export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store");
+  if (req.method !== "GET") { res.setHeader("Allow", "GET"); return res.status(405).end(); }
+  const user = await getSessionUser(req);
+  if (!user) return res.status(401).json({ error: "Please sign in to view your reservation." });
+  if (typeof req.query.session_id !== "string" || !req.query.session_id.startsWith("cs_")) return res.status(400).json({ error: "Invalid checkout session." });
+  try {
+    const session = await getStripe().checkout.sessions.retrieve(req.query.session_id);
+    const m = session.metadata;
+    if (m?.purchase_type !== "reservation" || m.user_id !== String(user.user_id) || !["rooms", "equipment"].includes(m.reservation_type)) return res.status(404).json({ error: "Checkout not found." });
+    const c = bookingColumns(m.reservation_type);
+    const result = await query(`SELECT ${c.id} AS id FROM ${c.table} WHERE stripe_checkout_session_id = $1 AND user_id = $2`, [session.id, user.user_id]);
+    const refunded = !result.rowCount && (await query('SELECT 1 FROM "payment" WHERE stripe_invoice_id = $1 AND payment_method = $2',
+      [session.id, REFUNDED_PAYMENT_METHOD])).rowCount > 0;
+    return res.json({ status: result.rowCount ? "confirmed" : refunded ? "refunded" : session.status === "expired" ? "expired" : session.payment_status === "unpaid" ? "unpaid" : "processing",
+      type: m.reservation_type, reservationIds: result.rows.map(r => r.id), checkoutUrl: session.status === "open" ? session.url : null });
+  } catch (error) { console.error("Checkout status:", error); return res.status(500).json({ error: "Could not load checkout status." }); }
+}

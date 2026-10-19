@@ -17,6 +17,21 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Only upcoming reservations can be cancelled; the UI hides the button, but the API must enforce it too
+    const startQuery = {
+      class: `SELECT c.class_date + COALESCE(c.class_time::time, '00:00'::time) AS starts_at
+              FROM "class_enrollment" e JOIN "class" c ON c.class_id = e.class_id
+              WHERE e.class_id = $1 AND e.user_id = $2`,
+      room: `SELECT start_date AS starts_at FROM "room_reservation"
+             WHERE reservation_id = $1 AND user_id = $2 AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%')`,
+      equipment: `SELECT start_date_time AS starts_at FROM "machine_booking" WHERE booking_id = $1 AND user_id = $2`,
+    }[type];
+    const current = await getPool().query(startQuery, [Number(reservationId), user.user_id]);
+    if (!current.rowCount) return res.status(404).json({ error: "Reservation not found." });
+    if (new Date(current.rows[0].starts_at) <= new Date()) {
+      return res.status(400).json({ error: "Reservations that have already started can't be cancelled." });
+    }
+
     let result;
     if (type === "class") {
       result = await getPool().query(

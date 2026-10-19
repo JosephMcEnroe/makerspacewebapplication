@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./LoginForm.module.css";
 import { getPostLoginDestination } from "@/lib/authRedirect";
 
 function redirectForRole(router, role) {
-  void router.replace(getPostLoginDestination(router.query.next, role));
+  //void router.replace(getPostLoginDestination(router.query.next, role)); //closed this for forcing users to their main page based on their roles
+  void router.replace(getPostLoginDestination(null, role));
 }
 
 export default function LoginForm() {
@@ -67,8 +69,16 @@ export default function LoginForm() {
 
   return (
     <div className={styles.card}>
+      <Image
+        src="/images/collaboratory_logo.jpg"
+        alt="The Collaboratory"
+        width={670}
+        height={670}
+        className={styles.logo}
+        priority
+      />
       <h1 className={styles.title}>WELCOME BACK</h1>
-      <p className={styles.subtitle}>Sign in to your Crafty Studio account</p>
+      <p className={styles.subtitle}>Sign in to your Collaboratory account</p>
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
