@@ -1,4 +1,5 @@
 import { query } from "@/lib/db";
+import { effectiveMembershipStatus } from "@/lib/membershipStatus";
 
 export default async function handler(req, res) {
   // If visited via browser (GET), return a friendly status check
@@ -63,7 +64,9 @@ export default async function handler(req, res) {
           m.status AS member_status,
           m.role_of_membership,
           m.period_start_date,
-          m.period_end_date
+          m.period_end_date,
+          m.auto_renew,
+          m.stripe_subscription_id
        FROM membership m
        JOIN users u ON u.user_id = m.user_id
        WHERE LOWER(m.rfid_id::text) = LOWER($1::text)`,
@@ -81,9 +84,9 @@ export default async function handler(req, res) {
 
     const user = userResult.rows[0];
 
-    const memberStatus = (user.member_status || "")
-      .toLowerCase()
-      .trim();
+    // An expired day pass counts as inactive
+    const memberStatus = (effectiveMembershipStatus({ ...user, status: user.member_status }) || "")
+      .toLowerCase();
 
     // 4. Determine traffic light decision
     //

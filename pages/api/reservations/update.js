@@ -2,25 +2,16 @@ import { monthlyPeriod, isMonthlyReservation } from "@/lib/monthlyReservation";
 import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
+import { MEMBERSHIP_REQUIRED_MESSAGE, canReserve } from "@/lib/reservationAccess";
 import { verifyCsrfToken } from "@/lib/csrf";
 import { hasReservationBuffer, isValidReservationPeriod } from "@/lib/reservationPeriods";
+import { bookingColumns } from "@/lib/reservationCheckout";
 
 function isMonthlyPeriod(periods) {
   try {
     const expected = monthlyPeriod(periods[0]?.start?.slice(0, 10));
     return periods.length === 1 && periods[0].start === expected.start && periods[0].end === expected.end;
   } catch { return false; }
-}
-
-function validDateTime(value) {
-  if (typeof value !== "string" || value.length !== 19 || value[4] !== "-" || value[7] !== "-" || value[10] !== "T" || value.slice(16) !== ":00") return false;
-  const year = Number(value.slice(0, 4));
-  const month = Number(value.slice(5, 7));
-  const day = Number(value.slice(8, 10));
-  const hour = Number(value.slice(11, 13));
-  const minute = Number(value.slice(14, 16));
-  return month >= 1 && month <= 12 && day >= 1 && day <= new Date(Date.UTC(year, month, 0)).getUTCDate()
-    && hour <= 23 && minute <= 59 && minute % 15 === 0;
 }
 
 export default async function handler(req, res) {
@@ -30,10 +21,11 @@ export default async function handler(req, res) {
   }
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Sign in to edit a reservation." });
+  if (!canReserve(user)) return res.status(403).json({ error: MEMBERSHIP_REQUIRED_MESSAGE });
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
 
   const { type, reservationId, periods } = req.body || {};
-  if (!["rooms", "equipment"].includes(type) || !/^\d+$/.test(String(reservationId)) || !Array.isArray(periods) || periods.length < 1 || periods.length > 21 || (!(type === "rooms" && isMonthlyPeriod(periods)) && periods.some((period) => !validDateTime(period?.start) || !validDateTime(period?.end) || !isValidReservationPeriod(type, period)))) {
+  if (!["rooms", "equipment"].includes(type) || !/^\d+$/.test(String(reservationId)) || !Array.isArray(periods) || periods.length < 1 || periods.length > 21 || (!(type === "rooms" && isMonthlyPeriod(periods)) && periods.some((period) => !isValidReservationPeriod(type, period)))) {
     return res.status(400).json({ error: "Choose valid one-hour reservation slots." });
   }
   if (!(type === "rooms" && isMonthlyPeriod(periods)) && !hasReservationBuffer(periods)) {
@@ -51,12 +43,7 @@ export default async function handler(req, res) {
     await client.query("BEGIN");
     transactionStarted = true;
     const room = type === "rooms";
-    const table = room ? '"room_reservation"' : '"machine_booking"';
-    const idColumn = room ? "reservation_id" : "booking_id";
-    const resourceColumn = room ? "room_id" : "machine_id";
-    const startColumn = room ? "start_date" : "start_date_time";
-    const endColumn = room ? "end_date" : "end_date_time";
-    const statusClause = room ? "AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%')" : "";
+    const { table, id: idColumn, resource: resourceColumn, start: startColumn, end: endColumn, status: statusClause } = bookingColumns(type);
     const current = await client.query(
       `SELECT ${resourceColumn} AS resource_id, stripe_checkout_session_id, ${startColumn} AS start_time, ${endColumn} AS end_time FROM ${table}
        WHERE ${idColumn} = $1 AND user_id = $2 ${statusClause} FOR UPDATE`,

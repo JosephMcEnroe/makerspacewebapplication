@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { businessDateTime } from "@/lib/businessTime";
 import { fulfillReservation } from "@/lib/reservationCheckout";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { paymentRepository } from "@/Data_Access_Layer/paymentRepository";
@@ -108,8 +109,8 @@ async function handleCheckoutCompleted(session) {
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
     period = getSubscriptionPeriod(subscription);
   } else {
-    // Day pass is good for the day it was bought
-    const today = toDateString(new Date());
+    // Day pass is good for the (Eastern) day it was bought and expires at midnight
+    const today = businessDateTime().slice(0, 10);
     period = { start: today, end: today };
   }
 

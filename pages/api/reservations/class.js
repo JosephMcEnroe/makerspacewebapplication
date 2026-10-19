@@ -2,8 +2,8 @@ import { businessDateTime } from "@/lib/businessTime";
 import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
+import { MEMBERSHIP_REQUIRED_MESSAGE, canReserve } from "@/lib/reservationAccess";
 import { verifyCsrfToken } from "@/lib/csrf";
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -11,6 +11,7 @@ export default async function handler(req, res) {
   }
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Sign in to reserve a class." });
+  if (!canReserve(user)) return res.status(403).json({ error: MEMBERSHIP_REQUIRED_MESSAGE });
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
 
   const classId = Number(req.body?.resourceId);
@@ -55,6 +56,12 @@ export default async function handler(req, res) {
       transactionStarted = false;
       return res.status(400).json({ error: "The selected time does not match this class schedule." });
     }
+    await client.query(`CREATE TABLE IF NOT EXISTS "class_enrollment" (
+      user_id INTEGER NOT NULL REFERENCES "users"(user_id) ON DELETE CASCADE,
+      class_id INTEGER NOT NULL REFERENCES "class"(class_id) ON DELETE CASCADE,
+      enrolled_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_id, class_id)
+    )`);
     const existing = await client.query(
       `SELECT 1 FROM "class_enrollment" WHERE user_id = $1 AND class_id = $2`,
       [user.user_id, classId]

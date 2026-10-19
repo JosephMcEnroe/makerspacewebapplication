@@ -1,6 +1,7 @@
 import { parse } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { formatYear } from "@/lib/format";
+import { effectiveMembershipStatus } from "@/lib/membershipStatus";
 
 export default async function handler(req, res) {
     res.setHeader("Cache-Control", "private, no-store, no-cache, must-revalidate");
@@ -35,7 +36,7 @@ export default async function handler(req, res) {
             ok: true,
             user: {
                 id: user.user_id,
-                status: user.status,
+                status: effectiveMembershipStatus(user),
                 role: user.role_of_membership,
                 firstName: user.first_name,
                 lastName: user.last_name,

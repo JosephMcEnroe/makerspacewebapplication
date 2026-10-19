@@ -1,7 +1,9 @@
 import Head from "next/head";
 import { useState } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { useAuthContext } from "@/context/AuthContext";
+import { MEMBERSHIP_REQUIRED_MESSAGE, canReserve } from "@/lib/reservationAccess";
 import ResourceCard from "./ReservationProductCard";
 
 import WeeklyAvailability from "./WeeklyAvailability";
@@ -17,7 +19,8 @@ export default function ExplorePage({
 }) {
   const router = useRouter();
   const { user } = useAuthContext();
-  const [selectedResource, setSelectedResource] = useState(() => items.find(item => !item.unavailable && String(item.resourceId) === String(router.query.resourceId)) || null);
+  const allowedToReserve = canReserve(user);
+  const [selectedResource, setSelectedResource] = useState(() => (allowedToReserve && items.find(item => !item.unavailable && String(item.resourceId) === String(router.query.resourceId))) || null);
   const [bookingError, setBookingError] = useState("");
   const available = items.filter((item) => !item.unavailable);
   const unavailable = items.filter((item) => item.unavailable);
@@ -127,6 +130,9 @@ export default function ExplorePage({
 
       {router.query.canceled && <p role="status">Checkout canceled. No reservation was created.</p>}
       {bookingError && <p role="alert">{bookingError}</p>}
+      {user && !allowedToReserve && (
+        <p role="status">{MEMBERSHIP_REQUIRED_MESSAGE} <Link href="/membership">View membership options</Link></p>
+      )}
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Available for Reservation</h2>
         {available.length > 0 ? (
@@ -136,10 +142,10 @@ export default function ExplorePage({
                 <ResourceCard
                   key={item.id ?? item.name}
                   {...item}
-                  onSelect={() => {
+                  onSelect={allowedToReserve ? () => {
                     setBookingError("");
                     setSelectedResource(item);
-                  }}
+                  } : undefined}
                 />
               ))}
             </div>

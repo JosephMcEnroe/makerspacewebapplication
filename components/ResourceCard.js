@@ -28,7 +28,7 @@ function ResourceImage({ image, name }) {
   );
 }
 
-export default function ResourceCard({ name, image, description, time, spots, unavailable, unavailableNote, onSelect }) {
+export default function ResourceCard({ name, image, description, time, spots, unavailable, unavailableLabel, unavailableNote, onSelect }) {
   const source = image || DEFAULT_RESOURCE_IMAGE;
   const handleKeyDown = (event) => {
     if (onSelect && (event.key === "Enter" || event.key === " ")) {
@@ -54,7 +54,7 @@ export default function ResourceCard({ name, image, description, time, spots, un
           </div>
         )}
         {unavailable && (
-          <div className={styles.unavailableBadge}>Booked Indefinitely</div>
+          <div className={styles.unavailableBadge}>{unavailableLabel || "Booked Indefinitely"}</div>
         )}
       </div>
       <div className={styles.body}>

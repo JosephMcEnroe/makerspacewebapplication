@@ -27,7 +27,7 @@ describe("reservation Checkout API", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.spyOn(Date, "now").mockReturnValue(Date.parse("2026-10-15T16:00:00Z"));
-    mocks.user.mockResolvedValue({ user_id: 18 });
+    mocks.user.mockResolvedValue({ user_id: 18, status: "ACTIVE", role_of_membership: "MEMBER" });
     mocks.csrf.mockReturnValue(true);
     mocks.transactionQuery.mockImplementation(async sql => {
       if (sql.includes('FROM "room"')) return { rows: [{ room_id: 1 }], rowCount: 1 };
@@ -101,6 +101,22 @@ describe("reservation Checkout API", () => {
     expect(res.status).toHaveBeenCalledWith(status);
     expect(mocks.create).not.toHaveBeenCalled();
     log.mockRestore();
+  });
+
+  it.each(["equipment", "rooms"])("blocks %s reservations for users without an active membership", async type => {
+    mocks.user.mockResolvedValue({ user_id: 18, status: "INACTIVE", role_of_membership: "MEMBER" });
+    const res = response();
+    await handler(request({ type, resourceId: 1, periods: [{ start: "2026-10-20T08:00:00", end: "2026-10-20T09:00:00" }] }), res);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(mocks.transactionQuery).not.toHaveBeenCalled();
+  });
+
+  it("lets staff reserve without a paid membership", async () => {
+    mocks.user.mockResolvedValue({ user_id: 18, status: "INACTIVE", role_of_membership: "STAFF" });
+    const res = response();
+    await handler(request(), res);
+    expect(res.status).toHaveBeenCalledWith(200);
   });
 
   it("rejects existing booking conflicts before creating checkout", async () => {

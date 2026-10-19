@@ -1,8 +1,7 @@
 import Head from "next/head";
 import { isMonthlyReservation } from "@/lib/monthlyReservation";
 import ReservationEditor from "@/components/ReservationEditor";
-import { query } from "@/lib/db";
-import { getSessionUser, loginRedirect } from "@/lib/session";
+import { query } from "@/lib/db";import { getSessionUser, loginRedirect } from "@/lib/session";
 import { loadClasses, loadEquipment, loadRooms } from "@/lib/resources";
 
 function plainDateTime(value) {
@@ -55,7 +54,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
       [reservationId, user.user_id]
     );
     reservation = rows[0];
-    resources = (await loadClasses()).filter((item) => item.scheduledTime);
+    resources = (await loadClasses({ userId: user.user_id })).filter((item) => item.scheduledTime);
   }
 
   if (!reservation) return { notFound: true };

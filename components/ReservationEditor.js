@@ -122,7 +122,7 @@ export default function ReservationEditor({ type, reservation, resource, resourc
                 <ResourceCard
                   key={item.id}
                   {...item}
-                  onSelect={() => setSelectedClass(item)}
+                  onSelect={item.unavailable ? undefined : () => setSelectedClass(item)}
                 />
               ))}
             </div>

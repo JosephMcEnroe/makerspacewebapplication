@@ -37,6 +37,7 @@ export class membershipRepositry {
     //Marks the user's membership ACTIVE for the given period (used by the Stripe webhook).
     //Creates the membership row if the user somehow doesn't have one yet.
     //autoRenew should be TRUE for monthly subscriptions and FALSE for day passes.
+    //A day pass clears any old subscription id, otherwise it isn't recognized as a day pass and never expires.
     async activateMembership(userId, periodStartDate, periodEndDate, stripeSubscriptionId = null, autoRenew = true) {
         const updated = await query(
             `UPDATE "membership"
@@ -44,7 +45,7 @@ export class membershipRepositry {
                  period_start_date = $2,
                  period_end_date = $3,
                  auto_renew = $5,
-                 stripe_subscription_id = COALESCE($4, stripe_subscription_id)
+                 stripe_subscription_id = CASE WHEN $5 THEN COALESCE($4, stripe_subscription_id) ELSE $4 END
              WHERE user_id = $1
              RETURNING membership_id, user_id, status, period_start_date, period_end_date, stripe_subscription_id, auto_renew`,
             [userId, periodStartDate, periodEndDate, stripeSubscriptionId, autoRenew]

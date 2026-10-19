@@ -167,6 +167,9 @@ export class UserRepository {
               m.status,
               m.role_of_membership,
               m.period_start_date,
+              m.period_end_date,
+              m.auto_renew,
+              m.stripe_subscription_id,
               u.first_name,
               u.last_name
             FROM sessions s

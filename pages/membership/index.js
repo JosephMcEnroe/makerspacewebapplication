@@ -8,6 +8,7 @@ import styles from "@/styles/Account.module.css";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { getSessionUser, loginRedirect } from "@/lib/session";
 import { formatDate } from "@/lib/format";
+import { effectiveMembershipStatus, isDayPass as isActiveDayPass, isDayPassExpired } from "@/lib/membershipStatus";
 
 export async function getServerSideProps({ req, resolvedUrl }) {
   const sessionUser = await getSessionUser(req);
@@ -17,20 +18,10 @@ export async function getServerSideProps({ req, resolvedUrl }) {
 
   const membership = await new membershipRepositry().findUserMembership(sessionUser.user_id);
 
-  // Determine if this is a day pass (no subscription, no auto-renew) and check if it has expired
-  const isDayPass = membership?.status?.toUpperCase() === "ACTIVE"
-    && !membership.stripe_subscription_id
-    && membership.auto_renew === false;
-
-  // Day passes expire after period_end_date
-  const periodEndDate = membership?.period_end_date
-    ? new Date(membership.period_end_date).toISOString().slice(0, 10)
-    : null;
-  const today = new Date().toISOString().slice(0, 10);
-  const dayPassExpired = isDayPass && periodEndDate && periodEndDate < today;
-
-  // If the day pass has expired, the member should see the purchase options (treated as inactive)
-  const effectiveStatus = dayPassExpired ? "inactive" : (membership?.status ?? "").toLowerCase();
+  // Day passes expire at midnight Eastern; an expired one is treated as inactive so the purchase options show
+  const isDayPass = isActiveDayPass(membership);
+  const dayPassExpired = isDayPassExpired(membership);
+  const effectiveStatus = (effectiveMembershipStatus(membership) ?? "").toLowerCase();
 
   return {
     props: {
