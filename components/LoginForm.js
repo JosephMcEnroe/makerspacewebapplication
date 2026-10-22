@@ -4,17 +4,14 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/router";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./LoginForm.module.css";
+import { getPostLoginDestination } from "@/lib/authRedirect";
 
 //Add dynamic redirect instead of dashboard
 function redirectForRole(router, role) {
-  if (role === 'ADMIN') {
-    router.push("/admin");
-  } else if (role === "STAFF") {
-    router.push("/staff");
-  } else {
-    router.push("/dashboard");
-  }
+  //void router.replace(getPostLoginDestination(router.query.next, role)); //closed this for forcing users to their main page based on their roles
+  void router.replace(getPostLoginDestination(null, role));
 }
 
 export default function LoginForm() {
@@ -26,13 +23,23 @@ export default function LoginForm() {
 
   const {
     user,
+    loading,
+    authCheckFailed,
     login,
     loginloading,
     error,
   } = useAuth();
 
+  //Set by /api/auth/verify-email after the user clicks the link in their email
+  const verifiedMessage =
+    router.query.verified === "1"
+      ? "Your email is verified. You can sign in now."
+      : router.query.verified === "invalid"
+        ? "That verification link is invalid or has expired. Sign in to get a new one."
+        : null;
+
   useEffect(() => {
-    if (user) {
+    if (user && router.isReady) {
       redirectForRole(router, user.role);
     }
   }, [user, router]);
@@ -48,14 +55,31 @@ export default function LoginForm() {
       return;
     }
 
-    //Where is the page for instructor/student? Is what the member page for?
-    redirectForRole(router, user.role);
+    if (router.isReady) {
+      redirectForRole(router, user.role);
+    }
   };
+
+  if (loading || user) {
+    return (
+      <div className={styles.card} role="status">
+        <p className={styles.subtitle}>{user ? "Returning to your page…" : "Checking your session…"}</p>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.card}>
+      <Image
+        src="/images/collaboratory_logo.jpg"
+        alt="The Collaboratory"
+        width={670}
+        height={670}
+        className={styles.logo}
+        priority
+      />
       <h1 className={styles.title}>WELCOME BACK</h1>
-      <p className={styles.subtitle}>Sign in to your Crafty Studio account</p>
+      <p className={styles.subtitle}>Sign in to your Collaboratory account</p>
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.formGroup}>
@@ -101,6 +125,21 @@ export default function LoginForm() {
             required
           />
         </div>
+
+        {authCheckFailed && !error && (
+          <p className={styles.errorText} role="status">
+            We couldn’t verify your existing session. You can still sign in below.
+          </p>
+        )}
+
+        {verifiedMessage && !error && (
+          <p
+            className={router.query.verified === "1" ? styles.successText : styles.errorText}
+            role="status"
+          >
+            {verifiedMessage}
+          </p>
+        )}
 
         {error && (
           <p className={styles.errorText} role="alert">

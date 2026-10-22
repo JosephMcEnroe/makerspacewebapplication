@@ -18,11 +18,13 @@ export default async function handler(req, res) {
     });
   }
 
-  // 1. Authenticate with Bearer token if MAKERSPACE_API_KEY is 
-  // Authorization: Bearer APIKEY is whats being sent
+  // 1. Authenticate with Bearer token
+  // Authorization: Bearer APIKEY
   const expectedApiKey = process.env.MAKERSPACE_API_KEY;
+
   if (expectedApiKey) {
     const authHeader = req.headers.authorization;
+
     const token = authHeader?.startsWith("Bearer ")
       ? authHeader.substring(7).trim()
       : null;
@@ -35,6 +37,7 @@ export default async function handler(req, res) {
     }
   }
 
+  // 2. Get RFID card ID from request body
   const { card_id } = req.body || {};
 
   if (!card_id || typeof card_id !== "string") {
@@ -47,17 +50,27 @@ export default async function handler(req, res) {
   const normalizedCardId = card_id.toLowerCase().trim();
 
   try {
-    // 2. Query user and membership details by rfid_id
-    // Cast to text to prevent Postgres type mismatches if rfid_id is integer/varchar
+    // 3. Find membership by RFID and join it to the associated user
     const userResult = await query(
-      `SELECT u.user_id, u.first_name, u.last_name, u.email, u.rfid_id,
-              m.status AS member_status, m.type_of_membership, m.period_end_date
-       FROM users u
-       LEFT JOIN member m ON u.user_id = m.user_id
-       WHERE LOWER(u.rfid_id::text) = LOWER($1::text)`,
+      `SELECT
+          u.user_id,
+          u.first_name,
+          u.last_name,
+          u.email,
+          u.waiver_status,
+          m.membership_id,
+          m.rfid_id,
+          m.status AS member_status,
+          m.role_of_membership,
+          m.period_start_date,
+          m.period_end_date
+       FROM membership m
+       JOIN users u ON u.user_id = m.user_id
+       WHERE LOWER(m.rfid_id::text) = LOWER($1::text)`,
       [normalizedCardId]
     );
 
+    // No membership has this RFID card
     if (userResult.rows.length === 0) {
       return res.status(200).json({
         ok: false,
@@ -67,61 +80,59 @@ export default async function handler(req, res) {
     }
 
     const user = userResult.rows[0];
-    const memberStatus = (user.member_status || "").toLowerCase().trim();
 
-    // 3. Determine traffic light decision
-    // Active membership -> Green
-    // Warning / Pending / Grace -> Yellow
-    // Inactive / Suspended / Expired -> Red
-    let decision = "green";
-    let message = "Access granted";
+    const memberStatus = (user.member_status || "")
+      .toLowerCase()
+      .trim();
 
-    if (
-      memberStatus === "inactive" ||
-      memberStatus === "suspended" ||
-      memberStatus === "expired"
-    ) {
+    // 4. Determine traffic light decision
+    //
+    // ACTIVE   -> Green
+    // INACTIVE -> Red
+    //
+    // Default to red so an unknown/null membership status
+    // cannot accidentally grant access.
+    let decision = "red";
+    let message = "Access denied: membership is not active";
+
+    if (memberStatus === "active") {
+      decision = "green";
+      message = "Access granted";
+    } else if (memberStatus === "inactive") {
       decision = "red";
-      message = `Access denied: membership is ${memberStatus}`;
-    } 
-    // we dont really need this condition for checkin, but ive left it as placeholder
-    else if (
-      memberStatus === "warning" ||
-      memberStatus === "pending" ||
-      memberStatus === "grace"
-    ) {
-      decision = "yellow";
-      message = `Notice: membership status is ${memberStatus}`;
+      message = "Access denied: membership is inactive";
     }
 
-    // 4. If access is granted (Green or Yellow), record check-in
-    if (decision !== "red") {
-      await query(
-        `UPDATE users
-         SET last_check_in = CURRENT_TIMESTAMP
-         WHERE user_id = $1`,
-        [user.user_id]
-      );
-
+    // 5. Record successful check-in
+    //
+    // last_check_in no longer exists in users.
+    // The check_in table is now the source of truth
+    // for each user's latest successful check-in.
+    if (decision === "green") {
       await query(
         `INSERT INTO check_in (user_id, datetime)
-         VALUES ($1, CURRENT_TIMESTAMP)`,
+         VALUES ($1, CURRENT_TIMESTAMP)
+         ON CONFLICT (user_id)
+         DO UPDATE SET datetime = EXCLUDED.datetime`,
         [user.user_id]
       );
     }
 
+    // 6. Return result to Raspberry Pi
     return res.status(200).json({
-      ok: decision !== "red",
+      ok: decision === "green",
       status: decision,
       message,
       user: {
         first_name: user.first_name,
         last_name: user.last_name,
         status: user.member_status,
+        role: user.role_of_membership,
       },
     });
   } catch (error) {
     console.error("Check-in API error:", error);
+
     return res.status(500).json({
       ok: false,
       status: "red",

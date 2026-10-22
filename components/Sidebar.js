@@ -46,7 +46,7 @@ function PersonIcon() {
   );
 }
 
-export default function Sidebar({ userTest = { name: "Alex Chen", memberSince: "2025" } }) {
+export default function Sidebar() {
   const router = useRouter();
 
   const {
@@ -73,8 +73,12 @@ export default function Sidebar({ userTest = { name: "Alex Chen", memberSince: "
           <PersonIcon />
         </div>
         <div>
-          <p className={styles.userName}>{userTest.name}</p>
-          <p className={styles.userMeta}>Member since {userTest.memberSince}</p>
+          <p className={styles.userName}>
+            {[user?.firstName, user?.lastName].filter(Boolean).join(" ")}
+          </p>
+          {user?.memberSince && (
+            <p className={styles.userMeta}>Member since {user.memberSince}</p>
+          )}
         </div>
       </div>
 

@@ -19,6 +19,21 @@ export class adminRepository {
         );
         return rows[0] || null;
     }
+    //Returns true if the user is an admin (admin table or ADMIN membership role)
+    async isAdmin(userId) {
+        const { rows } = await query(
+            `SELECT EXISTS (
+                SELECT 1 FROM "admin" WHERE user_id = $1
+             ) OR EXISTS (
+                SELECT 1
+                FROM "membership"
+                WHERE user_id = $1
+                  AND UPPER(TRIM(role_of_membership::text)) = 'ADMIN'
+             ) AS is_admin`,
+            [userId]
+        );
+        return rows[0]?.is_admin === true;
+    }
     //Create Admin
     async createAdmin(userId) {
         const { rows } = await query(

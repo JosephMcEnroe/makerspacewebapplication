@@ -5,19 +5,32 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [authCheckFailed, setAuthCheckFailed] = useState(false);
 
     useEffect(() => {
         async function checkAuth() {
             try{
-                const response = await fetch("/api/auth/checkC");
+                const response = await fetch("/api/auth/checkC", {
+                    credentials: "include",
+                    cache: "no-store",
+                });
 
                 const data = await response.json();
 
-                if(data.ok){
+                if (response.ok && data.ok) {
                     setUser(data.user);
+                    setAuthCheckFailed(false);
+                } else if (response.status === 401) {
+                    setUser(null);
+                    setAuthCheckFailed(false);
+                } else {
+                    setUser(null);
+                    setAuthCheckFailed(true);
                 }
             } catch (error){
-                console.error("Authetication check failed:", error);
+                console.error("Authentication check failed:", error);
+                setUser(null);
+                setAuthCheckFailed(true);
             } finally {
                 setLoading(false);
             }
@@ -31,6 +44,7 @@ export function AuthProvider({ children }) {
             value={{
                 user,
                 loading,
+                authCheckFailed,
                 setUser,
             }}
         >

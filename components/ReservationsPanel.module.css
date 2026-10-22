@@ -43,8 +43,9 @@
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 1rem;
+  min-width: 0;
 }
 
 .emptyText {
@@ -55,11 +56,30 @@
 
 .card {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
   background-color: #ffffff;
   border-radius: 14px;
   padding: 1.1rem 1.4rem 1.2rem;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
+  overflow-wrap: anywhere;
+}
+
+.cardHighlighted {
+  outline: 2px solid #f0a752;
+  box-shadow: 0 4px 20px rgba(176, 99, 43, 0.16);
+}
+
+.newReservationBadge {
+  display: inline-block;
+  margin-bottom: 0.65rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: #fdf1e2;
+  color: #b8632b;
+  font-size: 0.68rem;
+  font-weight: 700;
 }
 
 .trainingBadge {
@@ -75,13 +95,23 @@
 
 .cardHeader {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
   margin-bottom: 0.85rem;
 }
 
+.cardName,
+.cardTime {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .cardName {
+  width: 100%;
   font-size: 0.92rem;
   font-weight: 700;
   color: #2b1916;
@@ -89,15 +119,17 @@
 }
 
 .cardTime {
+  width: 100%;
   font-size: 0.8rem;
   color: #905e49;
   font-weight: 600;
   margin: 0;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .cardActions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
@@ -140,8 +172,51 @@
   cursor: not-allowed;
 }
 
+.editBtn:not(:disabled) {
+  color: #2b1916;
+  background: #f0a752;
+  border-color: #f0a752;
+}
+
+.confirmBackdrop {
+  position: fixed;
+  z-index: 1300;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(31, 20, 16, 0.68);
+}
+
+.confirmDialog {
+  width: min(100%, 440px);
+  box-sizing: border-box;
+  padding: 1.5rem;
+  border-radius: 14px;
+  background: #fffaf3;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
+  overflow-wrap: anywhere;
+}
+
+.confirmDialog h2 {
+  margin: 0;
+  color: #2b1916;
+  font-size: 1.25rem;
+}
+
+.confirmDialog p {
+  margin: 0.75rem 0 1.25rem;
+  color: #6b5347;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 640px) {
   .cardGrid {
     grid-template-columns: 1fr;
+  }
+
+  .cardHeader {
+    gap: 0.3rem;
   }
 }

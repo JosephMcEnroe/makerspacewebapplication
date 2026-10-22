@@ -11,7 +11,7 @@ const publicRoutes = [
 
 //This is to differentiate the public pages and private pages depending on user's authentication role
 export default function AuthGuard({ children }){
-    const { user, loading } = useAuthContext();
+    const { user, loading, authCheckFailed } = useAuthContext();
     const router = useRouter();
 
     //Allow public login page + other public pages
@@ -23,18 +23,11 @@ export default function AuthGuard({ children }){
     );
 
     useEffect(() => {
-        if(!router.isReady || loading ) return;
+        if (!router.isReady || loading || isPublicPage || authCheckFailed || user) return;
 
-        //Public pages <- don't need authentication
-        if (isPublicPage) return;
-
-        //Redirect unathenticated users for protected pages
-        if(!user){
-            router.replace(
-                `/login?next=${encodeURIComponent(router.asPath)}`
-            );
-        }
-    }, [router.isReady, router.pathname, router.asPath, loading, user, isPublicPage]);
+        // Redirect unauthenticated users only after a confirmed 401 session result.
+        void router.replace(`/login?next=${encodeURIComponent(router.asPath)}`);
+    }, [router, loading, user, isPublicPage, authCheckFailed]);
 
     //wait for session validation
     if(loading || !router.isReady){
@@ -48,7 +41,7 @@ export default function AuthGuard({ children }){
 
     //Prevent rendering protected content
     if (!user) {
-        return null;
+        return authCheckFailed ? <div role="alert">Unable to verify your session. Please try again.</div> : null;
     }
 
     return children;
