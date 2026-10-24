@@ -12,6 +12,7 @@ import { adminRepository } from "@/Data_Access_Layer/adminRepository";
 import { requireStaffPage } from "@/lib/staffAuth";
 import { businessDateTime } from "@/lib/businessTime";
 import { formatDate, formatTime, formatTimeRange, toISODate } from "@/lib/format";
+import { reservationCustomerEndDateTime } from "@/lib/reservationPeriods";
 import { staffRequest } from "@/lib/staffApi";
 
 const ROLES = ["MEMBER", "STUDENT", "INSTRUCTOR", "STAFF", "ADMIN"];
@@ -44,7 +45,9 @@ export async function getServerSideProps({ req, resolvedUrl, params }) {
         name: reservation.name || TYPE_LABELS[reservation.type],
         time: reservation.type === "class"
           ? [formatDate(reservation.start_at), formatTime(reservation.start_at)].filter(Boolean).join(" · ")
-          : formatTimeRange(reservation.start_at, reservation.end_at),
+          : formatTimeRange(reservation.start_at, reservation.type === "equipment"
+            ? reservationCustomerEndDateTime(reservation.end_at, 15) || reservation.end_at
+            : reservation.end_at),
         sortAt: reservation.start_at instanceof Date ? reservation.start_at.getTime() : 0,
         state: cancelled ? "cancelled" : endsAt >= now ? "upcoming" : "past",
       };

@@ -1,5 +1,5 @@
 import { businessTime } from "@/lib/businessTime";
-import { hasReservationBuffer, isValidReservationPeriod } from "@/lib/reservationPeriods";
+import { countEquipmentReservationHours, hasReservationBuffer, isValidReservationPeriod } from "@/lib/reservationPeriods";
 import { getPool, query } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -63,8 +63,8 @@ export default async function handler(req, res) {
     if (!row) return res.status(404).json({ error: "Resource not found." });
     if (row.status && row.status.toLowerCase() !== "available") return res.status(409).json({ error: "Equipment is currently unavailable." });
     const c = bookingColumns(type);
+    const buffer = type === "equipment" ? "0 minutes" : "15 minutes";
     for (const p of periods) {
-      const buffer = "15 minutes";
       const conflict = await query(`SELECT 1 FROM ${c.table} WHERE ${c.resource} = $1
         AND ${c.start} < $3::timestamp + INTERVAL '${buffer}' AND ${c.end} > $2::timestamp - INTERVAL '${buffer}' ${c.status} LIMIT 1`, [Number(resourceId), p.start, p.end]);
       if (conflict.rowCount) return res.status(409).json({ error: "The selected times are no longer available." });
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
     const session = await getStripe().checkout.sessions.create({
       mode: "payment", customer_email: rows[0]?.email, payment_method_types: ["card"],
       client_reference_id: String(user.user_id),
-      line_items: [{ price: product.priceId, quantity: periods.length }],
+      line_items: [{ price: product.priceId, quantity: type === "equipment" ? countEquipmentReservationHours(periods) : periods.length }],
       metadata: reservationMetadata(type, resourceId, user.user_id, periods),
       invoice_creation: { enabled: true },
       success_url: `${origin}/reservations/checkout-return?session_id={CHECKOUT_SESSION_ID}`,

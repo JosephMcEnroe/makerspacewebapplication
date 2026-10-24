@@ -72,7 +72,7 @@ export class StaffRepository {
             ),
             query(
                 `SELECT b.booking_id AS id, m.name, b.start_date_time AS start_at,
-                    b.end_date_time AS end_at, NULL AS status
+                    b.end_date_time AS end_at, b.stripe_checkout_session_id, NULL AS status
                  FROM "machine_booking" b
                  LEFT JOIN "machine" m ON m.machine_id = b.machine_id
                  WHERE b.user_id = $1
