@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   padding: 1.75rem 1.25rem 1.5rem;
   box-sizing: border-box;
   background-color: #ffffff;
@@ -110,9 +110,126 @@
   color: #b8412b;
 }
 
+.serviceNav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-top: 0.65rem;
+}
+
+.mobileMenuToggle,
+.mobileMenu {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .sidebar {
     width: 100%;
-    height: auto;
+    min-height: 0;
+    padding: 0.6rem 0.75rem 0.7rem;
+    background: #fff;
+  }
+
+  .userBlock,
+  .footer {
+    display: none;
+  }
+
+  .nav,
+  .serviceNav {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.45rem;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .nav + .serviceNav {
+    margin-top: 0.45rem;
+  }
+
+  .navItem,
+  .logoutBtn {
+    min-width: 0;
+    min-height: 44px;
+    flex: 1 1 0;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.35rem;
+    border-radius: 999px;
+    background: #faf6f1;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+
+  .navItemActive {
+    background: #fdf1e2;
+    color: #8b471f;
+    box-shadow: inset 0 0 0 1px #efd3b1;
+  }
+
+  .navLabel {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .navIcon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .sidebar {
+    padding: 0.45rem 0.75rem;
+  }
+
+  .nav,
+  .serviceNav {
+    display: none;
+  }
+
+  .mobileMenuToggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    min-width: 48px;
+    min-height: 48px;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid #eadfd4;
+    border-radius: 10px;
+    background: #fffaf3;
+    color: #2b1916;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .mobileMenu:global([hidden]) {
+    display: none;
+  }
+
+  .mobileMenuOpen {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 0.65rem 0 0.25rem;
+  }
+
+  .mobileMenu .navItem {
+    min-height: 48px;
+    justify-content: flex-start;
+    padding: 0.65rem 0.8rem;
+    border-radius: 10px;
+    background: #faf6f1;
+    font-size: 0.9rem;
+  }
+
+  .mobileMenu .navItemActive {
+    background: #fdf1e2;
+    color: #8b471f;
   }
 }

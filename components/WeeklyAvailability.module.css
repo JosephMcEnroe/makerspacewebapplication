@@ -248,19 +248,77 @@
 }
 
 @media (max-width: 640px) {
+  .backdrop {
+    align-items: stretch;
+    padding: 0;
+  }
+
   .dialog {
-    padding: 1.2rem 0.8rem;
+    width: 100%;
+    max-height: 100dvh;
+    padding: max(1rem, env(safe-area-inset-top)) 0.85rem calc(1rem + env(safe-area-inset-bottom));
+    border-radius: 0;
+  }
+
+  .closeButton {
+    top: max(0.5rem, env(safe-area-inset-top));
+    right: 0.75rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #f4ece2;
+    font-size: 1.65rem;
+  }
+
+  .title {
+    max-width: calc(100% - 3rem);
+    font-size: 1.3rem;
+  }
+
+  .instructions {
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .tableScroller {
+    max-height: 40dvh;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .table {
-    min-width: 560px;
+    min-width: 540px;
+  }
+
+  .table th,
+  .table td {
+    height: 2.35rem;
+    padding: 0.2rem;
+  }
+
+  .slot {
+    min-height: 2rem;
+  }
+
+  .periodList {
+    max-height: 18dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .actions {
+    position: sticky;
+    bottom: calc(-1rem - env(safe-area-inset-bottom));
     flex-direction: column-reverse;
+    margin: 1rem -0.85rem calc(-1rem - env(safe-area-inset-bottom));
+    padding: 0.75rem 0.85rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: rgba(255, 250, 243, 0.97);
+    border-top: 1px solid #e9ded2;
   }
 
   .actions button {
     width: 100%;
+    min-height: 48px;
+    font-size: 0.92rem;
   }
 }

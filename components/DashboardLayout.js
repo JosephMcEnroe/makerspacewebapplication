@@ -10,6 +10,9 @@ export default function DashboardLayout({ children }) {
         <div className={styles.sidebar}>
           <Sidebar />
         </div>
+        <div className={styles.mobileNavigation}>
+          <Sidebar />
+        </div>
         <main className={styles.mainContent}>{children}</main>
       </div>
     </div>

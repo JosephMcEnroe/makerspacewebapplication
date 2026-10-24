@@ -27,18 +27,41 @@
   background-color: #fbe8c3;
 }
 
+.mobileNavigation {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .body {
     flex-direction: column;
   }
 
   .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #f0e7dc;
+    display: none;
+  }
+
+  .mobileNavigation {
+    position: sticky;
+    z-index: 90;
+    top: 0;
+    display: block;
+    background: #fff;
+    border-bottom: 1px solid #eadfd4;
   }
 
   .mainContent {
     padding: 1.75rem 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .mobileNavigation {
+    position: relative;
+    z-index: 90;
+    box-shadow: 0 4px 18px rgba(43, 25, 22, 0.06);
+  }
+
+  .mainContent {
+    padding: 1.25rem 1rem calc(1.25rem + env(safe-area-inset-bottom));
   }
 }
