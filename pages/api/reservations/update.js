@@ -3,7 +3,7 @@ import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
-import { hasReservationBuffer, isValidReservationPeriod } from "@/lib/reservationPeriods";
+import { hasReservationBuffer, isValidEquipmentReservation, isValidReservationPeriod, mergeAdjacentReservationPeriods } from "@/lib/reservationPeriods";
 
 function isMonthlyPeriod(periods) {
   try {
@@ -33,14 +33,20 @@ export default async function handler(req, res) {
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
 
   const { type, reservationId, periods } = req.body || {};
-  if (!["rooms", "equipment"].includes(type) || !/^\d+$/.test(String(reservationId)) || !Array.isArray(periods) || periods.length < 1 || periods.length > 21 || (!(type === "rooms" && isMonthlyPeriod(periods)) && periods.some((period) => !validDateTime(period?.start) || !validDateTime(period?.end) || !isValidReservationPeriod(type, period)))) {
+  if (!["rooms", "equipment"].includes(type) || !/^\d+$/.test(String(reservationId)) || !Array.isArray(periods) || periods.length < 1 || periods.length > 21 || (!(type === "rooms" && isMonthlyPeriod(periods)) && periods.some((period) => !validDateTime(period?.start) || !validDateTime(period?.end)
+      || !(type === "equipment" ? isValidEquipmentReservation(type, period) : isValidReservationPeriod(type, period))))) {
     return res.status(400).json({ error: "Choose valid one-hour reservation slots." });
   }
-  if (!(type === "rooms" && isMonthlyPeriod(periods)) && !hasReservationBuffer(periods)) {
-    return res.status(400).json({ error: "Reservations must have at least a 15-minute buffer between periods." });
+  const requiredBufferMinutes = 15;
+  const normalizedPeriods = type === "equipment" ? mergeAdjacentReservationPeriods(periods) : periods;
+  const validationPeriods = type === "equipment"
+    ? normalizedPeriods.map((period) => ({ ...period, start: period.start, end: period.end }))
+    : normalizedPeriods;
+  if (!(type === "rooms" && isMonthlyPeriod(periods)) && !hasReservationBuffer(validationPeriods, requiredBufferMinutes)) {
+    return res.status(400).json({ error: `Reservations must have at least a ${requiredBufferMinutes}-minute buffer between periods.` });
   }
   const maxAdvance = type === "rooms" ? 90 : 31;
-  if (periods.some(({ start }) => !Number.isFinite(businessTime(start)) || businessTime(start) <= Date.now() || businessTime(start) > Date.now() + maxAdvance * 86400000)) {
+  if (normalizedPeriods.some(({ start }) => !Number.isFinite(businessTime(start)) || businessTime(start) <= Date.now() || businessTime(start) > Date.now() + maxAdvance * 86400000)) {
     return res.status(400).json({ error: `Reservations can be changed up to ${maxAdvance} days in advance.` });
   }
 
@@ -68,15 +74,30 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Reservation not found." });
     }
     const monthly = room && isMonthlyReservation(current.rows[0].start_time, current.rows[0].end_time);
-    if ((monthly && !isMonthlyPeriod(periods)) || (current.rows[0].stripe_checkout_session_id && (room ? !isMonthlyPeriod(periods) : periods.length !== 1))) {
+    if (monthly && !isMonthlyPeriod(periods)) {
       await client.query("ROLLBACK");
       transactionStarted = false;
-      return res.status(400).json({ error: room ? "A monthly room rental must remain one month." : "Reschedule each purchased one-hour booking separately." });
+      return res.status(400).json({ error: "A monthly room rental must remain one month." });
     }
-    const buffer = room && isMonthlyPeriod(periods) ? "0 minutes" : "15 minutes";
+    const buffer = room && isMonthlyPeriod(periods) ? "0 minutes" : type === "equipment" ? "0 minutes" : "15 minutes";
     const resourceId = Number(current.rows[0].resource_id);
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1), $2)", [type, resourceId]);
-    for (const period of periods) {
+    const preservePaidDuration = type === "equipment" && !!current.rows[0].stripe_checkout_session_id;
+    if (preservePaidDuration) {
+      if (normalizedPeriods.length !== 1) {
+        await client.query("ROLLBACK");
+        transactionStarted = false;
+        return res.status(400).json({ error: "A paid machine reservation must remain one continuous time block." });
+      }
+      const currentDuration = businessTime(current.rows[0].end_time) - businessTime(current.rows[0].start_time);
+      const requestedDuration = normalizedPeriods.reduce((total, period) => total + businessTime(period.end) - businessTime(period.start), 0);
+      if (requestedDuration !== currentDuration) {
+        await client.query("ROLLBACK");
+        transactionStarted = false;
+        return res.status(400).json({ error: "A paid machine reservation must keep the same total number of hours." });
+      }
+    }
+    for (const period of normalizedPeriods) {
       const conflict = await client.query(
         `SELECT 1 FROM ${table}
          WHERE ${resourceColumn} = $1 AND ${idColumn} <> $2
@@ -92,14 +113,14 @@ export default async function handler(req, res) {
       }
     }
 
-    if (periods.length === 1) {
+    if (normalizedPeriods.length === 1 || preservePaidDuration) {
       await client.query(
         `UPDATE ${table} SET ${startColumn} = $3, ${endColumn} = $4 WHERE ${idColumn} = $1 AND user_id = $2`,
-        [Number(reservationId), user.user_id, periods[0].start, periods[0].end]
+        [Number(reservationId), user.user_id, normalizedPeriods[0].start, normalizedPeriods[0].end]
       );
     } else {
       await client.query(`DELETE FROM ${table} WHERE ${idColumn} = $1 AND user_id = $2`, [Number(reservationId), user.user_id]);
-      for (const period of periods) {
+      for (const period of normalizedPeriods) {
         if (room) {
           await client.query(
             `INSERT INTO "room_reservation" (user_id, room_id, start_date, end_date, status) VALUES ($1, $2, $3, $4, 'upcoming')`,

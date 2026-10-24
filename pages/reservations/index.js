@@ -7,6 +7,7 @@ import { machineBookingRepository } from "@/Data_Access_Layer/machineBookingRepo
 import { roomReservationRepository } from "@/Data_Access_Layer/roomReservationRepository";
 import { getSessionUser, loginRedirect } from "@/lib/session";
 import { formatDate, formatTime, formatTimeRange } from "@/lib/format";
+import { reservationCustomerEndDateTime } from "@/lib/reservationPeriods";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import stylesPanel from "@/components/ReservationsPanel.module.css";
@@ -66,7 +67,7 @@ export async function getServerSideProps({ req, resolvedUrl }) {
       startDate: booking.start_date_time instanceof Date ? booking.start_date_time.toISOString() : String(booking.start_date_time),
       endDate: booking.end_date_time instanceof Date ? booking.end_date_time.toISOString() : String(booking.end_date_time),
       name: booking.machine_name ?? "Equipment",
-      time: formatTimeRange(booking.start_date_time, booking.end_date_time),
+      time: formatTimeRange(booking.start_date_time, reservationCustomerEndDateTime(booking.end_date_time, 15) || booking.end_date_time),
       trainingRequired: false,
     })
   );

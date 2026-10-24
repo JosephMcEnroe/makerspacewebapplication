@@ -5,7 +5,7 @@ import ResourceCard from "@/components/ResourceCard";
 import MonthlyAvailability from "@/components/MonthlyAvailability";
 import WeeklyAvailability from "@/components/WeeklyAvailability";
 import styles from "@/components/ExplorePage.module.css";
-import { getReservationSlotStartMinutes } from "@/lib/reservationPeriods";
+import { buildReservationPeriods, getReservationSlotStartMinutes } from "@/lib/reservationPeriods";
 
 const pad = (value) => String(value).padStart(2, "0");
 
@@ -14,14 +14,15 @@ function createInitialSlots(type, startValue, endValue) {
   const end = businessCalendarDate(endValue);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return [];
 
-  if (end.getTime() - start.getTime() !== 60 * 60 * 1000) return [];
+  const durationMinutes = (end.getTime() - start.getTime()) / (60 * 1000);
+  if (!Number.isInteger(durationMinutes) || durationMinutes < 60 || durationMinutes % 60 !== 0) return [];
+  if (type !== "equipment" && durationMinutes !== 60) return [];
   const startMinute = start.getHours() * 60 + start.getMinutes();
   if (start.getMinutes() % 15 !== 0 || !getReservationSlotStartMinutes(type).includes(startMinute)) return [];
 
-  return [{
-    date: `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`,
-    startMinute,
-  }];
+  const date = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`;
+  const slots = Array.from({ length: durationMinutes / 60 }, (_, index) => ({ date, startMinute: startMinute + index * 60 }));
+  return type === "equipment" ? slots : slots.slice(0, 1);
 }
 
 async function getCsrfToken() {

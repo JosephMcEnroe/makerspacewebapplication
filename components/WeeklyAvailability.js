@@ -1,7 +1,8 @@
 import { businessTime, businessCalendarDate } from "@/lib/businessTime";
 import { useMemo, useState } from "react";
 import styles from "./WeeklyAvailability.module.css";
-import { buildReservationPeriods, formatMinutesAsTime, getReservationSlotStartMinutes, isUnavailableInterval, toggleReservationSlot } from "@/lib/reservationPeriods";
+import { buildReservationPeriods, formatMinutesAsTime, getReservationSlotStartMinutes, isUnavailableInterval, reservationCustomerEndDateTime, toggleReservationSlot } from "@/lib/reservationPeriods";
+import { formatTimeRange } from "@/lib/format";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const pad = (value) => String(value).padStart(2, "0");
@@ -43,6 +44,8 @@ export default function WeeklyAvailability({
   const isRoom = type === "rooms";
   const isClass = type === "classes";
   const advanceDays = isRoom ? 90 : 31;
+  const cleanupMinutes = type === "equipment" ? 15 : 0;
+  const availabilityBufferMinutes = type === "rooms" ? 15 : 0;
   const classDate = type === "classes" && resource.scheduledDate ? resource.scheduledDate.slice(0, 10) : null;
   const classTimeMatch = type === "classes" && resource.scheduledTime
     ? String(resource.scheduledTime).trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?/i)
@@ -64,7 +67,10 @@ export default function WeeklyAvailability({
   const slotStarts = useMemo(() => isClass
     ? Number.isInteger(classHour) && classHour >= 0 && classHour < 24 ? [classHour * 60 + classMinute] : []
     : getReservationSlotStartMinutes(type), [classHour, classMinute, isClass, type]);
-  const periods = useMemo(() => buildReservationPeriods(selectedSlots), [selectedSlots]);
+  const periods = useMemo(
+    () => buildReservationPeriods(selectedSlots, { mergeAdjacent: type === "equipment" }),
+    [selectedSlots, type]
+  );
 
   const changeWeek = (amount) => {
     setWeekStart((current) => {
@@ -91,7 +97,7 @@ export default function WeeklyAvailability({
     const easternStart = businessTime(`${date}T${pad(Math.floor(startMinute / 60))}:${pad(startMinute % 60)}:00`);
     if (!Number.isFinite(easternStart) || easternStart <= now.getTime() || easternStart > bookingCutoff.getTime()) return false;
     return !unavailableIntervals.some((interval) =>
-      isUnavailableInterval(interval, resource.reservationId, easternStart, easternStart + 60 * 60 * 1000)
+      isUnavailableInterval(interval, resource.reservationId, easternStart, easternStart + 60 * 60 * 1000, availabilityBufferMinutes)
     );
   };
 
@@ -121,7 +127,11 @@ export default function WeeklyAvailability({
         <p className={styles.eyebrow}>{type === "classes" ? "Class" : isRoom ? "Room" : "Equipment"} Reservation</p>
         <h2 id="availability-title" className={styles.title}>{resource.name}</h2>
         <p>All times are Eastern Time (EST)</p>
-        <p className={styles.instructions}>{type === "classes" ? "Select the scheduled class time to reserve your spot." : `Choose one or more green time slots. Each reservation lasts one hour and requires a 15-minute buffer before the next; the last slot is 10:30–11:30 PM with a 30-minute closing buffer. ${isRoom ? "Rooms are bookable 24 hours a day." : ""}`}</p>
+        <p className={styles.instructions}>{type === "classes"
+          ? "Select the scheduled class time to reserve your spot."
+          : isRoom
+            ? "Choose one or more green time slots. Each reservation lasts one hour and requires a 15-minute buffer before the next. Rooms are bookable 24 hours a day."
+            : "Choose one or more green time slots from 6:00 AM to 11:00 PM. Each machine reservation lasts one hour; please leave the machine 15 minutes before the reserved end time so staff can clean up."}</p>
         <div className={styles.legend}>
           <span><i className={styles.availableSwatch} /> Available</span>
           <span><i className={styles.unavailableSwatch} /> Unavailable</span>
@@ -159,9 +169,16 @@ export default function WeeklyAvailability({
         <p className={styles.selectionSummary} aria-live="polite">
           {selectedSlots.length === 0 ? "No times selected" : `${selectedSlots.length} hour${selectedSlots.length === 1 ? "" : "s"} selected · ${periods.length} reservation period${periods.length === 1 ? "" : "s"}`}
         </p>
-        {periods.length > 0 && <ul className={styles.periodList}>{periods.map((period) => <li key={`${period.date}:${period.startMinute}`}>
-          {new Date(`${period.date}T12:00:00`).toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })} · {formatTime(period.startMinute)}–{formatTime(period.endMinute)}{period.endDate !== period.date ? ` (${new Date(`${period.endDate}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" })})` : ""}
-        </li>)}</ul>}
+        {periods.length > 0 && <ul className={styles.periodList}>{periods.map((period) => {
+          const endDateTime = `${period.endDate}T${pad(Math.floor(period.endMinute / 60))}:${pad(period.endMinute % 60)}:00`;
+          const displayEndDateTime = cleanupMinutes
+            ? reservationCustomerEndDateTime(endDateTime, cleanupMinutes)
+            : endDateTime;
+          const displayRange = formatTimeRange(`${period.date}T${pad(Math.floor(period.startMinute / 60))}:${pad(period.startMinute % 60)}:00`, displayEndDateTime);
+          return <li key={`${period.date}:${period.startMinute}`}>
+            {displayRange}{cleanupMinutes ? " · 15 minutes reserved for staff cleanup" : ""}
+          </li>;
+        })}</ul>}
         {error && <p className={styles.error} role="alert">{error}</p>}
         <div className={styles.actions}>
           <button type="button" className={styles.secondaryButton} onClick={onClose}>{cancelLabel}</button>

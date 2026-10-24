@@ -13,9 +13,7 @@ function response() {
   return { setHeader: vi.fn(), status: vi.fn().mockReturnThis(), json: vi.fn().mockReturnThis() };
 }
 const periods = [
-  { start: "2026-10-20T08:00:00", end: "2026-10-20T09:00:00" },
-  { start: "2026-10-20T09:15:00", end: "2026-10-20T10:15:00" },
-  { start: "2026-10-20T10:30:00", end: "2026-10-20T11:30:00" },
+  { start: "2026-10-20T06:00:00", end: "2026-10-20T09:00:00" },
 ];
 const price = { id: "price_server", active: true, type: "one_time", billing_scheme: "per_unit", unit_amount: 1000 };
 function request(body = {}) {
@@ -44,13 +42,13 @@ describe("reservation Checkout API", () => {
     });
   });
 
-  it("charges three hours using the server price and does not insert bookings before payment", async () => {
+  it("charges three consecutive hours while storing them as one continuous reservation period", async () => {
     const res = response();
     await handler(request({ priceId: "price_attacker", quantity: 1 }), res);
     expect(res.status).toHaveBeenCalledWith(200);
     const checkout = mocks.create.mock.calls[0][0];
     expect(checkout.line_items).toEqual([{ price: price.id, quantity: 3 }]);
-    expect(checkout.metadata).toMatchObject({ user_id: "18", resource_id: "7", period_count: "3" });
+    expect(checkout.metadata).toMatchObject({ user_id: "18", resource_id: "7", period_count: "1", period_0: "2026-10-20T06:00:00|2026-10-20T09:00:00" });
     expect(mocks.query.mock.calls.some(([sql]) => sql.includes("INSERT"))).toBe(false);
   });
 

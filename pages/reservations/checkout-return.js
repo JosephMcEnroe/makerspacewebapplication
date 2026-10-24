@@ -4,6 +4,7 @@ import Link from "next/link";
 import Head from "next/head";
 import styles from "@/styles/ReservationCheckoutReturn.module.css";
 
+
 export default function ReservationCheckoutReturn() {
   const router = useRouter();
   const [result, setResult] = useState(null);
@@ -43,7 +44,18 @@ export default function ReservationCheckoutReturn() {
         <Link className={styles.primaryButton} href={{ pathname: "/reservations", query: result ? { type: result.type, reservationId: result.reservationIds } : {} }}>View reservations <span aria-hidden="true">→</span></Link>
         {!confirmed && <button type="button" className={styles.secondaryButton} onClick={() => setRetry(n => n + 1)}>Refresh status</button>}
       </div>
-      {confirmed && <p className={styles.note}>You can review your booked times and manage your reservations from your account.</p>}
+      {confirmed && <>
+        {result.type === "equipment" && result.reservationTimes?.length > 0 && (
+          <ul className={styles.note}>
+            {result.reservationTimes.map((period, index) => (
+              <li key={`${period.start}-${index}`}>
+                Machine reservation: {period.time} (15 minutes reserved at the end for staff cleanup).
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className={styles.note}>You can review your booked times and manage your reservations from your account.</p>
+      </>}
     </section>
   </main>;
 }
