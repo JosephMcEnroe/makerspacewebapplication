@@ -1,0 +1,515 @@
+================================================================================
+ EMAIL VERIFICATION - HOW TO TURN IT ON FOR PRODUCTION
+ The Crafty Studio web app
+================================================================================
+
+WHAT THIS FEATURE DOES
+----------------------
+When someone signs up, they get an email with a "Verify Email" button. They
+cannot log in until they click it. If they try to log in before verifying,
+the app sends them a fresh link.
+
+The code is already written. Right now it is COMMENTED OUT (turned off) so
+that sign-up works without email. Instead, new accounts are logged in straight
+away and automatically marked as verified.
+
+To turn it on you need to do 6 things, in this order:
+
+  PART 1. Create a Resend account                         (~5 min)
+  PART 2. Add your domain to Resend and set up DNS        (~15 min + waiting)
+  PART 3. Create a Resend API key                         (~2 min)
+  PART 4. Set the environment variables                   (~10 min)
+  PART 5. Uncomment the code                              (~15 min)
+  PART 6. Test it                                         (~5 min)
+
+Read each part all the way through before you start it.
+
+WHAT YOU NEED BEFORE YOU START
+  - A domain name that the studio owns (for example: craftystudio.com), and
+    the login for the website where it was bought (GoDaddy, Namecheap,
+    Cloudflare, Squarespace, Google Domains, etc.). This is called the
+    "domain registrar" or "DNS provider".
+    -> If the studio does not own a domain, you must buy one first. Email
+       cannot be sent to real users without one.
+  - Access to the place the website is hosted (for example Railway or Vercel)
+    so you can add environment variables.
+  - The project code on your computer, and the ability to commit/push changes.
+
+
+================================================================================
+ PART 1. CREATE A RESEND ACCOUNT
+================================================================================
+Resend is the service that actually sends the emails.
+
+ 1. Go to https://resend.com and click "Get Started" / "Sign up".
+ 2. Sign up. Use a shared studio email (not a personal one) if possible, so
+    the account isn't lost when someone leaves.
+ 3. Confirm your email address when Resend asks you to.
+ 4. You're done with this part once you can see the Resend dashboard.
+
+Note: Resend's free plan allows a limited number of emails per day and month.
+That is plenty for a small studio. Check https://resend.com/pricing for the
+current limits.
+
+
+================================================================================
+ PART 2. ADD YOUR DOMAIN TO RESEND AND SET UP DNS
+================================================================================
+This proves to Gmail, Outlook etc. that your emails are real and not spam.
+Without this step, Resend will ONLY deliver to the email address you signed
+up to Resend with, and nobody else will receive anything.
+
+ 1. In the Resend dashboard, click "Domains" in the left menu.
+ 2. Click "Add Domain".
+ 3. Type your domain, e.g.  craftystudio.com
+    (no "https://", no "www").
+ 4. Pick the region closest to your users (e.g. "North Virginia (us-east-1)"
+    for the US East Coast). Click "Add".
+ 5. Resend now shows a table of DNS records (usually 3 or 4 rows). It looks
+    roughly like this - YOUR VALUES WILL BE DIFFERENT, always copy from
+    Resend's screen, never from this file:
+
+      Type   Name / Host           Value / Content                       Priority
+      ----   -------------------   -----------------------------------   --------
+      MX     send                  feedback-smtp.us-east-1.amazonses.com 10
+      TXT    send                  v=spf1 include:amazonses.com ~all
+      TXT    resend._domainkey     p=MIGfMA0GCSqGSIb3DQEB... (very long)
+
+    Leave this tab open.
+
+ 6. In a NEW browser tab, log in to your domain registrar / DNS provider
+    (GoDaddy, Namecheap, Cloudflare, ...).
+ 7. Find the DNS settings for your domain. It is usually called one of:
+      "DNS", "DNS Records", "Manage DNS", "Advanced DNS", "Zone Editor".
+ 8. For EACH row in Resend's table, click "Add record" and fill it in:
+      - Type:      choose the same type (MX or TXT)
+      - Name/Host: copy the "Name" column exactly (e.g. "send" or
+                   "resend._domainkey").
+                   IMPORTANT: most providers automatically add your domain
+                   to the end. So type "send", NOT "send.craftystudio.com".
+                   If you type the full thing you'll get
+                   "send.craftystudio.com.craftystudio.com", which is wrong.
+      - Value:     copy/paste the "Value" column exactly. Use Resend's copy
+                   button. Don't add or remove spaces or quotes.
+      - Priority:  only for MX records - type the number Resend shows (10).
+      - TTL:       leave it on the default / "Auto".
+      - Cloudflare only: if there is an orange cloud "Proxy" toggle, it does
+        not apply to TXT/MX records - just leave it as is.
+    Save each record.
+
+    Don't delete or change any DNS records that were already there. In
+    particular, don't touch existing MX records for "@" (those handle the
+    studio's normal inbox). Resend's records go on the "send" subdomain so
+    they don't conflict.
+
+ 9. (Recommended, helps emails avoid the spam folder) Add one more record:
+      Type:  TXT
+      Name:  _dmarc
+      Value: v=DMARC1; p=none;
+    If a "_dmarc" record already exists, leave the existing one alone and
+    skip this step.
+
+10. Go back to the Resend tab and click "Verify DNS Records".
+11. Wait. DNS changes can take anywhere from a few minutes to 48 hours (usually
+    under 1 hour). Refresh the Resend Domains page now and then. When every
+    row shows "Verified" and the domain status is "Verified", you're done.
+    If it's still "Pending" after a few hours, see TROUBLESHOOTING at the end.
+
+
+================================================================================
+ PART 3. CREATE A RESEND API KEY
+================================================================================
+The API key is the password the app uses to talk to Resend.
+
+ 1. In the Resend dashboard click "API Keys" in the left menu.
+ 2. Click "Create API Key".
+ 3. Name: "Crafty Studio production"
+    Permission: "Sending access"
+    Domain: choose the domain you verified in Part 2.
+ 4. Click "Add". Resend shows the key ONCE. It starts with  re_
+ 5. Copy it and keep it somewhere safe for Part 4 (e.g. a password manager).
+    -> NEVER put it in the code, in Git, in Slack, or in a screenshot.
+    -> If it leaks, delete it in Resend and create a new one.
+
+
+================================================================================
+ PART 4. SET THE ENVIRONMENT VARIABLES
+================================================================================
+Environment variables are settings the app reads when it starts. There are 4
+for email. You set them in TWO places: your own computer (for testing) and the
+hosting service (for the real website).
+
+THE 4 VARIABLES
+---------------
+  RESEND_API_KEY
+      The key from Part 3, e.g.  re_AbC123...
+
+  EMAIL_FROM
+      Who the email says it's from. MUST use the domain verified in Part 2.
+      Format:  Name <address@yourdomain>
+      Example: The Crafty Studio <no-reply@craftystudio.com>
+      (The address doesn't need to be a real inbox.)
+      Do NOT leave it as onboarding@resend.dev - that test address can only
+      send to the Resend account owner.
+
+  APP_URL
+      The public web address of the site, used to build the link in the
+      email. No slash at the end.
+      Production example:  https://craftystudio.com
+      Your computer:       http://localhost:3000
+      If this is wrong, the "Verify Email" button will point to the wrong site.
+
+  EMAIL_VERIFICATION_SECRET
+      A long random password used to sign the verification links so nobody
+      can fake them. Generate one by running this in a terminal inside the
+      project folder:
+
+        node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+      Copy the 64-character output. Use a DIFFERENT one for production than
+      for your computer. If you ever change it, any links already emailed
+      stop working (users can just log in to get a new link).
+
+A) ON YOUR COMPUTER
+-------------------
+ 1. Open the file  .env.local  in the project's main folder.
+    (It's hidden from Git on purpose - never commit it.)
+ 2. Add or update these lines (use your real values, no spaces around "="):
+
+      RESEND_API_KEY=re_your_key_here
+      EMAIL_FROM=The Crafty Studio <no-reply@yourdomain.com>
+      APP_URL=http://localhost:3000
+      EMAIL_VERIFICATION_SECRET=your_64_character_random_string
+
+ 3. Save the file. Stop the dev server (Ctrl+C in its terminal) and start it
+    again with  npm run dev  - env changes are only read at startup.
+
+B) ON THE HOSTING SERVICE (the real website)
+--------------------------------------------
+If hosted on RAILWAY:
+ 1. Go to https://railway.app, open the project, click the web app service
+    (not the Postgres database).
+ 2. Click the "Variables" tab.
+ 3. Click "New Variable" and add each of the 4 variables (name + value).
+    Use the production APP_URL (https://...) and a new production secret.
+ 4. Railway asks to deploy the changes - click "Deploy". Wait for it to
+    finish (green "Success"/"Active").
+
+If hosted on VERCEL:
+ 1. Go to https://vercel.com, open the project.
+ 2. Settings -> Environment Variables.
+ 3. Add each of the 4 variables. Tick "Production" (and "Preview" if you
+    want preview deployments to send email too).
+ 4. Go to "Deployments", click the "..." on the latest one -> "Redeploy".
+    Env variables only apply to NEW deployments.
+
+Anywhere else: find "Environment variables" / "Config vars" / "Secrets" in
+the host's settings, add the 4 variables, then redeploy/restart the app.
+
+
+================================================================================
+ PART 5. UNCOMMENT THE CODE
+================================================================================
+Every place that needs changing is marked in the code with one of these
+comments:
+
+   "EMAIL VERIFICATION"   -> code that is turned off. UNCOMMENT it.
+   "DEV ONLY"             -> the temporary replacement. DELETE it.
+
+"Uncomment" means removing the  //  at the start of each line. In VS Code you
+can select the lines and press  Ctrl + /  (Mac: Cmd + /). Some lines start
+with  // //  - remove only the FIRST  //  so they become normal comments
+(the remaining  //  is a real comment that should stay).
+
+Tip: use VS Code's search (Ctrl+Shift+F) for  EMAIL VERIFICATION  and
+DEV ONLY  to find every spot. There are 4 files.
+
+--------------------------------------------------------------------------
+FILE 1 of 4:  pages/api/auth/signup.js
+--------------------------------------------------------------------------
+ a) Near the top, find:
+        // EMAIL VERIFICATION
+        // import { sendVerificationEmail } from "@/lib/email";
+    Change to:
+        import { sendVerificationEmail } from "@/lib/email";
+
+ b) Find the block that starts with  // EMAIL VERIFICATION  and contains
+    "if (existing?.email_verified)". Uncomment it, so it becomes:
+
+        //An unverified account with this email can be signed up over (typo'd or
+        //someone else's address) - only verified accounts block a new signup
+        if (existing?.email_verified) {
+            return res.status(409).json({
+                ok: false,
+                error: "An account with that email already exists",
+            });
+        }
+
+    Then DELETE the block right below it that starts with
+        // DEV ONLY - without verification any existing account blocks a new signup
+    (the comment and the whole  if (existing) { ... }  under it).
+
+ c) Find  // EMAIL VERIFICATION - replace the DEV ONLY block below with this
+    Uncomment the  if (existing) { ... } else { ... }  block under it, so it
+    becomes:
+
+        if (existing) {
+            newUser = await userQuery.replaceUnverifiedUser(existing.user_id, user);
+
+            //Verified between the lookup and the update
+            if (!newUser) {
+                return res.status(409).json({
+                    ok: false,
+                    error: "An account with that email already exists",
+                });
+            }
+        } else {
+            const isAdded = await userQuery.createUser(user);
+
+            if(!isAdded){
+                console.log("The database has fail to add the new user");
+            }
+
+            newUser = await userQuery.findEmailAuthentication(user.email);
+        }
+
+    Then DELETE everything from the next  // DEV ONLY  line down to and
+    including this line:
+        await userQuery.markEmailVerified(newUser.user_id, newUser.email);
+    (That's the duplicate createUser code AND the line that auto-verifies
+    everyone. If you leave markEmailVerified in, verification does nothing.)
+
+ d) Find the block starting  // EMAIL VERIFICATION  that contains
+    "sendVerificationEmail(req, {". Uncomment it so it becomes:
+
+        // No session yet - the user signs in after clicking the link in this email.
+        // If sending fails the account still exists; logging in re-sends the link.
+        try {
+            await sendVerificationEmail(req, {
+                userId: newUser.user_id,
+                email: newUser.email,
+                firstName: newUser.first_name,
+                passwordHash: newUser.password,
+            });
+        } catch (emailError) {
+            console.error("Verification email error:", emailError);
+        }
+
+    Then DELETE the block right below it, starting with
+        // DEV ONLY - log the new user straight in
+    down to and including the closing  );  of  res.setHeader("Set-Cookie", ...)
+    (This is the code that creates a session cookie. New users must NOT be
+    logged in before they verify.)
+
+ e) Near the bottom, find the last  // EMAIL VERIFICATION  block. Uncomment
+    it so it becomes:
+
+        return res.status(200).json({
+            ok: true,
+            verificationRequired: true,
+            email: newUser.email,
+        });
+
+    Then DELETE the  // DEV ONLY  return block right below it (the one that
+    returns  user: { id: ..., status: ..., role: "MEMBER" }).
+
+ f) Optional tidy-up: at the very top, the lines
+        import crypto from "crypto";
+        import { serialize } from "cookie";
+    are no longer used in this file and can be deleted. You can also update
+    the big comment at the top of the file to say verification is on.
+
+--------------------------------------------------------------------------
+FILE 2 of 4:  pages/api/auth/login.js
+--------------------------------------------------------------------------
+ a) Near the top, find:
+        // import { sendVerificationEmail } from "@/lib/email";
+    Remove the  //  so it becomes:
+        import { sendVerificationEmail } from "@/lib/email";
+    (The 3 explanation comment lines above it can be deleted.)
+
+ b) Further down, find the block starting  // EMAIL VERIFICATION  that
+    contains  if (user.email_verified === false) {  and uncomment it so it
+    becomes:
+
+        //Unverified accounts can't sign in - send them a fresh verification link
+        if (user.email_verified === false) {
+            try {
+                await sendVerificationEmail(req, {
+                    userId: user.user_id,
+                    email: user.email,
+                    firstName: user.first_name,
+                    passwordHash: user.password,
+                });
+            } catch (emailError) {
+                console.error("Verification email error:", emailError);
+            }
+
+            return res.status(403).json({
+                ok: false,
+                error: "Please verify your email before signing in. We've sent a new verification link to your inbox.",
+            });
+        }
+
+    There is no DEV ONLY block in this file.
+
+--------------------------------------------------------------------------
+FILE 3 of 4:  hooks/useAuth.js
+--------------------------------------------------------------------------
+ Inside the  signup  function, find:
+
+        // EMAIL VERIFICATION DISABLED - commented out for now ...
+        // ...
+        // //No session yet - the user has to verify their email first
+        // return data;
+
+        // DEV ONLY - signup logs the user in, so load the session user
+        const sessionUser = await sessionCheck();
+        if (!sessionUser) setUser(data.user);
+        return sessionUser ?? data.user;
+
+ Replace ALL of that with just:
+
+        //No session yet - the user has to verify their email first
+        return data;
+
+--------------------------------------------------------------------------
+FILE 4 of 4:  components/RegisterForm.js
+--------------------------------------------------------------------------
+ a) Inside  handleSubmit , find:
+
+        // EMAIL VERIFICATION DISABLED - commented out for now ...
+        // ...
+        // setPendingEmail(result.email);
+
+        // DEV ONLY - signup logs the user straight in
+        router.push("/dashboard");
+
+    Replace ALL of that with just:
+
+        setPendingEmail(result.email);
+
+    (This shows the "CHECK YOUR EMAIL" screen after sign-up.)
+
+ b) Near the top, delete these now-unused lines:
+        // DEV ONLY - see EMAIL VERIFICATION note below
+        import { useRouter } from "next/router";
+    and inside the component, delete:
+        const router = useRouter();
+
+--------------------------------------------------------------------------
+CHECK YOUR WORK
+--------------------------------------------------------------------------
+ 1. Search the project (Ctrl+Shift+F) for  DEV ONLY  inside these 4 files.
+    There should be NO results left.
+ 2. In a terminal in the project folder run:
+        npm run lint
+    Fix anything it reports in these 4 files (usually a leftover unused
+    import - just delete it).
+ 3. Run  npm run build  - it must finish without errors.
+
+Files you do NOT need to touch (they're already active):
+  lib/email.js, lib/verificationToken.js, pages/api/auth/verify-email.js,
+  components/LoginForm.js
+
+
+================================================================================
+ PART 6. TEST IT
+================================================================================
+Test on your computer first, then on the live site.
+
+ 1. Start the app (npm run dev) and open http://localhost:3000/register
+ 2. Sign up with an email address you can open (one that does NOT already
+    have an account).
+    -> You should see a "CHECK YOUR EMAIL" screen.
+       You should NOT be logged in.
+ 3. Open your inbox (check Spam too). You should get
+    "Verify your email - The Crafty Studio" within a minute.
+ 4. Click "Verify Email".
+    -> You land on the login page with a message that your email is verified.
+    -> You should also get a "welcome" email.
+ 5. Log in. It should work.
+ 6. Extra check: sign up with another new email, DON'T click the link, and
+    try to log in. You should see "Please verify your email before signing
+    in..." and receive a new link.
+ 7. In the Resend dashboard, click "Emails" - you can see every email sent
+    and whether it was delivered.
+ 8. Commit and push the code changes, let the site deploy, and repeat steps
+    1-6 on the real website.
+
+
+================================================================================
+ IMPORTANT: EXISTING ACCOUNTS
+================================================================================
+Once this is on, any account whose  email_verified  column is FALSE can't log
+in until it verifies. When they try to log in, they're emailed a link, so
+real users can fix this themselves. Accounts with TRUE (or empty/NULL) are
+not affected.
+
+Accounts created while verification was off were automatically marked
+verified, so they're fine.
+
+If you want to let specific old accounts in without verifying (e.g. test
+accounts), run this SQL on the database (Railway -> Postgres service ->
+"Data" / "Query" tab), replacing the email:
+
+    UPDATE users SET email_verified = TRUE WHERE email = 'someone@example.com';
+
+To see who is unverified:
+
+    SELECT user_id, email FROM users WHERE email_verified = FALSE;
+
+
+================================================================================
+ TROUBLESHOOTING
+================================================================================
+Where to look for errors:
+  - On your computer: the terminal where  npm run dev  is running.
+  - On Railway: the web service -> "Deployments" -> latest -> "View Logs".
+  - On Vercel: the project -> "Logs".
+  - Resend dashboard -> "Emails" (shows sent/delivered/bounced) and "Logs".
+
+"RESEND_API_KEY is not set" or "EMAIL_VERIFICATION_SECRET is not set"
+  -> The variable is missing or misspelled where the app is running. Check
+     spelling (all caps, underscores). Restart/redeploy after adding it.
+
+"Resend failed to send ... domain is not verified" / "You can only send
+testing emails to your own email address"
+  -> Part 2 isn't finished (domain still "Pending"), OR EMAIL_FROM still uses
+     onboarding@resend.dev or a different domain than the verified one.
+
+"API key is invalid"
+  -> Copy the key again (starts with  re_ , no spaces). If unsure, create a
+     new key in Resend and update the variable. Redeploy.
+
+Sign-up says success but no email arrives
+  -> Check Spam. Check Resend -> Emails to see if it was sent. Check the
+     server logs for "Verification email error". Add the DMARC record
+     (Part 2, step 9) if emails land in spam.
+
+The link in the email goes to localhost or the wrong website
+  -> APP_URL is wrong on the hosting service. Set it to the real https://
+     address with no slash at the end, then redeploy.
+
+Clicking the link says the link is invalid / expired
+  -> Links expire after 24 hours, and only the NEWEST link works if the
+     person signed up or requested a link more than once. Just log in to get
+     a fresh link. Also happens if EMAIL_VERIFICATION_SECRET was changed
+     after the email was sent.
+
+Domain stuck on "Pending" in Resend for hours
+  -> Usually the Name/Host field has the domain added twice (see Part 2,
+     step 8). Use https://dnschecker.org - type  resend._domainkey.yourdomain.com
+     and choose TXT - to see what's actually published. Compare it to
+     Resend's value. Fix, then click "Verify" again in Resend.
+
+Users signed up but are stuck logged-in without verifying
+  -> The DEV ONLY "log the new user straight in" block in signup.js was not
+     deleted, or markEmailVerified is still there. Re-check Part 5, File 1.
+
+
+================================================================================
+ HOW TO TURN IT OFF AGAIN
+================================================================================
+Revert the code changes from Part 5 (e.g. revert that Git commit). The
+environment variables can stay - they're harmless when the code is off.
