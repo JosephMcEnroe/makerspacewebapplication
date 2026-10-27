@@ -5,6 +5,8 @@ import { useAuthContext } from "@/context/AuthContext";
 import ResourceCard from "./ReservationProductCard";
 
 import WeeklyAvailability from "./WeeklyAvailability";
+import MonthlyAvailability from "./MonthlyAvailability";
+import { isMonthlyStudioResource } from "@/lib/resourceGroups";
 
 import styles from "./ExplorePage.module.css";
 
@@ -17,12 +19,19 @@ export default function ExplorePage({
 }) {
   const router = useRouter();
   const { user } = useAuthContext();
-  const [selectedResource, setSelectedResource] = useState(() => items.find(item => !item.unavailable && String(item.resourceId) === String(router.query.resourceId)) || null);
+  const [selectedResource, setSelectedResource] = useState(() => {
+    const requestedResourceId = String(router.query.resourceId || "");
+    const item = items.find((candidate) => !candidate.unavailable && (
+      String(candidate.resourceId) === requestedResourceId
+      || candidate.alternatives?.some((alternative) => String(alternative.resourceId) === requestedResourceId)
+    ));
+    return item && requestedResourceId ? { ...item, initialResourceId: requestedResourceId } : item || null;
+  });
   const [bookingError, setBookingError] = useState("");
   const available = items.filter((item) => !item.unavailable);
   const unavailable = items.filter((item) => item.unavailable);
 
-  const confirmReservation = async (periods) => {
+  const confirmReservation = async (periods, bookingResource = selectedResource) => {
     if (!user?.id) throw new Error("Please sign in before making a reservation.");
     setBookingError("");
 
@@ -80,16 +89,18 @@ export default function ExplorePage({
       throw new Error("Could not verify the reservation request. Please try again.");
     }
 
-    const startsAndEnds = periods.map(({ date, startMinute, endDate: endDateKey, endMinute }) => {
-      const wallTime = (day, minute) => day + 'T' + String(Math.floor(minute / 60)).padStart(2, '0') + ':' + String(minute % 60).padStart(2, '0') + ':00';
-      return { start: wallTime(date, startMinute), end: wallTime(endDateKey, endMinute) };
-    });
+    const startsAndEnds = resourceType === "rooms" && isMonthlyStudioResource(selectedResource || {})
+      ? periods.map(({ start, end }) => ({ start, end }))
+      : periods.map(({ date, startMinute, endDate: endDateKey, endMinute }) => {
+        const wallTime = (day, minute) => day + 'T' + String(Math.floor(minute / 60)).padStart(2, '0') + ':' + String(minute % 60).padStart(2, '0') + ':00';
+        return { start: wallTime(date, startMinute), end: wallTime(endDateKey, endMinute) };
+      });
     let response;
     try {
       response = await fetch("/api/reservations/create", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-csrf-token": csrfData.csrfToken },
-        body: JSON.stringify({ type: resourceType, resourceId: selectedResource.resourceId, periods: startsAndEnds }),
+        body: JSON.stringify({ type: resourceType, resourceId: bookingResource.resourceId, periods: startsAndEnds }),
       });
     } catch {
       throw new Error("Could not connect to the reservation service. Please try again.");
@@ -102,6 +113,10 @@ export default function ExplorePage({
     }
     if (!response.ok) throw new Error(result.error || "Could not create the reservation.");
 
+    if (resourceType === "rooms" && result.url) {
+      window.location.assign(result.url);
+      return;
+    }
     if (resourceType === "rooms") {
       setSelectedResource(null);
       await router.replace({ pathname: "/reservations", query: { type: resourceType, reservationId: result.reservationIds || [] } });
@@ -111,7 +126,8 @@ export default function ExplorePage({
     window.location.assign(result.url);
   };
 
-  const Availability = WeeklyAvailability;
+  const isMonthlyStudio = resourceType === "rooms" && isMonthlyStudioResource(selectedResource || {});
+  const Availability = isMonthlyStudio ? MonthlyAvailability : WeeklyAvailability;
   return (
     <div className={styles.page}>
       <Head>
@@ -166,11 +182,12 @@ export default function ExplorePage({
 
       {selectedResource && (
         <Availability
-          confirmLabel={resourceType === "classes" ? "Confirm Reservation" : "Create Reservation"}
+          confirmLabel={isMonthlyStudio ? "Continue to payment" : resourceType === "classes" ? "Confirm Reservation" : "Create Reservation"}
           resource={selectedResource}
           type={resourceType}
           initialDate={selectedResource.scheduledDate || undefined}
           unavailableIntervals={selectedResource.unavailableIntervals}
+          initialResourceId={selectedResource.initialResourceId}
           onClose={() => setSelectedResource(null)}
           onConfirm={confirmReservation}
         />

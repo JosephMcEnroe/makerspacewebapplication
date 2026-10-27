@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import StaffNavbar from "@/components/StaffNavbar";
 import MembershipStatusBadge from "@/components/MembershipStatusBadge";
 import WeeklyAvailability from "@/components/WeeklyAvailability";
+import MonthlyAvailability from "@/components/MonthlyAvailability";
+import { isMonthlyStudioResource } from "@/lib/resourceGroups";
 import styles from "@/styles/StaffPages.module.css";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { requireStaffPage } from "@/lib/staffAuth";
@@ -94,14 +96,15 @@ export default function NewStaffReservationPage({ navRole, members, resources, i
   }, [members, search]);
 
   const book = (body) => staffRequest("/api/staff/reservations", "POST", { userId: memberId, ...body });
+  const monthlyRental = activeTab === "rooms" && isMonthlyStudioResource(selectedResource || {});
   const finish = () => router.push(`/members/${memberId}?booked=1`);
 
   // WeeklyAvailability shows its own error message when this throws
-  const confirmSlots = async (periods) => {
+  const confirmSlots = async (periods, bookingResource = selectedResource) => {
     await book({
       type: activeTab,
-      resourceId: selectedResource.resourceId,
-      periods: periods.map(({ date, startMinute, endDate, endMinute }) => ({
+      resourceId: bookingResource.resourceId,
+      periods: monthlyRental ? periods : periods.map(({ date, startMinute, endDate, endMinute }) => ({
         start: wallTime(date, startMinute),
         end: wallTime(endDate, endMinute),
       })),
@@ -252,8 +255,14 @@ export default function NewStaffReservationPage({ navRole, members, resources, i
         </div>
       </div>
 
-      {selectedResource && member && (
-        <WeeklyAvailability
+      {selectedResource && member && (monthlyRental ? <MonthlyAvailability
+          resource={selectedResource}
+          unavailableIntervals={selectedResource.unavailableIntervals}
+          confirmLabel={`Book for ${member.name.split(" ")[0]}`}
+          cancelLabel="Back"
+          onClose={() => setSelectedResource(null)}
+          onConfirm={confirmSlots}
+        /> : <WeeklyAvailability
           resource={selectedResource}
           type={activeTab}
           unavailableIntervals={selectedResource.unavailableIntervals}
@@ -261,8 +270,7 @@ export default function NewStaffReservationPage({ navRole, members, resources, i
           cancelLabel="Back"
           onClose={() => setSelectedResource(null)}
           onConfirm={confirmSlots}
-        />
-      )}
+        />)}
     </>
   );
 }

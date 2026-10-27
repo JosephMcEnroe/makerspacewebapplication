@@ -8,6 +8,8 @@ import { roomReservationRepository } from "@/Data_Access_Layer/roomReservationRe
 import { getSessionUser, loginRedirect } from "@/lib/session";
 import { formatDate, formatTime, formatTimeRange } from "@/lib/format";
 import { reservationCustomerEndDateTime } from "@/lib/reservationPeriods";
+import { groupRoomReservations } from "@/lib/reservationGrouping";
+import { monthlyReservationLabel, monthlyReservationSelectionLabel } from "@/lib/monthlyReservation";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import stylesPanel from "@/components/ReservationsPanel.module.css";
@@ -73,15 +75,21 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   );
 
   const room = groupReservations(
-    roomReservations.map((reservation) => ({ ...reservation, start: reservation.start_date, end: reservation.end_date })),
+    groupRoomReservations(roomReservations).map((reservation) => ({ ...reservation, start: reservation.start_date, end: reservation.end_date })),
     (reservation) => ({
-      id: `rm-${reservation.reservation_id}`,
+      id: `rm-${reservation.reservation_ids.join("-")}`,
       reservationId: reservation.reservation_id,
+      reservationIds: reservation.reservation_ids,
+      selectedMonths: reservation.monthly_months?.map(({ start }) => start.slice(0, 7)) || null,
       resourceId: reservation.room_id,
       startDate: reservation.start_date instanceof Date ? reservation.start_date.toISOString() : String(reservation.start_date),
       endDate: reservation.end_date instanceof Date ? reservation.end_date.toISOString() : String(reservation.end_date),
       name: reservation.room_name ?? "Room",
-      time: formatTimeRange(reservation.start_date, reservation.end_date),
+      time: monthlyReservationSelectionLabel(reservation.monthly_months?.map(({ start }) => start.slice(0, 7)))
+        || monthlyReservationLabel(reservation.start_date, reservation.end_date)
+        || (reservation.reservation_ids.length > 1
+          ? `${formatTimeRange(reservation.start_date, reservation.end_date)} (${reservation.reservation_ids.length} time slots)`
+          : formatTimeRange(reservation.start_date, reservation.end_date)),
       trainingRequired: false,
     })
   );
@@ -126,7 +134,10 @@ export default function ReservationsPage({ reservations, initialType, initialRes
   const [actionError, setActionError] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
   const editReservation = (type, reservation) => {
-    router.push({ pathname: "/reservations/edit", query: { type, id: reservation.reservationId } });
+    router.push({
+      pathname: "/reservations/edit",
+      query: { type, id: reservation.reservationId, reservationIds: reservation.reservationIds },
+    });
   };
   const cancelReservation = (type, reservation) => setConfirmation({ type, reservation });
   const confirmCancellation = async () => {
@@ -140,7 +151,11 @@ export default function ReservationsPage({ reservations, initialType, initialRes
       const response = await fetch("/api/reservations/cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-csrf-token": csrfData.csrfToken },
-        body: JSON.stringify({ type: confirmation.type, reservationId: confirmation.reservation.reservationId }),
+        body: JSON.stringify({
+          type: confirmation.type,
+          reservationId: confirmation.reservation.reservationId,
+          reservationIds: confirmation.reservation.reservationIds,
+        }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not cancel this reservation.");
@@ -165,7 +180,7 @@ export default function ReservationsPage({ reservations, initialType, initialRes
         <div className={stylesPanel.confirmBackdrop} role="presentation" onMouseDown={(event) => event.target === event.currentTarget && !isCancelling && setConfirmation(null)}>
           <section className={stylesPanel.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="cancel-title">
             <h2 id="cancel-title">Cancel this reservation?</h2>
-            <p>Are you sure you want to cancel {confirmation.reservation.name}? This cannot be undone.</p>
+            <p>Are you sure you want to cancel {confirmation.reservation.name}{confirmation.reservation.reservationIds?.length > 1 ? ` and its ${confirmation.reservation.reservationIds.length - 1} additional linked time slots` : ""}? This cannot be undone.</p>
             {actionError && <p role="alert">{actionError}</p>}
             <div className={stylesPanel.cardActions}>
               <button type="button" className={stylesPanel.editBtn} disabled={isCancelling} onClick={() => setConfirmation(null)}>Keep Reservation</button>

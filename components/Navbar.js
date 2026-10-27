@@ -3,14 +3,14 @@ import Image from "next/image";
 import { useAuthContext } from "@/context/AuthContext";
 import styles from "./Navbar.module.css";
 
-export default function Navbar() {
+export default function Navbar({ hasSidebar = false }) {
   const { user } = useAuthContext();
   const initials = [user?.firstName, user?.lastName]
     .map((name) => name?.charAt(0).toUpperCase() || "")
     .join("");
 
   return (
-    <header className={styles.navbar}>
+    <header className={`${styles.navbar} ${hasSidebar ? styles.navbarWithSidebar : ""}`}>
       <Link href="/dashboard" className={styles.brand}>
         <Image
           src="/images/collaboratory_logo.jpg"

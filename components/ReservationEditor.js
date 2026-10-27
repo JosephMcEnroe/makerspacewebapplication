@@ -6,6 +6,7 @@ import MonthlyAvailability from "@/components/MonthlyAvailability";
 import WeeklyAvailability from "@/components/WeeklyAvailability";
 import styles from "@/components/ExplorePage.module.css";
 import { buildReservationPeriods, getReservationSlotStartMinutes } from "@/lib/reservationPeriods";
+import { calendarMonthPeriod } from "@/lib/monthlyReservation";
 
 const pad = (value) => String(value).padStart(2, "0");
 
@@ -15,12 +16,18 @@ function createInitialSlots(type, startValue, endValue) {
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) return [];
 
   const durationMinutes = (end.getTime() - start.getTime()) / (60 * 1000);
-  if (!Number.isInteger(durationMinutes) || durationMinutes < 60 || durationMinutes % 60 !== 0) return [];
-  if (type !== "equipment" && durationMinutes !== 60) return [];
+  if (!Number.isInteger(durationMinutes) || durationMinutes < 60) return [];
+  const roomSlotCount = (durationMinutes + 15) / 75;
+  if (type === "rooms" && (!Number.isInteger(roomSlotCount) || roomSlotCount < 1)) return [];
+  if (type === "equipment" && durationMinutes % 60 !== 0) return [];
+  if (type !== "equipment" && type !== "rooms" && durationMinutes !== 60) return [];
   const startMinute = start.getHours() * 60 + start.getMinutes();
   if (start.getMinutes() % 15 !== 0 || !getReservationSlotStartMinutes(type).includes(startMinute)) return [];
 
   const date = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`;
+  if (type === "rooms") {
+    return Array.from({ length: roomSlotCount }, (_, index) => ({ date, startMinute: startMinute + index * 75 }));
+  }
   const slots = Array.from({ length: durationMinutes / 60 }, (_, index) => ({ date, startMinute: startMinute + index * 60 }));
   return type === "equipment" ? slots : slots.slice(0, 1);
 }
@@ -58,7 +65,12 @@ export default function ReservationEditor({ type, reservation, resource, resourc
       const response = await fetch("/api/reservations/update", {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken },
-        body: JSON.stringify({ type: resourceType, reservationId: reservation.reservationId, periods: formattedPeriods }),
+        body: JSON.stringify({
+          type: resourceType,
+          reservationId: reservation.reservationId,
+          reservationIds: reservation.reservationIds,
+          periods: formattedPeriods,
+        }),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Could not update the reservation.");
@@ -105,6 +117,9 @@ export default function ReservationEditor({ type, reservation, resource, resourc
     }
   };
 
+  const initialSelectedMonths = reservation.selectedMonths?.length
+    ? reservation.selectedMonths
+    : reservation.monthly ? [calendarMonthPeriod(reservation.startDate.slice(0, 7), reservation.monthCount || 1).start.slice(0, 7)] : undefined;
   const Availability = reservation.monthly ? MonthlyAvailability : WeeklyAvailability;
   return (
     <main className={styles.page}>
@@ -142,6 +157,10 @@ export default function ReservationEditor({ type, reservation, resource, resourc
           type={resourceType}
           initialDate={reservation.monthly ? (() => { const d = businessCalendarDate(reservation.startDate); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; })() : reservation.startDate}
           initialSlots={createInitialSlots(resourceType, reservation.startDate, reservation.endDate)}
+          initialMonths={reservation.monthCount || 1}
+          initialSelectedMonths={initialSelectedMonths}
+          lockMonthCount={reservation.monthly}
+          excludedReservationIds={reservation.reservationIds || [reservation.reservationId]}
           unavailableIntervals={resource.unavailableIntervals}
           confirmLabel={submitting ? "Saving…" : "Confirm Changes"}
           cancelLabel="Cancel Editing"

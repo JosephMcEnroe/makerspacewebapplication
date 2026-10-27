@@ -1,9 +1,10 @@
 import Head from "next/head";
-import { isMonthlyReservation } from "@/lib/monthlyReservation";
+import { getMonthlyReservationCount, isMonthlyReservation, monthlyReservationLabel, monthlyReservationSelectionLabel } from "@/lib/monthlyReservation";
 import ReservationEditor from "@/components/ReservationEditor";
 import { query } from "@/lib/db";
 import { getSessionUser, loginRedirect } from "@/lib/session";
 import { loadClasses, loadEquipment, loadRooms } from "@/lib/resources";
+import { groupRoomReservations } from "@/lib/reservationGrouping";
 
 function plainDateTime(value) {
   return value instanceof Date ? value.toISOString() : String(value);
@@ -15,7 +16,10 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
 
   const type = routeQuery.type;
   const reservationId = Number(routeQuery.id);
-  if (!Number.isInteger(reservationId) || reservationId < 1 || !["room", "equipment", "class"].includes(type)) {
+  const requestedReservationIds = type === "room"
+    ? [...new Set([reservationId, ...(Array.isArray(routeQuery.reservationIds) ? routeQuery.reservationIds : routeQuery.reservationIds ? [routeQuery.reservationIds] : [])].map(Number))]
+    : [reservationId];
+  if (!Number.isInteger(reservationId) || reservationId < 1 || requestedReservationIds.some((id) => !Number.isInteger(id) || id < 1) || !["room", "equipment", "class"].includes(type)) {
     return { notFound: true };
   }
 
@@ -27,11 +31,15 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
               r.name, r.type AS description, rr.stripe_checkout_session_id
        FROM "room_reservation" rr
        JOIN "room" r ON r.room_id = rr.room_id
-       WHERE rr.reservation_id = $1 AND rr.user_id = $2
-         AND (rr.status IS NULL OR LOWER(rr.status) NOT LIKE 'cancel%')`,
-      [reservationId, user.user_id]
+       WHERE rr.reservation_id = ANY($1::integer[]) AND rr.user_id = $2
+         AND (rr.status IS NULL OR LOWER(rr.status) NOT LIKE 'cancel%')
+       ORDER BY rr.start_date`,
+      [requestedReservationIds, user.user_id]
     );
-    reservation = rows[0];
+    if (rows.length !== requestedReservationIds.length) return { notFound: true };
+    const grouped = groupRoomReservations(rows);
+    if (grouped.length !== 1 || grouped[0].reservation_ids.length !== requestedReservationIds.length) return { notFound: true };
+    reservation = grouped[0];
     resources = await loadRooms();
   } else if (type === "equipment") {
     const { rows } = await query(
@@ -61,26 +69,33 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
   if (!reservation) return { notFound: true };
   const startDate = reservation.start_time ?? reservation.class_date;
   const endDate = reservation.end_time ?? reservation.class_date;
+  const roomResources = type === "room" ? resources.flatMap((item) => item.alternatives || [item]) : [];
+  const matchingRoom = roomResources.find((item) => String(item.resourceId) === String(reservation.resource_id));
   return {
     props: {
       type,
       reservation: {
         monthly: type === "room" && isMonthlyReservation(startDate, endDate),
+        monthCount: type === "room" ? getMonthlyReservationCount(startDate, endDate) : null,
+        selectedMonths: reservation.monthly_months?.map(({ start }) => start.slice(0, 7)) || null,
         reservationId: reservation.reservation_id,
+        reservationIds: reservation.reservation_ids,
         classId: reservation.class_id ?? reservation.reservation_id,
         resourceId: reservation.resource_id ?? reservation.class_id,
         startDate: plainDateTime(startDate),
         endDate: plainDateTime(endDate),
-        name: reservation.name,
+        name: matchingRoom?.displayName || reservation.name,
+        time: type === "room" && isMonthlyReservation(startDate, endDate)
+          ? monthlyReservationSelectionLabel(reservation.monthly_months?.map(({ start }) => start.slice(0, 7))) || monthlyReservationLabel(startDate, endDate)
+          : null,
       },
       resource: type === "class" ? null : {
         resourceId: String(reservation.resource_id),
-        name: reservation.name,
+        name: matchingRoom?.displayName || reservation.name,
         description: reservation.description ?? "",
         monthly: type === "room" && isMonthlyReservation(startDate, endDate),
         reservationId: reservation.reservation_id,
-        unavailableIntervals: resources
-          .find((item) => String(item.resourceId) === String(reservation.resource_id))?.unavailableIntervals ?? [],
+        unavailableIntervals: matchingRoom?.unavailableIntervals ?? [],
       },
       resources: type === "class" ? resources : [],
     },

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import styles from "./WeeklyAvailability.module.css";
 import { buildReservationPeriods, formatMinutesAsTime, getReservationSlotStartMinutes, isUnavailableInterval, reservationCustomerEndDateTime, toggleReservationSlot } from "@/lib/reservationPeriods";
 import { formatTimeRange } from "@/lib/format";
+import { ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const pad = (value) => String(value).padStart(2, "0");
@@ -34,16 +35,20 @@ export default function WeeklyAvailability({
   resource,
   type,
   initialDate,
-  unavailableIntervals = [],
+  initialResourceId,
   initialSlots = [],
   confirmLabel = "Confirm Reservation",
   cancelLabel = "Keep Browsing",
   onConfirm,
   onClose,
 }) {
+  const alternatives = resource.alternatives || [resource];
+  const [selectedResourceId, setSelectedResourceId] = useState(String(initialResourceId || resource.resourceId));
+  const activeResource = alternatives.find((item) => String(item.resourceId) === selectedResourceId) || resource;
+  const unavailableIntervalsForResource = activeResource.unavailableIntervals || [];
   const isRoom = type === "rooms";
   const isClass = type === "classes";
-  const advanceDays = isRoom ? 90 : 31;
+  const advanceDays = isRoom ? ROOM_BOOKING_ADVANCE_DAYS : 31;
   const cleanupMinutes = type === "equipment" ? 15 : 0;
   const availabilityBufferMinutes = type === "rooms" ? 15 : 0;
   const classDate = type === "classes" && resource.scheduledDate ? resource.scheduledDate.slice(0, 10) : null;
@@ -81,7 +86,7 @@ export default function WeeklyAvailability({
   };
 
   const isAvailable = (date, startMinute) => {
-    if (isClass && (!Number.isInteger(classMinute) || classMinute < 0 || classMinute > 59)) return false;
+    if (activeResource.unavailable || (isClass && (!Number.isInteger(classMinute) || classMinute < 0 || classMinute > 59))) return false;
     const slotStart = new Date(`${date}T00:00:00`);
     slotStart.setHours(Math.floor(startMinute / 60), startMinute % 60, 0, 0);
     const slotEnd = new Date(slotStart);
@@ -96,8 +101,8 @@ export default function WeeklyAvailability({
     }
     const easternStart = businessTime(`${date}T${pad(Math.floor(startMinute / 60))}:${pad(startMinute % 60)}:00`);
     if (!Number.isFinite(easternStart) || easternStart <= now.getTime() || easternStart > bookingCutoff.getTime()) return false;
-    return !unavailableIntervals.some((interval) =>
-      isUnavailableInterval(interval, resource.reservationId, easternStart, easternStart + 60 * 60 * 1000, availabilityBufferMinutes)
+    return !unavailableIntervalsForResource.some((interval) =>
+      isUnavailableInterval(interval, activeResource.reservationId, easternStart, easternStart + 60 * 60 * 1000, availabilityBufferMinutes)
     );
   };
 
@@ -111,7 +116,7 @@ export default function WeeklyAvailability({
     setSubmitting(true);
     setError("");
     try {
-      await onConfirm(periods);
+      await onConfirm(periods, activeResource);
     } catch (submitError) {
       setError(submitError.message || "Could not create the reservation.");
       setSubmitting(false);
@@ -125,7 +130,29 @@ export default function WeeklyAvailability({
       <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="availability-title">
         <button type="button" className={styles.closeButton} onClick={onClose} aria-label="Close availability">×</button>
         <p className={styles.eyebrow}>{type === "classes" ? "Class" : isRoom ? "Room" : "Equipment"} Reservation</p>
-        <h2 id="availability-title" className={styles.title}>{resource.name}</h2>
+        <h2 id="availability-title" className={styles.title}>{alternatives.length > 1 ? resource.name : activeResource.displayName || activeResource.name}</h2>
+        {alternatives.length > 1 && (
+          <fieldset className={styles.machinePicker}>
+            <legend>{isRoom ? "Choose a studio" : "Choose a machine"}</legend>
+            <div className={styles.machineChoices}>
+              {alternatives.map((alternative) => (
+                <button
+                  key={alternative.resourceId}
+                  type="button"
+                  className={`${styles.machineChoice} ${String(alternative.resourceId) === selectedResourceId ? styles.machineChoiceActive : ""}`}
+                  aria-pressed={String(alternative.resourceId) === selectedResourceId}
+                  disabled={alternative.unavailable}
+                  onClick={() => {
+                    setSelectedResourceId(String(alternative.resourceId));
+                    setSelectedSlots([]);
+                  }}
+                >
+                  {alternative.displayName || alternative.name}{alternative.unavailable ? " · Unavailable" : ""}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        )}
         <p>All times are Eastern Time (EST)</p>
         <p className={styles.instructions}>{type === "classes"
           ? "Select the scheduled class time to reserve your spot."

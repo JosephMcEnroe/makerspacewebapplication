@@ -110,13 +110,6 @@
   color: #b8412b;
 }
 
-.serviceNav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  padding-top: 0.65rem;
-}
-
 .mobileMenuToggle,
 .mobileMenu {
   display: none;
@@ -135,8 +128,7 @@
     display: none;
   }
 
-  .nav,
-  .serviceNav {
+  .nav {
     display: flex;
     width: 100%;
     flex-direction: row;
@@ -144,10 +136,6 @@
     gap: 0.45rem;
     padding: 0;
     overflow: hidden;
-  }
-
-  .nav + .serviceNav {
-    margin-top: 0.45rem;
   }
 
   .navItem,
@@ -186,8 +174,7 @@
     padding: 0.45rem 0.75rem;
   }
 
-  .nav,
-  .serviceNav {
+  .nav {
     display: none;
   }
 
