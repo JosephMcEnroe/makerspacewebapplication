@@ -11,8 +11,8 @@ export default async function handler(req, res) {
   }
   try {
     const result = await query(mode === "equipment"
-      ? "SELECT machine_id AS id, name FROM machine ORDER BY name, machine_id"
-      : "SELECT room_id AS id, name FROM room ORDER BY name, room_id");
+      ? "SELECT machine_id AS id, name, type FROM machine ORDER BY name, machine_id"
+      : "SELECT room_id AS id, name, type FROM room ORDER BY name, room_id");
     return res.status(200).json({ resources: result.rows });
   } catch (error) {
     console.error("RFID resource listing failed:", error);
