@@ -5,7 +5,7 @@ import styles from "./DashboardLayout.module.css";
 export default function DashboardLayout({ children }) {
   return (
     <div className={styles.pageContainer}>
-      <Navbar />
+      <Navbar hasSidebar />
       <div className={styles.body}>
         <div className={styles.sidebar}>
           <Sidebar />

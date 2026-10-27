@@ -33,13 +33,18 @@ function ReservationCard({ reservation, editable, highlighted, reservationType, 
 export default function ReservationsPanel({ reservations, initialType, initialReservationIds = [], onEdit, onCancel }) {
   const [activeType, setActiveType] = useState(initialType || "class");
   const newReservationIds = useMemo(() => new Set(initialReservationIds.map(String)), [initialReservationIds]);
-  const firstNewReservationId = initialReservationIds[0];
+  const reservationTargetId = initialReservationIds[0];
 
   useEffect(() => {
-    if (!initialType || !firstNewReservationId) return;
-    document.getElementById(`reservation-${initialType}-${firstNewReservationId}`)
+    if (!initialType || !reservationTargetId) return;
+    const matchingReservation = Object.values(reservations[initialType] || {})
+      .flatMap((section) => section)
+      .find((reservation) => [reservation.reservationId, ...(reservation.reservationIds || [])]
+        .some((id) => String(id) === String(reservationTargetId)));
+    const reservationId = matchingReservation?.reservationId ?? reservationTargetId;
+    document.getElementById(`reservation-${initialType}-${reservationId}`)
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [initialType, firstNewReservationId]);
+  }, [initialType, reservationTargetId, reservations]);
   const active = TYPES.find((type) => type.key === activeType);
   const data = reservations[active.key] || { upcoming: [], previous: [], cancelled: [] };
 

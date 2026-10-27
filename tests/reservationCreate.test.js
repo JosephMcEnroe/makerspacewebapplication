@@ -52,6 +52,36 @@ describe("reservation Checkout API", () => {
     expect(mocks.query.mock.calls.some(([sql]) => sql.includes("INSERT"))).toBe(false);
   });
 
+  it("charges one monthly room price for each consecutive calendar month rented", async () => {
+    const months = [{ start: "2026-11-01T00:00:00", end: "2027-02-01T00:00:00" }];
+    mocks.query.mockImplementation(async sql => {
+      if (sql.includes('FROM "room"')) return { rows: [{ room_id: 1, name: "Harkonnen", type: "small maker studio", stripe_key: "small_studio" }] };
+      if (sql.includes('FROM "users"')) return { rows: [{ email: "member@example.com" }] };
+      return { rows: [], rowCount: 0 };
+    });
+    mocks.products.mockResolvedValue([{ id: "prod_studio", active: true, name: "Small Studio", metadata: { room_id: "small_studio" },
+      default_price: { ...price, id: "price_studio" }, priceId: "price_studio" }]);
+    const res = response();
+    await handler(request({ type: "rooms", resourceId: 1, periods: months }), res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({
+      line_items: [{ price: "price_studio", quantity: 3 }],
+      metadata: expect.objectContaining({ period_count: "1", period_0: "2026-11-01T00:00:00|2027-02-01T00:00:00" }),
+    }));
+    expect(mocks.transactionQuery.mock.calls.some(([sql]) => sql.includes('FROM "room_reservation"'))).toBe(true);
+  });
+
+  it("rejects calendar-month purchases for non-studio rooms", async () => {
+    mocks.query.mockImplementation(async sql => sql.includes('FROM "room"')
+      ? { rows: [{ room_id: 1, name: "Workshop", type: "Room", stripe_key: "small_studio" }] }
+      : { rows: [], rowCount: 0 });
+    const res = response();
+    await handler(request({ type: "rooms", resourceId: 1, periods: [{ start: "2026-11-01T00:00:00", end: "2026-12-01T00:00:00" }] }), res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
   it("saves an hourly room reservation directly without Stripe", async () => {
     const res = response();
     mocks.products.mockRejectedValue(Error("Stripe unavailable"));
@@ -80,6 +110,9 @@ describe("reservation Checkout API", () => {
 
   it("rejects missing rooms and invalid room slots", async () => {
     mocks.transactionQuery.mockResolvedValue({ rows: [], rowCount: 0 });
+    mocks.query.mockImplementation(async sql => sql.includes('FROM "room"')
+      ? { rows: [], rowCount: 0 }
+      : { rows: [], rowCount: 0 });
     const res = response();
     await handler(request({ type: "rooms", periods: [{ start: "2026-10-20T00:00:00", end: "2026-10-20T01:00:00" }] }), res);
     expect(res.status).toHaveBeenCalledWith(404);

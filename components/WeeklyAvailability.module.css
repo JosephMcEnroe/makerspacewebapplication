@@ -46,6 +46,49 @@
   font-size: 1.5rem;
 }
 
+.machinePicker {
+  margin: 0.85rem 0 1rem;
+  padding: 0;
+  border: 0;
+}
+
+.machinePicker legend {
+  margin-bottom: 0.45rem;
+  color: #6b5347;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.machineChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.machineChoice {
+  min-height: 42px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid #d8ccc2;
+  border-radius: 999px;
+  background: #fff;
+  color: #6b5347;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.machineChoiceActive {
+  border-color: #a05c3a;
+  background: #fdf1e2;
+  color: #8b471f;
+}
+
+.machineChoice:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+}
+
 .instructions {
   margin: 0.5rem 0 1rem;
   color: #6b5347;
