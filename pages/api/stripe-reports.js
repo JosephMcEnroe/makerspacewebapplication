@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { getStaffSession } from "@/lib/staffAuth";
 
 const TIMEZONE = "America/New_York";
 const dateFormatter = new Intl.DateTimeFormat("en-CA", {
@@ -16,6 +17,10 @@ export default async function handler(req, res) {
     res.setHeader("Allow", "GET");
     return res.status(405).json({ error: "Method not allowed" });
   }
+  // Revenue is admin-only
+  const session = await getStaffSession(req);
+  if (!session) return res.status(401).json({ error: "Sign in to continue." });
+  if (!session.isAdmin) return res.status(403).json({ error: "Admin access required." });
   if (!process.env.STRIPE_SECRET_KEY) {
     return res.status(500).json({ error: "STRIPE_SECRET_KEY is not configured" });
   }

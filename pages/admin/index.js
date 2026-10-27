@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import StaffNavbar from "@/components/StaffNavbar";
 import StatCard from "@/components/StatCard";
@@ -25,24 +26,9 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   return { props: {} };
 }
 
-// Placeholder until revenue/usage data is wired up to the database
-// Dummy data — once a database is connected, these stat cards should pull
-// live revenue totals for today/this week/this month instead of hardcoded values.
-const REVENUE_STATS = [
-  { label: "Today", value: "$4,200", delta: { text: "+12% from yesterday", positive: true } },
-  { label: "This Week", value: "$24,130", delta: { text: "+8% from last week", positive: true } },
-  { label: "This Month", value: "$38,420", delta: { text: "+15% from last month", positive: true } },
-];
-
-// Dummy data — replace with actual daily revenue figures from the database.
-const REVENUE_TREND = [
-  { label: "Mar 7", value: 3200 },
-  { label: "Mar 8", value: 4100 },
-  { label: "Mar 9", value: 3600 },
-  { label: "Mar 10", value: 4700 },
-  { label: "Mar 11", value: 3900 },
-  { label: "Mar 12", value: 4200 },
-];
+const formatMoney = (value) => new Intl.NumberFormat("en-US", {
+  style: "currency", currency: "USD",
+}).format(value);
 
 // Dummy data — replace with actual daily new-membership counts from the database.
 const MEMBERSHIP_ENTRIES = [
@@ -91,6 +77,34 @@ const ExportIcon = (
 );
 
 export default function AdminDashboardPage() {
+  // Live Stripe revenue (gross USD sales, Eastern time, weeks start Monday)
+  const [revenue, setRevenue] = useState(null);
+  const [revenueLoading, setRevenueLoading] = useState(true);
+  const [revenueError, setRevenueError] = useState(null);
+  const [refresh, setRefresh] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadRevenue() {
+      setRevenueLoading(true);
+      setRevenueError(null);
+      try {
+        const response = await fetch("/api/stripe-reports", { signal: controller.signal });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Failed to load revenue");
+        if (!controller.signal.aborted) setRevenue(result);
+      } catch (err) {
+        if (!controller.signal.aborted) setRevenueError(err.message);
+      } finally {
+        if (!controller.signal.aborted) setRevenueLoading(false);
+      }
+    }
+    loadRevenue();
+    return () => controller.abort();
+  }, [refresh]);
+
+  const revenueValue = (key) => (revenue ? formatMoney(revenue[key]) : "—");
+
   return (
     <>
       <Head>
@@ -106,17 +120,35 @@ export default function AdminDashboardPage() {
           </p>
           <h1 className={styles.heading}>Revenue &amp; Operations</h1>
 
-          {/* Dummy data — see REVENUE_STATS above; wire up to the database once it exists */}
+          <div className={styles.revenueToolbar}>
+            <p className={styles.revenueNotice} role="status">
+              {revenueLoading && "Loading revenue..."}
+              {!revenueLoading && revenue && (
+                <>
+                  Gross USD sales before refunds and fees · Updated{" "}
+                  {new Intl.DateTimeFormat("en-US", { timeZone: revenue.timezone, dateStyle: "medium", timeStyle: "short" }).format(new Date(revenue.updatedAt))} ET
+                </>
+              )}
+            </p>
+            <button className={styles.refreshButton} disabled={revenueLoading} onClick={() => setRefresh((value) => value + 1)}>
+              Refresh revenue
+            </button>
+          </div>
+          {revenueError && <p className={styles.revenueError} role="alert">{revenueError}</p>}
+
           <div className={styles.statsGrid}>
-            {REVENUE_STATS.map((stat) => (
-              <StatCard key={stat.label} label={stat.label} value={stat.value} icon={DollarIcon} delta={stat.delta} />
-            ))}
+            <StatCard label="Today" value={revenueValue("today")} icon={DollarIcon} />
+            <StatCard label="This Week" value={revenueValue("thisWeek")} icon={DollarIcon} />
+            <StatCard label="This Month" value={revenueValue("thisMonth")} icon={DollarIcon} />
           </div>
 
           <div className={styles.chartsGrid}>
-            {/* Dummy data — see REVENUE_TREND above; wire up to the database once it exists */}
-            <ChartCard title="Revenue Trend" subtitle="Last 6 days">
-              <LineChart data={REVENUE_TREND} formatValue={(v) => `$${v.toLocaleString()}`} />
+            <ChartCard title="Revenue Trend" subtitle="Last 7 days · USD">
+              {revenue ? (
+                <LineChart data={revenue.dailyRevenue} formatValue={formatMoney} />
+              ) : (
+                <p className={styles.revenueNotice}>{revenueLoading ? "Loading revenue..." : "Revenue unavailable"}</p>
+              )}
             </ChartCard>
             {/* Dummy data — see MEMBERSHIP_ENTRIES above; wire up to the database once it exists */}
             <ChartCard title="Daily Membership Entries" subtitle="Last 6 days">
