@@ -47,8 +47,52 @@ describe("reservation update API", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(mocks.query).toHaveBeenCalledWith(
       expect.stringContaining('UPDATE "room_reservation"'),
-      [42, 18, updated.start, updated.end]
+      [42, 18, updated.start, "2027-02-01T00:00:00"]
     );
+  });
+
+  it("allows a paid multi-month rental to keep its duration while selecting separated months", async () => {
+    const months = [calendarMonthPeriod("2026-11"), calendarMonthPeriod("2027-01"), calendarMonthPeriod("2026-12")];
+    mocks.query.mockImplementation(async sql => {
+      if (sql.includes('FROM "room_reservation"') && sql.includes("stripe_checkout_session_id")) {
+        return { rows: [
+          { reservation_id: 42, resource_id: 4, stripe_checkout_session_id: "cs_studio", start_time: "2026-11-01T00:00:00", end_time: "2026-12-01T00:00:00" },
+          { reservation_id: 43, resource_id: 4, stripe_checkout_session_id: "cs_studio", start_time: "2026-12-01T00:00:00", end_time: "2027-01-01T00:00:00" },
+          { reservation_id: 44, resource_id: 4, stripe_checkout_session_id: "cs_studio", start_time: "2027-01-01T00:00:00", end_time: "2027-02-01T00:00:00" },
+        ], rowCount: 3 };
+      }
+      if (sql.includes('FROM "room"')) return { rows: [{ name: "Harkonnen", type: "small maker studio" }], rowCount: 1 };
+      return { rows: [], rowCount: 0 };
+    });
+    const res = response();
+    await handler({ method: "POST", body: { type: "rooms", reservationId: 42, reservationIds: [42, 43, 44], periods: months } }, res);
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mocks.query.mock.calls.filter(([sql]) => sql.includes('UPDATE "room_reservation"'))).toHaveLength(3);
+    expect(mocks.query.mock.calls.at(-1)[0]).toBe("COMMIT");
+  });
+
+  it("updates a single-row three-month rental into selected, separated month rows", async () => {
+    const existing = calendarMonthPeriod("2026-11", 3);
+    const months = [calendarMonthPeriod("2027-01"), calendarMonthPeriod("2027-03"), calendarMonthPeriod("2027-02")];
+    mocks.query.mockImplementation(async sql => {
+      if (sql.includes('FROM "room_reservation"') && sql.includes("stripe_checkout_session_id")) {
+        return { rows: [{ reservation_id: 42, resource_id: 4, stripe_checkout_session_id: "cs_studio", start_time: existing.start, end_time: existing.end }], rowCount: 1 };
+      }
+      if (sql.includes('FROM "room"')) return { rows: [{ name: "Harkonnen", type: "small maker studio" }], rowCount: 1 };
+      return { rows: [], rowCount: 0 };
+    });
+    const res = response();
+    await handler({ method: "POST", body: { type: "rooms", reservationId: 42, periods: months } }, res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(mocks.query.mock.calls.filter(([sql]) => sql.includes('UPDATE "room_reservation"')).map(([, values]) => values)).toEqual([
+      [42, 18, "2027-01-01T00:00:00", "2027-02-01T00:00:00"],
+    ]);
+    expect(mocks.query.mock.calls.filter(([sql]) => sql.includes('INSERT INTO "room_reservation"')).map(([, values]) => values)).toEqual([
+      [18, 4, "2027-02-01T00:00:00", "2027-03-01T00:00:00", "cs_studio"],
+      [18, 4, "2027-03-01T00:00:00", "2027-04-01T00:00:00", "cs_studio"],
+    ]);
+    expect(mocks.query.mock.calls.at(-1)[0]).toBe("COMMIT");
   });
 
   it("rejects editing a paid studio rental to a different number of months", async () => {

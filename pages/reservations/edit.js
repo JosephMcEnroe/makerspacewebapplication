@@ -1,5 +1,5 @@
 import Head from "next/head";
-import { getMonthlyReservationCount, isMonthlyReservation, monthlyReservationLabel } from "@/lib/monthlyReservation";
+import { getMonthlyReservationCount, isMonthlyReservation, monthlyReservationLabel, monthlyReservationSelectionLabel } from "@/lib/monthlyReservation";
 import ReservationEditor from "@/components/ReservationEditor";
 import { query } from "@/lib/db";
 import { getSessionUser, loginRedirect } from "@/lib/session";
@@ -77,6 +77,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
       reservation: {
         monthly: type === "room" && isMonthlyReservation(startDate, endDate),
         monthCount: type === "room" ? getMonthlyReservationCount(startDate, endDate) : null,
+        selectedMonths: reservation.monthly_months?.map(({ start }) => start.slice(0, 7)) || null,
         reservationId: reservation.reservation_id,
         reservationIds: reservation.reservation_ids,
         classId: reservation.class_id ?? reservation.reservation_id,
@@ -85,7 +86,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
         endDate: plainDateTime(endDate),
         name: matchingRoom?.displayName || reservation.name,
         time: type === "room" && isMonthlyReservation(startDate, endDate)
-          ? monthlyReservationLabel(startDate, endDate)
+          ? monthlyReservationSelectionLabel(reservation.monthly_months?.map(({ start }) => start.slice(0, 7))) || monthlyReservationLabel(startDate, endDate)
           : null,
       },
       resource: type === "class" ? null : {

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import styles from "./WeeklyAvailability.module.css";
 import { buildReservationPeriods, formatMinutesAsTime, getReservationSlotStartMinutes, isUnavailableInterval, reservationCustomerEndDateTime, toggleReservationSlot } from "@/lib/reservationPeriods";
 import { formatTimeRange } from "@/lib/format";
+import { ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const pad = (value) => String(value).padStart(2, "0");
@@ -47,7 +48,7 @@ export default function WeeklyAvailability({
   const unavailableIntervalsForResource = activeResource.unavailableIntervals || [];
   const isRoom = type === "rooms";
   const isClass = type === "classes";
-  const advanceDays = isRoom ? 90 : 31;
+  const advanceDays = isRoom ? ROOM_BOOKING_ADVANCE_DAYS : 31;
   const cleanupMinutes = type === "equipment" ? 15 : 0;
   const availabilityBufferMinutes = type === "rooms" ? 15 : 0;
   const classDate = type === "classes" && resource.scheduledDate ? resource.scheduledDate.slice(0, 10) : null;

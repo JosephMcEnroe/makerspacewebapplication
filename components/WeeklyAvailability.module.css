@@ -65,6 +65,70 @@
   gap: 0.45rem;
 }
 
+.availabilitySection {
+  margin: 1rem 0;
+}
+
+.availabilitySection h3 {
+  margin: 0 0 0.3rem;
+  color: #382222;
+  font-size: 1rem;
+}
+
+.availabilitySection > p {
+  margin: 0 0 0.55rem;
+  color: #6b5347;
+  font-size: 0.8rem;
+}
+
+.monthAvailability {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.monthChoice {
+  display: flex;
+  min-height: 3.5rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #d8ccc2;
+  border-radius: 8px;
+  text-align: left;
+  font: inherit;
+}
+
+.monthChoice span:first-child {
+  color: #382222;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.monthChoice span:last-child {
+  font-size: 0.72rem;
+}
+
+.monthAvailable {
+  background: #edf7eb;
+  border-color: #b5d5af;
+  cursor: pointer;
+}
+
+.monthAvailable:hover:not(:disabled),
+.monthAvailable[aria-pressed="true"] {
+  background: #dcefd8;
+  border-color: #4d8b45;
+}
+
+.monthUnavailable {
+  background: #f2efec;
+  color: #887d75;
+  cursor: not-allowed;
+  opacity: 0.78;
+}
+
 .machineChoice {
   min-height: 42px;
   padding: 0.55rem 0.8rem;
@@ -239,6 +303,14 @@
   font-weight: 700;
 }
 
+.availabilitySection .selectionSummary {
+  margin: 0.9rem 0 0.75rem;
+  padding: 0.65rem 0.8rem;
+  border-radius: 8px;
+  background: #f4ece2;
+  line-height: 1.5;
+}
+
 .periodList {
   margin: 0;
   padding-left: 1.2rem;
@@ -291,6 +363,10 @@
 }
 
 @media (max-width: 640px) {
+  .monthAvailability {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .backdrop {
     align-items: stretch;
     padding: 0;

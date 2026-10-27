@@ -1,4 +1,4 @@
-import { getMonthlyReservationCount, isMonthlyPeriod, isMonthlyReservation } from "@/lib/monthlyReservation";
+import { getCalendarMonthSelection, getMonthlyReservationCount, isMonthlyPeriod, isMonthlyReservation, ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
@@ -7,8 +7,10 @@ import { hasReservationBuffer, isValidEquipmentReservation, isValidReservationPe
 import { mergeRoomReservationPeriods } from "@/lib/reservationGrouping";
 import { isMonthlyStudioResource } from "@/lib/resourceGroups";
 
-function isMonthlyPeriodList(periods) {
-  return periods.length === 1 && isMonthlyPeriod(periods[0]);
+function getMonthlySelection(periods) {
+  return getCalendarMonthSelection(periods) || (periods.length === 1 && isMonthlyPeriod(periods[0])
+    ? { periods: [periods[0]], count: 1, legacy: true }
+    : null);
 }
 
 function validDateTime(value) {
@@ -31,25 +33,28 @@ export default async function handler(req, res) {
   if (!user) return res.status(401).json({ error: "Sign in to edit a reservation." });
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
 
-  const { type, reservationId, reservationIds, periods } = req.body || {};
+  const { type, reservationId, reservationIds } = req.body || {};
+  let { periods } = req.body || {};
+  const requestedMonthSelection = type === "rooms" && Array.isArray(periods) ? getMonthlySelection(periods) : null;
   const roomIds = type === "rooms" && Array.isArray(reservationIds) ? [...new Set(reservationIds.map(Number))] : [Number(reservationId)];
   const lookupIds = type === "rooms" ? roomIds : [Number(reservationId)];
   if (roomIds.some((id) => !Number.isInteger(id) || id < 1)
-    || !["rooms", "equipment"].includes(type) || !/^\d+$/.test(String(reservationId)) || !Array.isArray(periods) || periods.length < 1 || periods.length > 21 || (!(type === "rooms" && isMonthlyPeriodList(periods)) && periods.some((period) => !validDateTime(period?.start) || !validDateTime(period?.end)
+    || !["rooms", "equipment"].includes(type) || !/^\d+$/.test(String(reservationId)) || !Array.isArray(periods) || periods.length < 1 || periods.length > 21 || (!(type === "rooms" && requestedMonthSelection) && periods.some((period) => !validDateTime(period?.start) || !validDateTime(period?.end)
       || !(type === "equipment" ? isValidEquipmentReservation(type, period) : isValidReservationPeriod(type, period))))) {
     return res.status(400).json({ error: "Choose valid one-hour reservation slots." });
   }
   const requiredBufferMinutes = 15;
+  if (requestedMonthSelection && !requestedMonthSelection.legacy) periods = requestedMonthSelection.periods;
   const normalizedPeriods = type === "equipment"
     ? mergeAdjacentReservationPeriods(periods)
-    : type === "rooms" && !isMonthlyPeriodList(periods)
+    : type === "rooms" && !requestedMonthSelection
       ? mergeRoomReservationPeriods(periods)
       : periods;
   const validationPeriods = normalizedPeriods;
-  if (!(type === "rooms" && isMonthlyPeriodList(periods)) && !hasReservationBuffer(validationPeriods, requiredBufferMinutes)) {
+  if (!(type === "rooms" && requestedMonthSelection) && !hasReservationBuffer(validationPeriods, requiredBufferMinutes)) {
     return res.status(400).json({ error: `Reservations must have at least a ${requiredBufferMinutes}-minute buffer between periods.` });
   }
-  const maxAdvance = type === "rooms" ? 90 : 31;
+  const maxAdvance = type === "rooms" ? ROOM_BOOKING_ADVANCE_DAYS : 31;
   if (normalizedPeriods.some(({ start }) => !Number.isFinite(businessTime(start)) || businessTime(start) <= Date.now() || businessTime(start) > Date.now() + maxAdvance * 86400000)) {
     return res.status(400).json({ error: `Reservations can be changed up to ${maxAdvance} days in advance.` });
   }
@@ -80,9 +85,12 @@ export default async function handler(req, res) {
     }
     const currentStart = current.rows[0].start_time;
     const currentEnd = current.rows.at(-1).end_time;
-    const monthly = room && current.rowCount === 1 && isMonthlyReservation(currentStart, currentEnd);
-    const requestedMonthly = room && isMonthlyPeriodList(periods);
-    const currentMonthlyCount = monthly ? getMonthlyReservationCount(currentStart, currentEnd) : null;
+    const existingMonthlyCount = room ? current.rows.reduce((total, row) => total + (getMonthlyReservationCount(row.start_time, row.end_time) || 0), 0) : 0;
+    const monthly = room && current.rows.every((row) => isMonthlyReservation(row.start_time, row.end_time))
+      && existingMonthlyCount > 0
+      && current.rows.every((row) => row.stripe_checkout_session_id === current.rows[0].stripe_checkout_session_id);
+    const requestedMonthly = room && !!requestedMonthSelection;
+    const currentMonthlyCount = monthly ? existingMonthlyCount : null;
     if (requestedMonthly) {
       if (!monthly) {
         await client.query("ROLLBACK");
@@ -96,12 +104,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Only studio reservations can be changed by calendar month." });
       }
     }
-    if (room && current.rowCount > 1 && current.rows.some((row) => row.stripe_checkout_session_id)) {
+    if (room && current.rowCount > 1 && current.rows.some((row) => row.stripe_checkout_session_id) && !monthly) {
       await client.query("ROLLBACK");
       transactionStarted = false;
       return res.status(400).json({ error: "A paid monthly room rental cannot be edited as a grouped hourly reservation." });
     }
-    if (monthly && (!isMonthlyPeriodList(periods) || getMonthlyReservationCount(periods[0].start, periods[0].end) !== currentMonthlyCount)) {
+    if (monthly && (!requestedMonthSelection || requestedMonthSelection.count !== currentMonthlyCount)) {
       await client.query("ROLLBACK");
       transactionStarted = false;
       return res.status(400).json({ error: `A paid studio rental must remain ${currentMonthlyCount} month${currentMonthlyCount === 1 ? "" : "s"}.` });
@@ -140,7 +148,27 @@ export default async function handler(req, res) {
       }
     }
 
-    if (room && normalizedPeriods.length === 1) {
+    if (monthly) {
+      const availableRows = [...current.rows];
+      const retainedIds = new Set();
+      for (const period of normalizedPeriods) {
+        const matchingIndex = availableRows.findIndex((row) => String(row.start_time).slice(0, 10) === period.start.slice(0, 10));
+        const rowIndex = matchingIndex >= 0 ? matchingIndex : availableRows.length ? 0 : -1;
+        if (rowIndex >= 0) {
+          const [existingRow] = availableRows.splice(rowIndex, 1);
+          retainedIds.add(existingRow.reservation_id);
+          await client.query(`UPDATE ${table} SET ${startColumn} = $3, ${endColumn} = $4 WHERE ${idColumn} = $1 AND user_id = $2`,
+            [existingRow.reservation_id, user.user_id, period.start, period.end]);
+        } else {
+          const inserted = await client.query(`INSERT INTO ${table} (user_id, ${resourceColumn}, ${startColumn}, ${endColumn}, status, stripe_checkout_session_id)
+            VALUES ($1, $2, $3, $4, 'upcoming', $5) RETURNING ${idColumn}`,
+          [user.user_id, resourceId, period.start, period.end, current.rows[0].stripe_checkout_session_id]);
+          if (inserted.rows[0]) retainedIds.add(inserted.rows[0][idColumn]);
+        }
+      }
+      const removedIds = current.rows.filter((row) => !retainedIds.has(row.reservation_id)).map((row) => row.reservation_id);
+      if (removedIds.length) await client.query(`UPDATE ${table} SET status = 'cancelled' WHERE ${idColumn} = ANY($1::integer[]) AND user_id = $2`, [removedIds, user.user_id]);
+    } else if (room && normalizedPeriods.length === 1) {
       await client.query(
         `UPDATE ${table} SET ${startColumn} = $3, ${endColumn} = $4 WHERE ${idColumn} = $1 AND user_id = $2`,
         [Number(reservationId), user.user_id, normalizedPeriods[0].start, normalizedPeriods[0].end]

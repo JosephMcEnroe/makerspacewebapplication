@@ -9,7 +9,7 @@ import { getSessionUser, loginRedirect } from "@/lib/session";
 import { formatDate, formatTime, formatTimeRange } from "@/lib/format";
 import { reservationCustomerEndDateTime } from "@/lib/reservationPeriods";
 import { groupRoomReservations } from "@/lib/reservationGrouping";
-import { monthlyReservationLabel } from "@/lib/monthlyReservation";
+import { monthlyReservationLabel, monthlyReservationSelectionLabel } from "@/lib/monthlyReservation";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import stylesPanel from "@/components/ReservationsPanel.module.css";
@@ -80,11 +80,13 @@ export async function getServerSideProps({ req, resolvedUrl }) {
       id: `rm-${reservation.reservation_ids.join("-")}`,
       reservationId: reservation.reservation_id,
       reservationIds: reservation.reservation_ids,
+      selectedMonths: reservation.monthly_months?.map(({ start }) => start.slice(0, 7)) || null,
       resourceId: reservation.room_id,
       startDate: reservation.start_date instanceof Date ? reservation.start_date.toISOString() : String(reservation.start_date),
       endDate: reservation.end_date instanceof Date ? reservation.end_date.toISOString() : String(reservation.end_date),
       name: reservation.room_name ?? "Room",
-      time: monthlyReservationLabel(reservation.start_date, reservation.end_date)
+      time: monthlyReservationSelectionLabel(reservation.monthly_months?.map(({ start }) => start.slice(0, 7)))
+        || monthlyReservationLabel(reservation.start_date, reservation.end_date)
         || (reservation.reservation_ids.length > 1
           ? `${formatTimeRange(reservation.start_date, reservation.end_date)} (${reservation.reservation_ids.length} time slots)`
           : formatTimeRange(reservation.start_date, reservation.end_date)),

@@ -11,7 +11,7 @@ export default function RoomsPage({ rooms }) {
       title="Rooms"
       resourceType="rooms"
       intro="Explore the rooms available at The Crafty Studio, from open studios to specialized workshop spaces."
-      bookingWindow="Rooms can be reserved up to 3 months in advance."
+      bookingWindow="Rooms can be reserved up to one year in advance."
       items={rooms}
     />
   );

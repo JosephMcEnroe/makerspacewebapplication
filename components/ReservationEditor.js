@@ -6,6 +6,7 @@ import MonthlyAvailability from "@/components/MonthlyAvailability";
 import WeeklyAvailability from "@/components/WeeklyAvailability";
 import styles from "@/components/ExplorePage.module.css";
 import { buildReservationPeriods, getReservationSlotStartMinutes } from "@/lib/reservationPeriods";
+import { calendarMonthPeriod } from "@/lib/monthlyReservation";
 
 const pad = (value) => String(value).padStart(2, "0");
 
@@ -116,6 +117,9 @@ export default function ReservationEditor({ type, reservation, resource, resourc
     }
   };
 
+  const initialSelectedMonths = reservation.selectedMonths?.length
+    ? reservation.selectedMonths
+    : reservation.monthly ? [calendarMonthPeriod(reservation.startDate.slice(0, 7), reservation.monthCount || 1).start.slice(0, 7)] : undefined;
   const Availability = reservation.monthly ? MonthlyAvailability : WeeklyAvailability;
   return (
     <main className={styles.page}>
@@ -154,7 +158,9 @@ export default function ReservationEditor({ type, reservation, resource, resourc
           initialDate={reservation.monthly ? (() => { const d = businessCalendarDate(reservation.startDate); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; })() : reservation.startDate}
           initialSlots={createInitialSlots(resourceType, reservation.startDate, reservation.endDate)}
           initialMonths={reservation.monthCount || 1}
+          initialSelectedMonths={initialSelectedMonths}
           lockMonthCount={reservation.monthly}
+          excludedReservationIds={reservation.reservationIds || [reservation.reservationId]}
           unavailableIntervals={resource.unavailableIntervals}
           confirmLabel={submitting ? "Saving…" : "Confirm Changes"}
           cancelLabel="Cancel Editing"

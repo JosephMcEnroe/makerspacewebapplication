@@ -24,7 +24,7 @@ export class roomReservationRepository {
     async findUserRoomReservations(userId) {
         const { rows } = await query(
             `SELECT rr.reservation_id, rr.user_id, rr.room_id,
-                   rr.start_date, rr.end_date, rr.status, r.name AS room_name
+                   rr.start_date, rr.end_date, rr.status, rr.stripe_checkout_session_id, r.name AS room_name
             FROM "room_reservation" rr
             LEFT JOIN "room" r ON r.room_id = rr.room_id
             WHERE rr.user_id = $1

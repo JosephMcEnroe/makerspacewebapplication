@@ -1,7 +1,7 @@
 import { businessTime } from "@/lib/businessTime";
 import { countEquipmentReservationHours, hasReservationBuffer, isValidReservationPeriod } from "@/lib/reservationPeriods";
 import { mergeRoomReservationPeriods } from "@/lib/reservationGrouping";
-import { getCalendarMonthCount, isMonthlyPeriod } from "@/lib/monthlyReservation";
+import { getCalendarMonthSelection, isMonthlyPeriod, ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 import { isMonthlyStudioResource } from "@/lib/resourceGroups";
 import { getPool, query } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
@@ -22,16 +22,19 @@ export default async function handler(req, res) {
     if (!/^\d+$/.test(String(resourceId))) throw new Error("Invalid resource.");
     if (type === "rooms") {
       periods = req.body?.periods;
-      calendarMonths = Array.isArray(periods) && periods.length === 1
-        ? getCalendarMonthCount(periods[0]?.start, periods[0]?.end)
-        : null;
-      if (calendarMonths === null && Array.isArray(periods) && periods.length === 1 && isMonthlyPeriod(periods[0])) {
+      const monthSelection = getCalendarMonthSelection(periods);
+      calendarMonths = monthSelection?.count ?? null;
+      if (calendarMonths === null && Array.isArray(periods) && periods.some(isMonthlyPeriod)) {
         throw new Error("Studio rentals must start on the first day of a calendar month.");
       }
       if (calendarMonths !== null) {
-        const start = businessTime(periods[0].start);
-        if (!Number.isFinite(start) || start <= Date.now() || start > Date.now() + 90 * 86400000) {
-          throw new Error("Choose one to twelve future calendar months starting within 90 days.");
+        periods = monthSelection.periods;
+        const now = Date.now();
+        if (periods.some(({ start }) => {
+          const startTime = businessTime(start);
+          return !Number.isFinite(startTime) || startTime <= now || startTime > now + ROOM_BOOKING_ADVANCE_DAYS * 86400000;
+        })) {
+          throw new Error("Choose one to twelve future calendar months starting within one year.");
         }
       } else {
         if (!Array.isArray(periods) || !periods.length || periods.length > 21
@@ -41,8 +44,8 @@ export default async function handler(req, res) {
         periods = mergeRoomReservationPeriods(periods, { userId: user.user_id, roomId: Number(resourceId) });
         const now = Date.now();
         if (periods.some(period => !Number.isFinite(businessTime(period.start)) || !Number.isFinite(businessTime(period.end))
-          || businessTime(period.start) <= now || businessTime(period.start) > now + 90 * 86400000)) {
-          throw new Error("Choose a future room reservation within 90 days.");
+          || businessTime(period.start) <= now || businessTime(period.start) > now + ROOM_BOOKING_ADVANCE_DAYS * 86400000)) {
+          throw new Error("Choose a future room reservation within one year.");
         }
       }
     } else {
@@ -70,10 +73,13 @@ export default async function handler(req, res) {
         try {
           await client.query("BEGIN");
           await client.query("SELECT pg_advisory_xact_lock(hashtext($1), $2)", [type, Number(resourceId)]);
-          conflict = await client.query(`SELECT 1 FROM "room_reservation" WHERE room_id = $1
-            AND start_date < $3::timestamp AND end_date > $2::timestamp
-            AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%') LIMIT 1`,
-          [Number(resourceId), periods[0].start, periods[0].end]);
+          for (const period of periods) {
+            conflict = await client.query(`SELECT 1 FROM "room_reservation" WHERE room_id = $1
+              AND start_date < $3::timestamp AND end_date > $2::timestamp
+              AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%') LIMIT 1`,
+            [Number(resourceId), period.start, period.end]);
+            if (conflict.rowCount) break;
+          }
           await client.query("COMMIT");
         } catch (error) {
           await client.query("ROLLBACK");
@@ -81,7 +87,7 @@ export default async function handler(req, res) {
         } finally {
           client.release();
         }
-        if (conflict.rowCount) return res.status(409).json({ error: "This studio is unavailable during part of the selected months." });
+        if (conflict?.rowCount) return res.status(409).json({ error: "This studio is unavailable during part of the selected months." });
 
         let product;
         try {
