@@ -215,6 +215,7 @@ export class UserRepository {
               u.user_id,
               m.status,
               m.role_of_membership,
+              m.period_start_date,
               u.first_name,
               u.last_name,
               EXISTS (SELECT 1 FROM "staff" st WHERE st.user_id = u.user_id)

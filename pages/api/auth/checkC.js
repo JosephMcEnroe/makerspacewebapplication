@@ -22,7 +22,8 @@ export default async function handler(req, res) {
 
         const query = new UserRepository();
 
-        const user = await query.findByCookie(sessionId);
+        // Staff/admin flags let shared pages show the staff navbar
+        const user = await query.findStaffSessionByCookie(sessionId);
 
         if (!user) {
             return res.status(401).json({
@@ -40,6 +41,8 @@ export default async function handler(req, res) {
                 firstName: user.first_name,
                 lastName: user.last_name,
                 memberSince: formatYear(user.period_start_date),
+                isStaff: user.is_staff,
+                isAdmin: user.is_admin,
             },
         });
     } catch (error) {

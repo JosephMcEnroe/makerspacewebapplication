@@ -38,13 +38,6 @@ const PersonIcon = (
   </svg>
 );
 
-const InfoIcon = (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 16v-4M12 8h.01" />
-  </svg>
-);
-
 export default function StaffDashboardPage({ stats }) {
   const { user } = useAuthContext();
   const statCards = [
@@ -93,7 +86,7 @@ export default function StaffDashboardPage({ stats }) {
 
           <div className={styles.statsGrid}>
             {statCards.map((stat) => (
-              <StatCard key={stat.label} label={stat.label} value={stat.value} icon={InfoIcon} />
+              <StatCard key={stat.label} label={stat.label} value={stat.value} />
             ))}
           </div>
         </div>

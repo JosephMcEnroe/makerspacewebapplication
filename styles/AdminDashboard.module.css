@@ -23,6 +23,48 @@
   margin: 0 0 1.75rem 0;
 }
 
+.revenueToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.revenueNotice {
+  color: #bda99a;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.revenueError {
+  color: #f2a6a0;
+  margin: 0 0 1rem 0;
+}
+
+.refreshButton {
+  border: 1px solid #f0a752;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  background: #f0a752;
+  color: #211510;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.refreshButton:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.refreshButton:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
 .statsGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
