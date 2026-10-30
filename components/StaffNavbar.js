@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuthContext } from "@/context/AuthContext";
+import WaiverBanner from "@/components/WaiverBanner";
 import styles from "./StaffNavbar.module.css";
 
 const NAV_ITEMS = (role) => [
@@ -18,6 +19,7 @@ export default function StaffNavbar({ role = "staff" }) {
   const navItems = NAV_ITEMS(role);
 
   return (
+    <>
     <header className={styles.navbar}>
       <div className={styles.left}>
         <Link href={`/${role}`} className={styles.brand}>
@@ -47,5 +49,7 @@ export default function StaffNavbar({ role = "staff" }) {
         </Link>
       </div>
     </header>
+    <WaiverBanner />
+    </>
   );
 }

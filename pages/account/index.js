@@ -1,5 +1,6 @@
 import Head from "next/head";
 import AccountInfoForm from "@/components/AccountInfoForm";
+import WaiverCard from "@/components/WaiverCard";
 import styles from "@/styles/Account.module.css";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ export async function getServerSideProps({ req, resolvedUrl }) {
         email: dbUser.email ?? "",
         phoneNumber: dbUser.phone_number ?? "",
         memberSince: formatYear(sessionUser.period_start_date),
+        waiverSigned: dbUser.waiver_status === true,
       },
     },
   };
@@ -55,6 +57,7 @@ export default function AccountPage({ account }) {
       </Head>
       <h1 className={styles.title}>ACCOUNT INFORMATION</h1>
       <AccountInfoForm account={account} />
+      <WaiverCard initiallySigned={account.waiverSigned} />
     </>
   );
 }

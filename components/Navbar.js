@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useAuthContext } from "@/context/AuthContext";
+import WaiverBanner from "@/components/WaiverBanner";
 import styles from "./Navbar.module.css";
 
 export default function Navbar({ hasSidebar = false }) {
@@ -10,6 +11,7 @@ export default function Navbar({ hasSidebar = false }) {
     .join("");
 
   return (
+    <>
     <header className={`${styles.navbar} ${hasSidebar ? styles.navbarWithSidebar : ""}`}>
       <Link href="/dashboard" className={styles.brand}>
         <Image
@@ -40,6 +42,8 @@ export default function Navbar({ hasSidebar = false }) {
         </Link>
       </div>
     </header>
+    <WaiverBanner />
+    </>
   );
 }
 
