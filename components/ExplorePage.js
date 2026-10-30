@@ -6,6 +6,8 @@ import ResourceCard from "./ReservationProductCard";
 
 import WeeklyAvailability from "./WeeklyAvailability";
 import MonthlyAvailability from "./MonthlyAvailability";
+import ClassDetailsModal from "./ClassDetailsModal";
+import WaiverRequiredDialog from "./WaiverRequiredDialog";
 import { isMonthlyStudioResource } from "@/lib/resourceGroups";
 
 import styles from "./ExplorePage.module.css";
@@ -19,6 +21,9 @@ export default function ExplorePage({
 }) {
   const router = useRouter();
   const { user } = useAuthContext();
+  // Reservations need a signed waiver (the reservation APIs enforce this too)
+  const needsWaiver = user?.waiverSigned === false;
+  const [showWaiverPrompt, setShowWaiverPrompt] = useState(false);
   const [selectedResource, setSelectedResource] = useState(() => {
     const requestedResourceId = String(router.query.resourceId || "");
     const item = items.find((candidate) => !candidate.unavailable && (
@@ -46,16 +51,12 @@ export default function ExplorePage({
       if (!classCsrfResponse.ok || !classCsrfData.csrfToken) {
         throw new Error("Could not verify the reservation request. Please try again.");
       }
-      const classMinute = String(selectedResource.scheduledTime || "").match(/:(\d{2})/)?.[1] || "00";
       let classResponse;
       try {
         classResponse = await fetch("/api/reservations/class", {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-csrf-token": classCsrfData.csrfToken },
-          body: JSON.stringify({
-            resourceId: selectedResource.resourceId,
-            start: `${periods[0].date}T${String(Math.floor(periods[0].startMinute / 60)).padStart(2, "0")}:${String(periods[0].startMinute % 60).padStart(2, "0")}:00`,
-          }),
+          body: JSON.stringify({ resourceId: selectedResource.resourceId }),
         });
       } catch {
         throw new Error("Could not connect to the reservation service. Please try again.");
@@ -180,7 +181,29 @@ export default function ExplorePage({
         </section>
       )}
 
-      {selectedResource && (
+      {selectedResource && resourceType === "classes" && (
+        <ClassDetailsModal
+          classItem={selectedResource}
+          onClose={() => setSelectedResource(null)}
+          onReserve={() => {
+            if (!needsWaiver) return confirmReservation();
+            setSelectedResource(null);
+            setShowWaiverPrompt(true);
+          }}
+        />
+      )}
+
+      {/* Rooms/equipment: ask for the waiver instead of opening the booking screen */}
+      {(showWaiverPrompt || (selectedResource && resourceType !== "classes" && needsWaiver)) && (
+        <WaiverRequiredDialog
+          onClose={() => {
+            setShowWaiverPrompt(false);
+            setSelectedResource(null);
+          }}
+        />
+      )}
+
+      {selectedResource && resourceType !== "classes" && !needsWaiver && (
         <Availability
           confirmLabel={isMonthlyStudio ? "Continue to payment" : resourceType === "classes" ? "Confirm Reservation" : "Create Reservation"}
           resource={selectedResource}

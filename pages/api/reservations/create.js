@@ -4,7 +4,7 @@ import { mergeRoomReservationPeriods } from "@/lib/reservationGrouping";
 import { getCalendarMonthSelection, isMonthlyPeriod, ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 import { isMonthlyStudioResource } from "@/lib/resourceGroups";
 import { getPool, query } from "@/lib/db";
-import { getSessionUser } from "@/lib/session";
+import { getSessionUser, WAIVER_REQUIRED } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
 import { getStripe, loadStripeProducts, matchResourceProduct } from "@/lib/stripeCatalog";
 import { bookingColumns, reservationMetadata, validateCheckoutPeriods } from "@/lib/reservationCheckout";
@@ -14,6 +14,7 @@ export default async function handler(req, res) {
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Sign in to make a reservation." });
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
+  if (user.waiver_status !== true) return res.status(403).json(WAIVER_REQUIRED);
 
   const { type, resourceId } = req.body || {};
   let periods;

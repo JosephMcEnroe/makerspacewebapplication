@@ -3,6 +3,83 @@
   min-height: 100vh;
 }
 
+.hero {
+  display: flex;
+  align-items: center;
+  min-height: clamp(280px, 42vw, 440px);
+  padding: 3rem 1.5rem;
+  background:
+    linear-gradient(90deg, rgba(31, 20, 16, 0.88) 0%, rgba(31, 20, 16, 0.55) 55%, rgba(31, 20, 16, 0.25) 100%),
+    url("/images/hero.jpg") center / cover no-repeat;
+  box-sizing: border-box;
+}
+
+.heroInner {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.heroTitle {
+  max-width: 14ch;
+  margin: 0 0 0.75rem;
+  font-family: "Oswald", sans-serif;
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.heroText {
+  max-width: 42ch;
+  margin: 0 0 1.75rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: #fbe6cb;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.heroPrimary,
+.heroSecondary {
+  display: inline-block;
+  padding: 0.8rem 1.4rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: 1px solid #f0a752;
+}
+
+.heroPrimary {
+  background-color: #f0a752;
+  color: #2b1916;
+}
+
+.heroSecondary {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.7);
+}
+
+.heroPrimary:hover {
+  background-color: #f4b96f;
+}
+
+.heroSecondary:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.heroPrimary:focus-visible,
+.heroSecondary:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
 .section {
   padding: 2rem 1.5rem;
 }
@@ -46,6 +123,10 @@
 
   .section {
     padding: 2rem 1.25rem;
+  }
+
+  .hero {
+    padding: 2.5rem 1.25rem;
   }
 }
 

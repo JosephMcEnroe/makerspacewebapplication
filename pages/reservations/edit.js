@@ -56,7 +56,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
   } else {
     const { rows } = await query(
       `SELECT e.class_id AS reservation_id, e.class_id, c.name_of_class AS name,
-              c.class_date, c.class_time, c.max_capacity
+              c.class_date, c.max_capacity
        FROM "class_enrollment" e
        JOIN "class" c ON c.class_id = e.class_id
        WHERE e.class_id = $1 AND e.user_id = $2 AND c.class_date >= CURRENT_DATE`,
@@ -79,7 +79,8 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
         monthCount: type === "room" ? getMonthlyReservationCount(startDate, endDate) : null,
         selectedMonths: reservation.monthly_months?.map(({ start }) => start.slice(0, 7)) || null,
         reservationId: reservation.reservation_id,
-        reservationIds: reservation.reservation_ids,
+        // Only room bookings group several reservation rows
+        reservationIds: reservation.reservation_ids ?? null,
         classId: reservation.class_id ?? reservation.reservation_id,
         resourceId: reservation.resource_id ?? reservation.class_id,
         startDate: plainDateTime(startDate),
