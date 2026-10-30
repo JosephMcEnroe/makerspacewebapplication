@@ -1,4 +1,4 @@
-import { businessTime, businessDateTime } from "@/lib/businessTime";
+import { businessTime } from "@/lib/businessTime";
 import Head from "next/head";
 import ReservationsPanel from "@/components/ReservationsPanel";
 import styles from "@/styles/Account.module.css";
@@ -48,11 +48,11 @@ export async function getServerSideProps({ req, resolvedUrl }) {
     new machineBookingRepository().findUserBooking(sessionUser.user_id),
     new roomReservationRepository().findUserRoomReservations(sessionUser.user_id),
     query(
-      `SELECT e.class_id, c.name_of_class, c.class_date, c.class_time
+      `SELECT e.class_id, c.name_of_class, c.class_date
        FROM "class_enrollment" e
        JOIN "class" c ON c.class_id = e.class_id
        WHERE e.user_id = $1
-       ORDER BY c.class_date, c.class_time`,
+       ORDER BY c.class_date`,
       [sessionUser.user_id]
     ).then(({ rows }) => rows).catch((error) => {
       if (error.code === "42P01") return [];
@@ -96,11 +96,8 @@ export async function getServerSideProps({ req, resolvedUrl }) {
 
   const classReservations = groupReservations(
     classEnrollments.map((enrollment) => {
-      const date = enrollment.class_date instanceof Date
-        ? businessDateTime(enrollment.class_date).slice(0, 10)
-        : String(enrollment.class_date).slice(0, 10);
-      const time = String(enrollment.class_time || "00:00").slice(0, 8);
-      const startsAt = new Date(businessTime(`${date}T${time}`));
+      // class_date holds the full start timestamp
+      const startsAt = new Date(businessTime(enrollment.class_date));
       return { ...enrollment, start: startsAt, end: startsAt };
     }),
     (enrollment) => ({
@@ -110,7 +107,7 @@ export async function getServerSideProps({ req, resolvedUrl }) {
       startDate: enrollment.start.toISOString(),
       endDate: enrollment.start.toISOString(),
       name: enrollment.name_of_class ?? "Class",
-      time: [formatDate(enrollment.start), formatTime(enrollment.class_time)].filter(Boolean).join(" · "),
+      time: [formatDate(enrollment.start), formatTime(enrollment.start)].filter(Boolean).join(" · "),
       trainingRequired: false,
     })
   );

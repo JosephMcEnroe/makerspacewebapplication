@@ -11,6 +11,28 @@ export class classRepository {
         return rows;
     }
 
+    // Classes with instructor name and how many members are enrolled
+    async findAllClassWithEnrollment() {
+        const select = (enrolled) => `
+            SELECT c.class_id, c.name_of_class, c.user_id, c.description,
+                   c.class_date, c.max_capacity,
+                   u.first_name AS instructor_first_name,
+                   u.last_name AS instructor_last_name,
+                   ${enrolled} AS enrolled
+            FROM "class" c
+            LEFT JOIN "users" u ON u.user_id = c.user_id
+            ORDER BY c.class_date
+        `;
+        const { rows } = await query(select(
+            `(SELECT COUNT(*)::integer FROM "class_enrollment" e WHERE e.class_id = c.class_id)`
+        )).catch((error) => {
+            // class_enrollment is created lazily on the first class booking
+            if (error.code !== "42P01") throw error;
+            return query(select("0"));
+        });
+        return rows;
+    }
+
     async findClass(classID) {
         const { rows } = await query(
             `SELECT class_id, name_of_class, user_id, description,

@@ -22,7 +22,10 @@ function ReservationCard({ reservation, editable, highlighted, reservationType, 
         <p className={styles.cardTime}>{reservation.time}</p>
       </div>
       <div className={styles.cardActions}>
-        <button type="button" className={styles.editBtn} onClick={() => onEdit(reservation)} disabled={!editable}>Edit</button>
+        {/* Class reservations can only be cancelled, not edited */}
+        {reservationType !== "class" && (
+          <button type="button" className={styles.editBtn} onClick={() => onEdit(reservation)} disabled={!editable}>Edit</button>
+        )}
         <button type="button" className={styles.cancelBtn} onClick={() => onCancel(reservation)} disabled={!editable}>Cancel</button>
       </div>
       {reservation.trainingRequired && <span className={styles.trainingBadge}>Training Required</span>}
