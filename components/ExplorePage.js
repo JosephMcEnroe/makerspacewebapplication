@@ -7,6 +7,7 @@ import ResourceCard from "./ReservationProductCard";
 import WeeklyAvailability from "./WeeklyAvailability";
 import MonthlyAvailability from "./MonthlyAvailability";
 import ClassDetailsModal from "./ClassDetailsModal";
+import WaiverRequiredDialog from "./WaiverRequiredDialog";
 import { isMonthlyStudioResource } from "@/lib/resourceGroups";
 
 import styles from "./ExplorePage.module.css";
@@ -20,6 +21,9 @@ export default function ExplorePage({
 }) {
   const router = useRouter();
   const { user } = useAuthContext();
+  // Reservations need a signed waiver (the reservation APIs enforce this too)
+  const needsWaiver = user?.waiverSigned === false;
+  const [showWaiverPrompt, setShowWaiverPrompt] = useState(false);
   const [selectedResource, setSelectedResource] = useState(() => {
     const requestedResourceId = String(router.query.resourceId || "");
     const item = items.find((candidate) => !candidate.unavailable && (
@@ -181,11 +185,25 @@ export default function ExplorePage({
         <ClassDetailsModal
           classItem={selectedResource}
           onClose={() => setSelectedResource(null)}
-          onReserve={() => confirmReservation()}
+          onReserve={() => {
+            if (!needsWaiver) return confirmReservation();
+            setSelectedResource(null);
+            setShowWaiverPrompt(true);
+          }}
         />
       )}
 
-      {selectedResource && resourceType !== "classes" && (
+      {/* Rooms/equipment: ask for the waiver instead of opening the booking screen */}
+      {(showWaiverPrompt || (selectedResource && resourceType !== "classes" && needsWaiver)) && (
+        <WaiverRequiredDialog
+          onClose={() => {
+            setShowWaiverPrompt(false);
+            setSelectedResource(null);
+          }}
+        />
+      )}
+
+      {selectedResource && resourceType !== "classes" && !needsWaiver && (
         <Availability
           confirmLabel={isMonthlyStudio ? "Continue to payment" : resourceType === "classes" ? "Confirm Reservation" : "Create Reservation"}
           resource={selectedResource}
