@@ -3,6 +3,8 @@ import Link from "next/link";
 import StaffNavbar from "@/components/StaffNavbar";
 import ActionCard from "@/components/ActionCard";
 import StatCard from "@/components/StatCard";
+import LiveActivity from "@/components/LiveActivity";
+import { useStaffActivity } from "@/hooks/useStaffActivity";
 import styles from "@/styles/StaffDashboard.module.css";
 import { useAuthContext } from "@/context/AuthContext";
 import { StaffRepository } from "@/Data_Access_Layer/staffRepository";
@@ -40,6 +42,7 @@ const PersonIcon = (
 
 export default function StaffDashboardPage({ stats }) {
   const { user } = useAuthContext();
+  const { activity, error: activityError } = useStaffActivity();
   const statCards = [
     { label: "Active Reservations", value: stats.activeReservations },
     { label: "Active Members", value: stats.activeMembers },
@@ -88,6 +91,13 @@ export default function StaffDashboardPage({ stats }) {
             {statCards.map((stat) => (
               <StatCard key={stat.label} label={stat.label} value={stat.value} />
             ))}
+          </div>
+
+          <div className={styles.liveSection}>
+            <LiveActivity activity={activity} error={activityError} />
+            <div className={styles.viewAllWrapper}>
+              <Link href="/staff/activity" className={styles.viewAllBtn}>View All Activity</Link>
+            </div>
           </div>
         </div>
       </div>

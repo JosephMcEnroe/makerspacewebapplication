@@ -7,6 +7,7 @@ import LineChart from "@/components/LineChart";
 import BarChart from "@/components/BarChart";
 import MachineUsageList from "@/components/MachineUsageList";
 import ActionCard from "@/components/ActionCard";
+import { useStaffActivity } from "@/hooks/useStaffActivity";
 import styles from "@/styles/AdminDashboard.module.css";
 
 import { loginRedirect } from "@/lib/session";
@@ -30,24 +31,10 @@ const formatMoney = (value) => new Intl.NumberFormat("en-US", {
   style: "currency", currency: "USD",
 }).format(value);
 
-// Dummy data — replace with actual daily new-membership counts from the database.
-const MEMBERSHIP_ENTRIES = [
-  { label: "Mar 7", value: 5 },
-  { label: "Mar 8", value: 8 },
-  { label: "Mar 9", value: 6 },
-  { label: "Mar 10", value: 9 },
-  { label: "Mar 11", value: 7 },
-  { label: "Mar 12", value: 10 },
-];
-
-// Dummy data — replace with real machine usage/utilization stats from the database.
-const MACHINE_USAGE = [
-  { name: "3D Printer", subtitle: "34.0 hrs this week", percent: 85 },
-  { name: "Laser Cutter", subtitle: "28.8 hrs this week", percent: 72 },
-  { name: "CNC Mill", subtitle: "31.2 hrs this week", percent: 78 },
-  { name: "Vinyl Cutter", subtitle: "23.2 hrs this week", percent: 58 },
-  { name: "Wood Lathe", subtitle: "24.8 hrs this week", percent: 62 },
-];
+// "2026-11-02" -> "Nov 2" (the API sends plain Eastern dates, so format them as UTC)
+const formatDay = (day) => new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", {
+  timeZone: "UTC", month: "short", day: "numeric",
+});
 
 const DollarIcon = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -105,6 +92,17 @@ export default function AdminDashboardPage() {
 
   const revenueValue = (key) => (revenue ? formatMoney(revenue[key]) : "—");
 
+  // Live RFID check-ins and machine usage (refreshes on its own)
+  const { activity, error: activityError } = useStaffActivity();
+  const dailyCheckIns = activity?.dailyVisitors.map((row) => ({ label: formatDay(row.day), value: row.visitors })) ?? [];
+  const machineUsage = activity?.machineUsageToday.map((machine) => ({
+    name: machine.name,
+    subtitle: `${machine.hours.toFixed(1)} hrs today`,
+    percent: machine.percent,
+  })) ?? [];
+  // Keep showing the last data if a refresh fails
+  const activityNotice = activity ? null : activityError || "Loading activity...";
+
   return (
     <>
       <Head>
@@ -150,16 +148,27 @@ export default function AdminDashboardPage() {
                 <p className={styles.revenueNotice}>{revenueLoading ? "Loading revenue..." : "Revenue unavailable"}</p>
               )}
             </ChartCard>
-            {/* Dummy data — see MEMBERSHIP_ENTRIES above; wire up to the database once it exists */}
-            <ChartCard title="Daily Membership Entries" subtitle="Last 6 days">
-              <BarChart data={MEMBERSHIP_ENTRIES} />
+            <ChartCard title="Daily Check-ins" subtitle="Members checked in · last 7 days">
+              {activityNotice ? (
+                <p className={styles.revenueNotice}>{activityNotice}</p>
+              ) : (
+                <BarChart data={dailyCheckIns} />
+              )}
             </ChartCard>
           </div>
 
-          {/* Dummy data — see MACHINE_USAGE above; wire up to the database once it exists */}
           <div className={styles.usageSection}>
-            <ChartCard title="Machine Usage Statistics" subtitle="Today's Utilization">
-              <MachineUsageList machines={MACHINE_USAGE} />
+            <ChartCard
+              title="Machine Usage Statistics"
+              subtitle={`Today's utilization · ${activity ? `${activity.machinesInUse.length} in use now` : "loading"}`}
+            >
+              {activityNotice ? (
+                <p className={styles.revenueNotice}>{activityNotice}</p>
+              ) : machineUsage.length === 0 ? (
+                <p className={styles.revenueNotice}>No machines yet.</p>
+              ) : (
+                <MachineUsageList machines={machineUsage} />
+              )}
             </ChartCard>
           </div>
 
@@ -169,7 +178,7 @@ export default function AdminDashboardPage() {
               icon={ActivityIcon}
               title="Live Activity Monitor"
               description="View real-time usage data"
-              onClick={() => console.log("Live activity monitor")}
+              href="/staff/activity"
             />
             <ActionCard
               icon={MembersIcon}

@@ -1,5 +1,9 @@
 import { query } from "@/lib/db";
+import { authenticateReader } from "@/lib/rfidAccess";
+import { usageRepository } from "@/Data_Access_Layer/usageRepository";
 
+// Front-door RFID reader. The first tap of the day checks a member in, the next
+// tap checks them out (see usageRepository.recordDoorTap).
 export default async function handler(req, res) {
   // If visited via browser (GET), return a friendly status check
   if (req.method === "GET") {
@@ -18,24 +22,8 @@ export default async function handler(req, res) {
     });
   }
 
-  // 1. Authenticate with Bearer token
-  // Authorization: Bearer APIKEY
-  const expectedApiKey = process.env.MAKERSPACE_API_KEY;
-
-  if (expectedApiKey) {
-    const authHeader = req.headers.authorization;
-
-    const token = authHeader?.startsWith("Bearer ")
-      ? authHeader.substring(7).trim()
-      : null;
-
-    if (!token || token !== expectedApiKey) {
-      return res.status(401).json({
-        ok: false,
-        error: "Unauthorized: Invalid or missing API key",
-      });
-    }
-  }
+  // 1. Authenticate the reader: Authorization: Bearer MAKERSPACE_API_KEY
+  if (!authenticateReader(req, res)) return;
 
   // 2. Get RFID card ID from request body
   const { card_id } = req.body || {};
@@ -56,14 +44,8 @@ export default async function handler(req, res) {
           u.user_id,
           u.first_name,
           u.last_name,
-          u.email,
-          u.waiver_status,
-          m.membership_id,
-          m.rfid_id,
           m.status AS member_status,
-          m.role_of_membership,
-          m.period_start_date,
-          m.period_end_date
+          m.role_of_membership
        FROM membership m
        JOIN users u ON u.user_id = m.user_id
        WHERE LOWER(m.rfid_id::text) = LOWER($1::text)`,
@@ -80,49 +62,29 @@ export default async function handler(req, res) {
     }
 
     const user = userResult.rows[0];
+    const memberStatus = (user.member_status || "").toLowerCase().trim();
 
-    const memberStatus = (user.member_status || "")
-      .toLowerCase()
-      .trim();
-
-    // 4. Determine traffic light decision
-    //
-    // ACTIVE   -> Green
-    // INACTIVE -> Red
-    //
-    // Default to red so an unknown/null membership status
-    // cannot accidentally grant access.
-    let decision = "red";
-    let message = "Access denied: membership is not active";
-
-    if (memberStatus === "active") {
-      decision = "green";
-      message = "Access granted";
-    } else if (memberStatus === "inactive") {
-      decision = "red";
-      message = "Access denied: membership is inactive";
+    // 4. Only active members get in. Default to red so an unknown/null
+    // membership status cannot accidentally grant access.
+    if (memberStatus !== "active") {
+      return res.status(200).json({
+        ok: false,
+        status: "red",
+        message: memberStatus === "inactive"
+          ? "Access denied: membership is inactive"
+          : "Access denied: membership is not active",
+      });
     }
 
-    // 5. Record successful check-in
-    //
-    // last_check_in no longer exists in users.
-    // The check_in table is now the source of truth
-    // for each user's latest successful check-in.
-    if (decision === "green") {
-      await query(
-        `INSERT INTO check_in (user_id, datetime)
-         VALUES ($1, CURRENT_TIMESTAMP)
-         ON CONFLICT (user_id)
-         DO UPDATE SET datetime = EXCLUDED.datetime`,
-        [user.user_id]
-      );
-    }
+    // 5. Record the visit in check_in_history (and the latest check-in in check_in)
+    const action = await new usageRepository().recordDoorTap(user.user_id);
 
     // 6. Return result to Raspberry Pi
     return res.status(200).json({
-      ok: decision === "green",
-      status: decision,
-      message,
+      ok: true,
+      status: "green",
+      action,
+      message: action === "checked_out" ? "Checked out. See you next time!" : "Access granted",
       user: {
         first_name: user.first_name,
         last_name: user.last_name,
@@ -137,7 +99,6 @@ export default async function handler(req, res) {
       ok: false,
       status: "red",
       error: "Internal server error during check-in",
-      details: error.message,
     });
   }
 }

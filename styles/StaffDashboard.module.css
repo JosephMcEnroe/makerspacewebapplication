@@ -64,6 +64,14 @@
   gap: 1.25rem;
 }
 
+.liveSection {
+  margin-top: 2.5rem;
+}
+
+.liveSection .viewAllWrapper {
+  margin-bottom: 0;
+}
+
 @media (max-width: 640px) {
   .actionsGrid,
   .statsGrid {

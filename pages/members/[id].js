@@ -9,6 +9,7 @@ import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { StaffRepository } from "@/Data_Access_Layer/staffRepository";
 import { adminRepository } from "@/Data_Access_Layer/adminRepository";
+import { usageRepository } from "@/Data_Access_Layer/usageRepository";
 import { requireStaffPage } from "@/lib/staffAuth";
 import { businessDateTime } from "@/lib/businessTime";
 import { formatDate, formatTime, formatTimeRange, toISODate } from "@/lib/format";
@@ -25,11 +26,12 @@ export async function getServerSideProps({ req, resolvedUrl, params }) {
   const memberId = Number(params.id);
   if (!Number.isInteger(memberId) || memberId < 1) return { notFound: true };
 
-  const [user, membership, reservations, targetIsAdmin] = await Promise.all([
+  const [user, membership, reservations, targetIsAdmin, usage] = await Promise.all([
     new UserRepository().findById(memberId),
     new membershipRepositry().findUserMembership(memberId),
     new StaffRepository().findUserReservations(memberId),
     new adminRepository().isAdmin(memberId),
+    new usageRepository().findUserActivity(memberId),
   ]);
   if (!user) return { notFound: true };
 
@@ -85,11 +87,24 @@ export async function getServerSideProps({ req, resolvedUrl, params }) {
       },
       upcoming: cards.filter((card) => card.state === "upcoming"),
       history: cards.filter((card) => card.state !== "upcoming").reverse().slice(0, 15),
+      visits: usage.visits.map((visit) => ({
+        key: `visit-${visit.id}`,
+        time: formatTimeRange(visit.start_at, visit.end_at),
+        // An open visit from an earlier day just means they never tapped out
+        open: !visit.end_at && toISODate(visit.start_at) === today,
+      })),
+      sessions: usage.sessions.map((session) => ({
+        key: `${session.kind}-${session.id}`,
+        name: session.resource_name,
+        type: session.kind === "machine" ? "Equipment" : "Room",
+        time: formatTimeRange(session.start_at, session.end_at),
+        open: !session.end_at,
+      })),
     },
   };
 }
 
-export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, member, membership, upcoming, history }) {
+export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, member, membership, upcoming, history, visits, sessions }) {
   const router = useRouter();
   const [details, setDetails] = useState(member);
   const [plan, setPlan] = useState(membership);
@@ -301,6 +316,39 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
                   ))}
                 </div>
               </>
+            )}
+          </section>
+
+          <section className={styles.panel}>
+            <h2 className={styles.panelTitle}>Check-ins &amp; Usage</h2>
+            <p className={styles.sectionLabel}>Recent visits</p>
+            {visits.length === 0 ? (
+              <p className={styles.emptyText}>No RFID check-ins yet.</p>
+            ) : (
+              <div className={styles.reservationList}>
+                {visits.map((visit) => (
+                  <div key={visit.key} className={styles.reservationItem}>
+                    <p className={styles.reservationMeta}>{visit.time}</p>
+                    {visit.open && <span className={`${styles.badge} ${styles.badgeActive}`}>checked in</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className={styles.sectionLabel}>Machine &amp; room use</p>
+            {sessions.length === 0 ? (
+              <p className={styles.emptyText}>No machine or room sessions yet.</p>
+            ) : (
+              <div className={styles.reservationList}>
+                {sessions.map((session) => (
+                  <div key={session.key} className={styles.reservationItem}>
+                    <div>
+                      <p className={styles.reservationName}>{session.name}</p>
+                      <p className={styles.reservationMeta}>{session.type} · {session.time}</p>
+                    </div>
+                    {session.open && <span className={`${styles.badge} ${styles.badgeActive}`}>in use</span>}
+                  </div>
+                ))}
+              </div>
             )}
           </section>
         </div>
