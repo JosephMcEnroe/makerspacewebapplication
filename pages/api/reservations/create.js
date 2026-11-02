@@ -6,7 +6,7 @@ import { isMonthlyStudioResource } from "@/lib/resourceGroups";
 import { getPool, query } from "@/lib/db";
 import { getSessionUser, WAIVER_REQUIRED } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
-import { getStripe, loadStripeProducts, matchResourceProduct } from "@/lib/stripeCatalog";
+import { getStripe, loadStripeProducts, matchResourceProduct, studioCheckoutLineItem } from "@/lib/stripeCatalog";
 import { bookingColumns, reservationMetadata, validateCheckoutPeriods } from "@/lib/reservationCheckout";
 
 export default async function handler(req, res) {
@@ -64,10 +64,25 @@ export default async function handler(req, res) {
       );
       const room = rows[0];
       if (!room) return res.status(404).json({ error: "Room not found." });
+      if (calendarMonths === null && isMonthlyStudioResource({ name: room.name, description: room.type })) {
+        return res.status(400).json({ error: "Choose one to twelve future calendar months for this studio." });
+      }
 
       if (calendarMonths !== null) {
         if (!isMonthlyStudioResource({ name: room.name, description: room.type })) {
           return res.status(400).json({ error: "Only studios can be rented by calendar month." });
+        }
+        if (!process.env.STRIPE_SECRET_KEY) {
+          return res.status(503).json({ error: "Studio checkout is not configured. Please contact staff." });
+        }
+        let origin;
+        try {
+          const appUrl = process.env.APP_URL || (process.env.NODE_ENV !== "production" ? "http://localhost:3000" : "");
+          const parsed = new URL(appUrl);
+          if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password) throw new Error("Invalid APP_URL");
+          origin = parsed.origin;
+        } catch {
+          return res.status(503).json({ error: "Studio checkout return URL is not configured. Please contact staff." });
         }
         const client = await getPool().connect();
         let conflict;
@@ -98,18 +113,18 @@ export default async function handler(req, res) {
           return res.status(503).json({ error: "This studio's monthly Stripe pricing is not configured. Please contact staff." });
         }
         const { rows: userRows } = await query('SELECT email FROM "users" WHERE user_id = $1', [user.user_id]);
-        const origin = process.env.APP_URL || new URL(req.headers.origin || `http://${req.headers.host}`).origin;
         const session = await getStripe().checkout.sessions.create({
           mode: "payment",
           customer_email: userRows[0]?.email,
           payment_method_types: ["card"],
           client_reference_id: String(user.user_id),
-          line_items: [{ price: product.priceId, quantity: calendarMonths }],
+          line_items: [studioCheckoutLineItem(product, calendarMonths)],
           metadata: reservationMetadata(type, resourceId, user.user_id, periods),
           invoice_creation: { enabled: true },
           success_url: `${origin}/reservations/checkout-return?session_id={CHECKOUT_SESSION_ID}`,
           cancel_url: `${origin}/rooms?canceled=true&resourceId=${resourceId}`,
         });
+        if (!session.url) throw new Error("Stripe did not return a checkout URL.");
         return res.status(200).json({ url: session.url });
       }
 
