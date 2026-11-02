@@ -113,6 +113,9 @@ export default function ExplorePage({
       throw new Error("The reservation service returned an invalid response.");
     }
     if (!response.ok) throw new Error(result.error || "Could not create the reservation.");
+    if (resourceType === "rooms" && isMonthlyStudioResource(bookingResource || {}) && !result.url) {
+      throw new Error("Checkout did not return a redirect URL. Please try again.");
+    }
 
     if (resourceType === "rooms" && result.url) {
       window.location.assign(result.url);

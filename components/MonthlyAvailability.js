@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { calendarMonthPeriod, getMonthlyStartAvailability, ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 import { businessDateTime } from "@/lib/businessTime";
 import styles from "./WeeklyAvailability.module.css";
@@ -23,6 +23,7 @@ export default function MonthlyAvailability({ resource, initialDate = "", initia
   const [selectedMonths, setSelectedMonths] = useState(requestedMonths);
   const requiredMonthCount = lockMonthCount ? requestedMonths.length : null;
   const [submitting, setSubmitting] = useState(false);
+  const submissionInProgress = useRef(false);
   const [error, setError] = useState("");
   const [now] = useState(() => Date.now());
   const today = businessDateTime(now).slice(0, 10);
@@ -47,10 +48,16 @@ export default function MonthlyAvailability({ resource, initialDate = "", initia
       : current.length < 12 ? [...current, selectedMonth] : current);
   }
   async function confirm() {
+    if (!valid || submissionInProgress.current) return;
+    submissionInProgress.current = true;
     setSubmitting(true);
     setError("");
     try { await onConfirm(periods, activeResource); }
-    catch (err) { setError(err.message || "Could not purchase the studio rental."); setSubmitting(false); }
+    catch (err) {
+      setError(err.message || "Could not purchase the studio rental.");
+      submissionInProgress.current = false;
+      setSubmitting(false);
+    }
   }
 
   return <div className={styles.backdrop}><section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="monthly-title">
@@ -62,7 +69,7 @@ export default function MonthlyAvailability({ resource, initialDate = "", initia
         type="button"
         className={`${styles.machineChoice} ${String(alternative.resourceId) === selectedResourceId ? styles.machineChoiceActive : ""}`}
         aria-pressed={String(alternative.resourceId) === selectedResourceId}
-        disabled={alternative.unavailable}
+        disabled={submitting || alternative.unavailable}
         onClick={() => setSelectedResourceId(String(alternative.resourceId))}
       >{alternative.displayName || alternative.name}</button>)}</div>
     </fieldset>}

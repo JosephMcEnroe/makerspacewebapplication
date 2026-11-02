@@ -27,7 +27,7 @@ export default function DashboardPage({ equipment, rooms, classes }) {
       </Head>
       <div className={styles.page}>
         <Navbar />
-        {/* Hero banner - disabled until we have a photo. To enable: add the image at
+         {/* Hero banner - disabled until we have a photo. To enable: add the image at
             public/images/hero.jpg, uncomment this and the Link import, and change the
             Equipment <h1> below to <h2> (the hero title becomes the page's <h1>).
         */}
