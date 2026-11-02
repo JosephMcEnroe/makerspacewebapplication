@@ -43,6 +43,7 @@ export default async function handler(req, res) {
                 memberSince: formatYear(user.period_start_date),
                 isStaff: user.is_staff,
                 isAdmin: user.is_admin,
+                waiverSigned: user.waiver_status === true,
             },
         });
     } catch (error) {

@@ -1,4 +1,3 @@
-import { businessDateTime } from "@/lib/businessTime";
 import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
@@ -33,12 +32,11 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: "Class reservation not found." });
     }
     const target = await client.query(
-      `SELECT class_id, class_date, class_time, max_capacity FROM "class" WHERE class_id = $1 FOR UPDATE`,
+      `SELECT class_id, class_date, max_capacity FROM "class" WHERE class_id = $1 FOR UPDATE`,
       [newClassId]
     );
-    const targetDate = target.rowCount
-      ? new Date(businessTime(`${target.rows[0].class_date instanceof Date ? businessDateTime(target.rows[0].class_date).slice(0, 10) : String(target.rows[0].class_date).slice(0, 10)}T${String(target.rows[0].class_time || "00:00").slice(0, 5)}:00`))
-      : null;
+    // class_date holds the full start timestamp
+    const targetDate = target.rowCount ? new Date(businessTime(target.rows[0].class_date)) : null;
     if (!target.rowCount || Number.isNaN(targetDate.getTime()) || targetDate <= new Date()) {
       await client.query("ROLLBACK");
       transactionStarted = false;
