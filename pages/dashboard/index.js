@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import ReservationProductCard from "@/components/ReservationProductCard";
 import Head from "next/head";
-// import Link from "next/link"; // used by the disabled hero banner below
+import Link from "next/link"; // used by the disabled hero banner below
 import ResourceCard from "@/components/ResourceCard";
 import styles from "@/styles/Dashboard.module.css";
 import Navbar from "@/components/Navbar";
@@ -30,6 +30,7 @@ export default function DashboardPage({ equipment, rooms, classes }) {
         {/* Hero banner - disabled until we have a photo. To enable: add the image at
             public/images/hero.jpg, uncomment this and the Link import, and change the
             Equipment <h1> below to <h2> (the hero title becomes the page's <h1>).
+        */}
         <section className={styles.hero}>
           <div className={styles.heroInner}>
             <h1 className={styles.heroTitle}>Make Something Great</h1>
@@ -42,7 +43,7 @@ export default function DashboardPage({ equipment, rooms, classes }) {
             </div>
           </div>
         </section>
-        */}
+        
 
         <section className={styles.section}>
           <div className={styles.sectionInner}>
