@@ -8,9 +8,9 @@ import Image from "next/image";
 import styles from "./LoginForm.module.css";
 import { getPostLoginDestination } from "@/lib/authRedirect";
 
-function redirectForRole(router, role) {
-  //void router.replace(getPostLoginDestination(router.query.next, role)); //closed this for forcing users to their main page based on their roles
-  void router.replace(getPostLoginDestination(null, role));
+function redirectForRole(router, user) {
+  //void router.replace(getPostLoginDestination(router.query.next, user)); //closed this for forcing users to their main page based on their roles
+  void router.replace(getPostLoginDestination(null, user?.role, { isInstructor: user?.isInstructor }));
 }
 
 export default function LoginForm() {
@@ -39,7 +39,7 @@ export default function LoginForm() {
 
   useEffect(() => {
     if (user && router.isReady) {
-      redirectForRole(router, user.role);
+      redirectForRole(router, user);
     }
   }, [user, router]);
 
@@ -55,7 +55,7 @@ export default function LoginForm() {
     }
 
     if (router.isReady) {
-      redirectForRole(router, user.role);
+      redirectForRole(router, user);
     }
   };
 

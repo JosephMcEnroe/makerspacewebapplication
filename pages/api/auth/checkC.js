@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
         const query = new UserRepository();
 
-        // Staff/admin flags let shared pages show the staff navbar
+        // Staff/admin/instructor flags let shared pages show the right navbar
         const user = await query.findStaffSessionByCookie(sessionId);
 
         if (!user) {
@@ -43,6 +43,7 @@ export default async function handler(req, res) {
                 memberSince: formatYear(user.period_start_date),
                 isStaff: user.is_staff,
                 isAdmin: user.is_admin,
+                isInstructor: user.is_instructor,
                 waiverSigned: user.waiver_status === true,
             },
         });

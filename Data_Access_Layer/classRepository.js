@@ -33,6 +33,27 @@ export class classRepository {
         return rows;
     }
 
+    // Every class one instructor teaches (past and upcoming) plus how many
+    // members are enrolled, so the instructor dashboard can group them by date
+    async findClassesByInstructor(userId) {
+        const select = (enrolled) => `
+            SELECT c.class_id, c.name_of_class, c.user_id, c.description,
+                   c.class_date, c.max_capacity,
+                   ${enrolled} AS enrolled
+            FROM "class" c
+            WHERE c.user_id = $1
+            ORDER BY c.class_date
+        `;
+        const { rows } = await query(select(
+            `(SELECT COUNT(*)::integer FROM "class_enrollment" e WHERE e.class_id = c.class_id)`
+        ), [userId]).catch((error) => {
+            // class_enrollment is created lazily on the first class booking
+            if (error.code !== "42P01") throw error;
+            return query(select("0"), [userId]);
+        });
+        return rows;
+    }
+
     async findClass(classID) {
         const { rows } = await query(
             `SELECT class_id, name_of_class, user_id, description,

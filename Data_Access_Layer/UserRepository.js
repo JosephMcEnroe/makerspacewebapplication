@@ -209,7 +209,7 @@ export class UserRepository {
         return rows[0] || null;
     }
 
-    // Session lookup plus staff/admin flags in one round trip (staff pages)
+    // Session lookup plus staff/admin/instructor flags in one round trip
     async findStaffSessionByCookie(sessionId) {
         const { rows } = await query(`
             SELECT
@@ -225,7 +225,10 @@ export class UserRepository {
                            AND UPPER(TRIM(ms.role_of_membership::text)) = 'STAFF') AS is_staff,
               EXISTS (SELECT 1 FROM "admin" a WHERE a.user_id = u.user_id)
                 OR EXISTS (SELECT 1 FROM "membership" ma WHERE ma.user_id = u.user_id
-                           AND UPPER(TRIM(ma.role_of_membership::text)) = 'ADMIN') AS is_admin
+                           AND UPPER(TRIM(ma.role_of_membership::text)) = 'ADMIN') AS is_admin,
+              EXISTS (SELECT 1 FROM "instructor" i WHERE i.user_id = u.user_id)
+                OR EXISTS (SELECT 1 FROM "membership" mi WHERE mi.user_id = u.user_id
+                           AND UPPER(TRIM(mi.role_of_membership::text)) = 'INSTRUCTOR') AS is_instructor
             FROM sessions s
             JOIN users u
               ON u.user_id = s.user_id

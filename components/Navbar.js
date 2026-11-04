@@ -6,22 +6,30 @@ import styles from "./Navbar.module.css";
 
 export default function Navbar({ hasSidebar = false }) {
   const { user } = useAuthContext();
+  // Instructors get their own dashboard and the dark studio header; everyone
+  // else lands on the member dashboard with the white one
+  const isInstructor = Boolean(user?.isInstructor);
+  const homeHref = isInstructor ? "/instructor" : "/dashboard";
   const initials = [user?.firstName, user?.lastName]
     .map((name) => name?.charAt(0).toUpperCase() || "")
     .join("");
 
   return (
     <>
-    <header className={`${styles.navbar} ${hasSidebar ? styles.navbarWithSidebar : ""}`}>
-      <Link href="/dashboard" className={styles.brand}>
-        <Image
-          src="/images/collaboratory_logo.jpg"
-          alt="The Collaboratory"
-          width={670}
-          height={670}
-          className={styles.brandLogo}
-          priority
-        />
+    <header className={`${styles.navbar} ${isInstructor ? styles.navbarInstructor : ""} ${hasSidebar ? styles.navbarWithSidebar : ""}`}>
+      <Link href={homeHref} className={`${styles.brand} ${isInstructor ? styles.brandInstructor : ""}`}>
+        {isInstructor
+          ? "Crafty Studio"
+          : (
+            <Image
+              src="/images/collaboratory_logo.jpg"
+              alt="The Collaboratory"
+              width={670}
+              height={670}
+              className={styles.brandLogo}
+              priority
+            />
+          )}
       </Link>
 
       <div className={styles.navRight}>
