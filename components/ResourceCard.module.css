@@ -3,21 +3,28 @@
   flex-direction: column;
   min-width: 0;
   height: 100%;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  background-color: #f0a752;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  background-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(43, 25, 22, 0.07);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(43, 25, 22, 0.12);
 }
 
 .imagePlaceholder {
   position: relative;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 11;
   flex-shrink: 0;
-  background-color: #ffffff;
+  background-color: #d9cabb;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #a3907d;
+  color: #8c7c6f;
 }
 
 .placeholderIcon {
@@ -31,12 +38,18 @@
   height: 100%;
   box-sizing: border-box;
   padding: 0;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
+  transition: transform 0.3s ease;
+}
+
+.card:hover .resourceImage {
+  transform: scale(1.03);
 }
 
 .logoImage {
   background-color: #ffffff;
+  object-fit: contain;
 }
 
 .badgeRow {
@@ -72,48 +85,50 @@
 
 .body {
   flex: 1;
-  min-height: 4.5rem;
   box-sizing: border-box;
-  padding: 0.85rem 1rem;
+  padding: 1.4rem 1.4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
   overflow-wrap: anywhere;
 }
 
 .title {
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   font-weight: 800;
-  color: #382222;
+  color: var(--color-primary);
   margin: 0 0 0.4rem 0;
+  line-height: 1.3;
 }
 
 .description {
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   color: #5c4536;
-  line-height: 1.45;
-  margin: 0;
+  line-height: 1.5;
+  margin: 0 0 1.25rem;
+  flex: 1;
 }
 
 .cardUnavailable {
   opacity: 0.62;
-  filter: grayscale(0.85);
+  cursor: not-allowed;
 }
 
 .cardInteractive {
   cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .cardInteractive:hover,
 .cardInteractive:focus-visible {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.14);
-  outline: 3px solid rgba(240, 167, 82, 0.55);
+  transform: translateY(-4px);
+  box-shadow: 0 0 18px 5px rgba(255, 208, 0, 0.5), 0 8px 26px rgba(43, 25, 22, 0.14);
+  outline: 2px solid #ffd000;
   outline-offset: 2px;
 }
 
 .reserveHint {
   margin: 0.65rem 0 0;
-  color: #6b5347;
-  font-size: 0.72rem;
+  color: var(--color-muted);
+  font-size: 0.8rem;
   font-weight: 700;
 }
 
@@ -141,21 +156,14 @@
   margin: 0.6rem 0 0 0;
 }
 
-@media (max-width: 640px) {
-  .card {
-    border-radius: 14px;
-  }
+.cardUnavailable:hover {
+  transform: none;
+  box-shadow: 0 4px 20px rgba(43, 25, 22, 0.07);
+}
 
-  .imagePlaceholder {
-    aspect-ratio: 16 / 9;
-  }
-
-  .body {
-    min-height: 0;
-    padding: 0.8rem 0.9rem 0.9rem;
-  }
-
-  .cardInteractive:active {
-    transform: scale(0.985);
+@media (prefers-reduced-motion: reduce) {
+  .cardInteractive,
+  .cardInteractive .resourceImage {
+    transition: none;
   }
 }

@@ -84,6 +84,29 @@
   }
 }
 
+/* Instructors get the dark brown studio header instead of the white one */
+.navbarInstructor {
+  background-color: #2b1c1c;
+  border-bottom: 1px solid #3f2c27;
+}
+
+.brandInstructor {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.navbarInstructor .navLink {
+  color: #b9a698;
+}
+
+.navbarInstructor .navLink:hover {
+  color: #ffffff;
+  opacity: 1;
+}
+
 .brand { display: flex; flex-shrink: 0; align-items: center; }
 .brandLogo { width: 180px; height: 72px; object-fit: cover; }
 

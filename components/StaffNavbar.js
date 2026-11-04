@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import brandLogo from "@/public/images/collaboratory_logo_no_background.png";
 import { useRouter } from "next/router";
 import { useAuthContext } from "@/context/AuthContext";
 import WaiverBanner from "@/components/WaiverBanner";
@@ -23,7 +25,14 @@ export default function StaffNavbar({ role = "staff" }) {
     <header className={styles.navbar}>
       <div className={styles.left}>
         <Link href={`/${role}`} className={styles.brand}>
-          Crafty Studio
+          <Image
+            src={brandLogo}
+            alt="The Collaboratory"
+            width={670}
+            height={670}
+            className={styles.brandLogo}
+            priority
+          />
         </Link>
         <span className={styles.rolePill}>{role}</span>
       </div>

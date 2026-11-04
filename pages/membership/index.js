@@ -1,4 +1,5 @@
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import MembershipCard from "@/components/MembershipCard";
 import StripeProductCard from "@/components/StripeProductCard";
@@ -50,6 +51,8 @@ export async function getServerSideProps({ req, resolvedUrl }) {
 }
 
 export default function MembershipPage({ membership }) {
+  const router = useRouter();
+  const checkoutCancelled = String(router.query.cancelled || "").toLowerCase() === "true";
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -108,6 +111,11 @@ export default function MembershipPage({ membership }) {
         <meta name="description" content="Manage your Crafty Studio membership" />
       </Head>
       <h1 className={styles.title}>MEMBERSHIP MANAGEMENT</h1>
+      {checkoutCancelled && (
+        <p role="status" className={`${productStyles.noticeBanner} ${productStyles.cancelBanner}`}>
+          Membership checkout was cancelled. You can choose a membership below whenever you&apos;re ready.
+        </p>
+      )}
       {active && <MembershipCard membership={billingMembership} />}
       {loading && <p role="status">Loading membership prices...</p>}
       {error && <p role="alert" className={`${productStyles.noticeBanner} ${productStyles.errorBanner}`}>{error}</p>}
