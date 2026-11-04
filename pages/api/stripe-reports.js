@@ -30,9 +30,9 @@ export default async function handler(req, res) {
     const today = dayKey(now);
     // UTC dates represent calendar dates here, not business-time midnight.
     const calendar = new Date(`${today}T00:00:00Z`);
-    const monday = new Date(calendar);
-    monday.setUTCDate(monday.getUTCDate() - (monday.getUTCDay() + 6) % 7);
-    const weekStart = calendarDay(monday);
+    const sunday = new Date(calendar);
+    sunday.setUTCDate(sunday.getUTCDate() - sunday.getUTCDay());
+    const weekStart = calendarDay(sunday);
     const monthStart = `${today.slice(0, 7)}-01`;
     const dailyRevenue = Array.from({ length: 7 }, (_, index) => {
       const date = new Date(calendar);

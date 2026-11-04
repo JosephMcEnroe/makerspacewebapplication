@@ -7,6 +7,7 @@ import LineChart from "@/components/LineChart";
 import BarChart from "@/components/BarChart";
 import MachineUsageList from "@/components/MachineUsageList";
 import ActionCard from "@/components/ActionCard";
+import FinancialReportModal from "@/components/FinancialReportModal";
 import styles from "@/styles/AdminDashboard.module.css";
 
 import { loginRedirect } from "@/lib/session";
@@ -77,7 +78,8 @@ const ExportIcon = (
 );
 
 export default function AdminDashboardPage() {
-  // Live Stripe revenue (gross USD sales, Eastern time, weeks start Monday)
+  const [reportsOpen, setReportsOpen] = useState(false);
+  // Live Stripe revenue (gross USD sales, Eastern time, weeks start Sunday)
   const [revenue, setRevenue] = useState(null);
   const [revenueLoading, setRevenueLoading] = useState(true);
   const [revenueError, setRevenueError] = useState(null);
@@ -180,11 +182,12 @@ export default function AdminDashboardPage() {
             <ActionCard
               icon={ExportIcon}
               title="Export Reports"
-              description="Generate financial and usage reports"
-              href="/reports"
+              description="Download financial reports"
+              onClick={() => setReportsOpen(true)}
             />
           </div>
         </div>
+        {reportsOpen && <FinancialReportModal onClose={() => setReportsOpen(false)} />}
       </div>
     </>
   );
