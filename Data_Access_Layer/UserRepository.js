@@ -196,7 +196,8 @@ export class UserRepository {
               m.role_of_membership,
               m.period_start_date,
               u.first_name,
-              u.last_name
+              u.last_name,
+              u.waiver_status
             FROM sessions s
             LEFT JOIN membership m
               ON s.user_id = m.user_id
@@ -218,6 +219,7 @@ export class UserRepository {
               m.period_start_date,
               u.first_name,
               u.last_name,
+              u.waiver_status,
               EXISTS (SELECT 1 FROM "staff" st WHERE st.user_id = u.user_id)
                 OR EXISTS (SELECT 1 FROM "membership" ms WHERE ms.user_id = u.user_id
                            AND UPPER(TRIM(ms.role_of_membership::text)) = 'STAFF') AS is_staff,
@@ -233,6 +235,10 @@ export class UserRepository {
               AND s.expires_at > NOW()
             `, [sessionId]);
         return rows[0] || null;
+    }
+
+    async markWaiverSigned(userId) {
+        await query(`UPDATE users SET waiver_status = TRUE WHERE user_id = $1`, [userId]);
     }
 
     async deleteCookie(sessionId){

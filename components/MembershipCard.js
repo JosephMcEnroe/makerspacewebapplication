@@ -116,14 +116,6 @@ export default function MembershipCard({ membership, showActions = true }) {
           </div>
         )}
       </div>
-
-      <div className={styles.promoCard}>
-        <h3 className={styles.promoTitle}>Why Crafty Studio?</h3>
-        <p className={styles.promoText}>
-          Experience the power of a supportive creator community that understands your vision. Share your work,
-          learn from others, and amplify your impact.
-        </p>
-      </div>
     </div>
   );
 }

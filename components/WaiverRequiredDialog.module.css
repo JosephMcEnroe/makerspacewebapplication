@@ -1,0 +1,67 @@
+.backdrop {
+  position: fixed;
+  z-index: 1200;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(31, 20, 16, 0.68);
+}
+
+.dialog {
+  width: min(100%, 420px);
+  padding: 1.75rem;
+  border-radius: 16px;
+  background: #fffaf3;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
+  box-sizing: border-box;
+}
+
+.title {
+  margin: 0 0 0.6rem;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #2b1916;
+}
+
+.text {
+  margin: 0 0 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #5c4536;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.primary,
+.secondary {
+  padding: 0.7rem 1.3rem;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary {
+  background-color: #2b1916;
+  color: #ffffff;
+}
+
+.secondary {
+  background-color: #ffffff;
+  color: #2b1916;
+  border: 1px solid #d8ccc2;
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid #f0a752;
+  outline-offset: 3px;
+}
