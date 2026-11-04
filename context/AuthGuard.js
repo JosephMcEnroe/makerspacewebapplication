@@ -1,12 +1,14 @@
 import { useAuthContext } from "./AuthContext";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+import { useState } from "react";
 
 const publicRoutes = [
     "/",
     "/login",
     "/register",
     "/reservations",
+    "/tos",
 ];
 
 //This is to differentiate the public pages and private pages depending on user's authentication role
