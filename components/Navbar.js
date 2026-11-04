@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import brandLogo from "@/public/images/collaboratory_logo_no_background.png";
 import { useAuthContext } from "@/context/AuthContext";
 import WaiverBanner from "@/components/WaiverBanner";
 import styles from "./Navbar.module.css";
@@ -18,18 +19,16 @@ export default function Navbar({ hasSidebar = false }) {
     <>
     <header className={`${styles.navbar} ${isInstructor ? styles.navbarInstructor : ""} ${hasSidebar ? styles.navbarWithSidebar : ""}`}>
       <Link href={homeHref} className={`${styles.brand} ${isInstructor ? styles.brandInstructor : ""}`}>
-        {isInstructor
-          ? "Crafty Studio"
-          : (
-            <Image
-              src="/images/collaboratory_logo.jpg"
-              alt="The Collaboratory"
-              width={670}
-              height={670}
-              className={styles.brandLogo}
-              priority
-            />
-          )}
+
+          <Image
+            src={brandLogo}
+            alt="The Collaboratory"
+            width={670}
+            height={670}
+            className={styles.brandLogo}
+            priority
+          />
+
       </Link>
 
       <div className={styles.navRight}>

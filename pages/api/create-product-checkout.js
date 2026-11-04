@@ -86,7 +86,9 @@ export default async function handler(req, res) {
       // Enable invoice generation for one-time payments so day passes receive a real Stripe invoice ID
       ...(mode === "payment" && { invoice_creation: { enabled: true } }),
       success_url: `${origin}/stripe/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/stripe/checkout?canceled=true`,
+      cancel_url: membershipType
+        ? `${origin}/membership?cancelled=True`
+        : `${origin}/stripe/checkout?canceled=true`,
     });
 
     return res.status(200).json({ url: session.url });
