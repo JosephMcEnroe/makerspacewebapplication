@@ -15,3 +15,8 @@
 .card button:disabled { opacity: 0.55; cursor: wait; }
 .card button:focus-visible, .close:focus-visible, .card select:focus-visible, .card input:focus-visible { outline: 2px solid #f0a752; outline-offset: 4px; }
 .card .error { color: #f2a6a0; }
+.formats { margin: 20px 0; padding: 16px; border: 1px solid #614535; border-radius: 8px; }
+.formats legend { padding: 0 8px; font-weight: 600; color: #fbe8c3; }
+.formats label { display: flex; align-items: center; gap: 10px; }
+.formats input { width: 18px; height: 18px; margin: 0; padding: 0; accent-color: #f0a752; }
+.formats button { width: auto; margin-top: 8px; padding: 8px 14px; background: transparent; color: #fbe8c3; }
