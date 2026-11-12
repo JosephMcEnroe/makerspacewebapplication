@@ -22,10 +22,17 @@ export default function FinancialReportModal({ onClose }) {
   const [end, setEnd] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [formats, setFormats] = useState(["pdf"]);
+  function toggleFormat(format) {
+    setFormats(current => current.includes(format) ? current.filter(value => value !== format) : [...current, format]);
+  }
   async function download(event) {
-    event.preventDefault(); setError(""); setLoading(true);
+    event.preventDefault();
+    if (!formats.length) { setError("Select at least one format."); return; }
+    setError(""); setLoading(true);
     try {
       const params = new URLSearchParams(preset === "custom" ? { start, end } : { preset });
+      params.set("formats", formats.join(","));
       const controller = new AbortController();
       requestRef.current = controller;
       const response = await fetch(`/api/reports/financial?${params}`, { signal: controller.signal });
@@ -33,7 +40,7 @@ export default function FinancialReportModal({ onClose }) {
       const url = URL.createObjectURL(await response.blob());
       const link = document.createElement("a");
       link.href = url;
-      link.download = response.headers.get("Content-Disposition")?.match(/filename="([^"]+)"/)?.[1] || "financial-report.pdf";
+      link.download = response.headers.get("Content-Disposition")?.match(/filename="([^"]+)"/)?.[1] || `financial-report.${formats.length > 1 ? "zip" : formats[0]}`;
       document.body.appendChild(link); link.click(); link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) { if (error.name !== "AbortError") setError(error.message || "Unable to download report."); }
@@ -62,7 +69,17 @@ export default function FinancialReportModal({ onClose }) {
           <label>End date<input type="date" required min={start || undefined} value={end} onChange={e => setEnd(e.target.value)} disabled={loading} /></label>
         </div>}
         <p className={styles.note}>All dates use Eastern time. Weeks run Sunday through Saturday. Custom ranges include both dates, up to the current time, and may span up to 366 days.</p>
-        <button type="submit" disabled={loading}>{loading ? "Generating PDF..." : "Download PDF"}</button>
+        <fieldset className={styles.formats} disabled={loading}>
+          <legend>Download formats</legend>
+          {["pdf", "csv", "xlsx"].map(format => <label key={format}>
+            <input type="checkbox" checked={formats.includes(format)} onChange={() => toggleFormat(format)} />
+            {format === "xlsx" ? "Excel (.xlsx)" : format.toUpperCase()}
+          </label>)}
+          <button type="button" onClick={() => setFormats(["pdf", "csv", "xlsx"])}>Select all</button>
+        </fieldset>
+        <p className={styles.note}>Multiple formats download together in one ZIP file.</p>
+        <p className={styles.note}>CSV lists transactions by date, description, and signed amount before Stripe fees. Dates use Eastern time. Excel includes detailed summaries and reporting notes.</p>
+        <button type="submit" disabled={loading || !formats.length}>{loading ? "Generating report..." : "Download selected formats"}</button>
         <p role="status" aria-live="polite">{loading ? "Retrieving financial activity and preparing your download. This may take a moment." : ""}</p>
         {error && <p role="alert" className={styles.error}>{error}</p>}
       </form>
