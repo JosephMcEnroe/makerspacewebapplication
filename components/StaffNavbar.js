@@ -10,6 +10,7 @@ const NAV_ITEMS = (role) => [
   { label: "Dashboard", href: `/${role}` },
   { label: "Members", href: "/members" },
   { label: "Equipment", href: "/equipment" },
+  { label: "Training", href: "/training" },
 ];
 
 export default function StaffNavbar({ role = "staff" }) {

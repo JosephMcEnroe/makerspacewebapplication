@@ -1,0 +1,198 @@
+.card {
+  margin-top: 1.5rem;
+  padding: 2rem 0 0.5rem;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+  overflow: hidden;
+  scroll-margin-top: 110px;
+}
+
+.cardTitle {
+  margin: 0 2.25rem 0.4rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2b1916;
+}
+
+.intro {
+  margin: 0 2.25rem 1.25rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #905e49;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.table th {
+  padding: 0.85rem 1rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: left;
+  text-transform: uppercase;
+  color: #2b1916;
+  background-color: #faf3ea;
+  border-top: 1px solid #ece2d7;
+  border-bottom: 1px solid #ece2d7;
+}
+
+.table td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0e7dd;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table th:first-child,
+.table td:first-child {
+  padding-left: 2.25rem;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 2.25rem;
+}
+
+.equipmentName {
+  font-weight: 700;
+  color: #2b1916;
+}
+
+.equipmentModel {
+  margin-top: 0.2rem;
+  font-size: 0.75rem;
+  color: #905e49;
+}
+
+.date {
+  color: #2b1916;
+  white-space: nowrap;
+}
+
+.status {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+
+.statusDone {
+  color: #1f7a3d;
+  background-color: #e3f4e8;
+}
+
+.statusPending {
+  color: #6b4d12;
+  background-color: #fbecc6;
+}
+
+.statusRequired {
+  color: #9a4b12;
+  background-color: #fde6cf;
+}
+
+.statusDenied {
+  color: #8a2c22;
+  background-color: #f6d3cf;
+}
+
+.actionBtn {
+  width: 100%;
+  min-width: 150px;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #2b1916;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background-color: #452822;
+}
+
+.actionBtn:disabled {
+  color: #9c8a80;
+  background-color: #ebdfd9;
+  cursor: default;
+}
+
+.actionBtn:focus-visible {
+  outline: 2px solid #f0a752;
+  outline-offset: 3px;
+}
+
+/* Stack each row into a small card on phones */
+@media (max-width: 640px) {
+  .cardTitle,
+  .intro {
+    margin-left: 1.25rem;
+    margin-right: 1.25rem;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+  }
+
+  .table tr {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #f0e7dd;
+  }
+
+  .table td,
+  .table td:first-child,
+  .table td:last-child {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.3rem 0;
+    border: none;
+  }
+
+  .table td:first-child {
+    display: block;
+    padding-bottom: 0.5rem;
+  }
+
+  .table td:not(:first-child)::before {
+    content: attr(data-label);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #905e49;
+  }
+
+  .table td:last-child::before {
+    content: none;
+  }
+
+  .actionBtn {
+    margin-top: 0.4rem;
+  }
+}
