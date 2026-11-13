@@ -1,10 +1,12 @@
 import Head from "next/head";
 import AccountInfoForm from "@/components/AccountInfoForm";
 import WaiverCard from "@/components/WaiverCard";
+import EquipmentTrainingCard from "@/components/EquipmentTrainingCard";
 import styles from "@/styles/Account.module.css";
 
 import { useAuth } from "@/hooks/useAuth";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
+import { trainingRepository } from "@/Data_Access_Layer/trainingRepository";
 import { getSessionUser, loginRedirect } from "@/lib/session";
 import { formatYear, toISODate } from "@/lib/format";
 
@@ -15,10 +17,18 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   }
 
   const userQuery = new UserRepository();
-  const dbUser = await userQuery.findById(sessionUser.user_id);
+  const [dbUser, trainingRows] = await Promise.all([
+    userQuery.findById(sessionUser.user_id),
+    new trainingRepository().findByUser(sessionUser.user_id),
+  ]);
   if (!dbUser) {
     return loginRedirect(resolvedUrl);
   }
+
+  const trainings = Object.fromEntries(trainingRows.map((row) => [
+    row.equipment_key,
+    { status: row.status, completedAt: row.completed_at ? row.completed_at.toISOString() : null },
+  ]));
 
   return {
     props: {
@@ -31,11 +41,12 @@ export async function getServerSideProps({ req, resolvedUrl }) {
         memberSince: formatYear(sessionUser.period_start_date),
         waiverSigned: dbUser.waiver_status === true,
       },
+      trainings,
     },
   };
 }
 
-export default function AccountPage({ account }) {
+export default function AccountPage({ account, trainings }) {
   //add the user auth check here
   const { user, loading } = useAuth();
 
@@ -58,6 +69,7 @@ export default function AccountPage({ account }) {
       <h1 className={styles.title}>ACCOUNT INFORMATION</h1>
       <AccountInfoForm account={account} />
       <WaiverCard initiallySigned={account.waiverSigned} />
+      <EquipmentTrainingCard trainings={trainings} />
     </>
   );
 }
