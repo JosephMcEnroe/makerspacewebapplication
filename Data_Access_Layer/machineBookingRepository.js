@@ -5,7 +5,7 @@ export class machineBookingRepository {
         const { rows } = await query(
             `SELECT booking_id, machine_id, start_date_time,
                 end_date_time, user_id
-         FROM "machine_booking"`
+         FROM "machine_booking" WHERE booking_active = true`
         );
         return rows;
     }
@@ -13,9 +13,11 @@ export class machineBookingRepository {
     async findUserBooking(userId) {
         const { rows } = await query(
             `SELECT b.user_id, b.booking_id, b.machine_id, b.start_date_time,
-                b.end_date_time, m.name AS machine_name
+                b.end_date_time, b.booking_active, b.cancelled_at, b.refund_eligible, b.paid_amount,
+                r.amount AS refund_amount, r.status AS refund_status, m.name AS machine_name
          FROM "machine_booking" b
          LEFT JOIN "machine" m ON m.machine_id = b.machine_id
+         LEFT JOIN equipment_refund r ON r.booking_id = b.booking_id
          WHERE b.user_id = $1
          ORDER BY b.start_date_time DESC`,
             [userId]
@@ -30,9 +32,9 @@ export class machineBookingRepository {
                 machine_id,
                 start_date_time,
                 end_date_time,
-                user_id
+                user_id, refund_eligible, booking_active
             )
-            VALUES ($1, $2, $3, $4)
+            VALUES ($1, $2, $3, $4, false, true)
             RETURNING booking_id, machine_id, start_date_time,
                       end_date_time, user_id
         `, [

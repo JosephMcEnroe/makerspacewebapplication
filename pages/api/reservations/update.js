@@ -71,7 +71,7 @@ export default async function handler(req, res) {
     const resourceColumn = room ? "room_id" : "machine_id";
     const startColumn = room ? "start_date" : "start_date_time";
     const endColumn = room ? "end_date" : "end_date_time";
-    const statusClause = room ? "AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%')" : "";
+    const statusClause = room ? "AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%')" : "AND booking_active = true";
     const current = await client.query(
       `SELECT ${idColumn} AS reservation_id, ${resourceColumn} AS resource_id, stripe_checkout_session_id, ${startColumn} AS start_time, ${endColumn} AS end_time FROM ${table}
        WHERE ${idColumn} = ${room ? "ANY($1::integer[])" : "$1"} AND user_id = $2 ${statusClause} ORDER BY ${startColumn} FOR UPDATE`,
@@ -179,11 +179,16 @@ export default async function handler(req, res) {
       );
     } else if (normalizedPeriods.length === 1 || preservePaidDuration) {
       await client.query(
-        `UPDATE ${table} SET ${startColumn} = $3, ${endColumn} = $4 WHERE ${idColumn} = $1 AND user_id = $2`,
+        `UPDATE ${table} SET ${startColumn} = $3, ${endColumn} = $4, refund_eligible = false WHERE ${idColumn} = $1 AND user_id = $2`,
         [Number(reservationId), user.user_id, normalizedPeriods[0].start, normalizedPeriods[0].end]
       );
     } else {
-      await client.query(`DELETE FROM ${table} WHERE ${idColumn} = ANY($1::integer[]) AND user_id = $2`, [roomIds, user.user_id]);
+      if (room) {
+        await client.query(`DELETE FROM ${table} WHERE ${idColumn} = ANY($1::integer[]) AND user_id = $2`, [roomIds, user.user_id]);
+      } else {
+        await client.query(`UPDATE machine_booking SET booking_active = false, refund_eligible = false,
+          cancelled_at = NOW(), cancelled_by = $2 WHERE booking_id = ANY($1::integer[]) AND user_id = $2`, [roomIds, user.user_id]);
+      }
       for (const period of normalizedPeriods) {
         if (room) {
           await client.query(
@@ -192,7 +197,7 @@ export default async function handler(req, res) {
           );
         } else {
           await client.query(
-            `INSERT INTO "machine_booking" (machine_id, start_date_time, end_date_time, user_id) VALUES ($1, $2, $3, $4)`,
+            `INSERT INTO "machine_booking" (machine_id, start_date_time, end_date_time, user_id, refund_eligible, booking_active) VALUES ($1, $2, $3, $4, false, true)`,
             [resourceId, period.start, period.end, user.user_id]
           );
         }

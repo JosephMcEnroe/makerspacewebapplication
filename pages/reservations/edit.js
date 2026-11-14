@@ -48,7 +48,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: routeQuery }
               m.name, m.type AS description
        FROM "machine_booking" b
        JOIN "machine" m ON m.machine_id = b.machine_id
-       WHERE b.booking_id = $1 AND b.user_id = $2`,
+       WHERE b.booking_id = $1 AND b.user_id = $2 AND b.booking_active = true`,
       [reservationId, user.user_id]
     );
     reservation = rows[0];

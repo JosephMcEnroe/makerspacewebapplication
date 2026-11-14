@@ -13,6 +13,8 @@ import { monthlyReservationLabel, monthlyReservationSelectionLabel } from "@/lib
 import { useRouter } from "next/router";
 import { useState } from "react";
 import stylesPanel from "@/components/ReservationsPanel.module.css";
+import EquipmentCancellationDialog from "@/components/EquipmentCancellationDialog";
+import { refundLabel } from "@/lib/refundDisplay";
 
 function emptyGroups() {
   return { upcoming: [], previous: [], cancelled: [] };
@@ -61,7 +63,7 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   ]);
 
   const equipment = groupReservations(
-    machineBookings.map((booking) => ({ ...booking, start: booking.start_date_time, end: booking.end_date_time })),
+    machineBookings.map((booking) => ({ ...booking, status: booking.booking_active ? "active" : "cancelled", start: booking.start_date_time, end: booking.end_date_time })),
     (booking) => ({
       id: `eq-${booking.booking_id}`,
       reservationId: booking.booking_id,
@@ -69,6 +71,9 @@ export async function getServerSideProps({ req, resolvedUrl }) {
       startDate: booking.start_date_time instanceof Date ? booking.start_date_time.toISOString() : String(booking.start_date_time),
       endDate: booking.end_date_time instanceof Date ? booking.end_date_time.toISOString() : String(booking.end_date_time),
       name: booking.machine_name ?? "Equipment",
+      refundLabel: !booking.booking_active ? refundLabel(booking.refund_status, booking.refund_amount) : null,
+      cancelledAt: booking.cancelled_at ? new Date(booking.cancelled_at).toISOString() : null,
+      nonRefundable: !booking.refund_eligible || booking.paid_amount == null,
       time: formatTimeRange(booking.start_date_time, reservationCustomerEndDateTime(booking.end_date_time, 15) || booking.end_date_time),
       trainingRequired: false,
     })
@@ -173,7 +178,11 @@ export default function ReservationsPage({ reservations, initialType, initialRes
       </Head>
       <h1 className={styles.title}>RESERVATIONS</h1>
       <ReservationsPanel reservations={reservations} initialType={initialType} initialReservationIds={initialReservationIds} onEdit={editReservation} onCancel={cancelReservation} />
-      {confirmation && (
+      {confirmation?.type === "equipment" && <EquipmentCancellationDialog
+        endpoint="/api/reservations/cancel" bookingId={confirmation.reservation.reservationId}
+        name={confirmation.reservation.name} time={confirmation.reservation.time}
+        onClose={() => setConfirmation(null)} onComplete={() => { setConfirmation(null); router.replace(router.asPath, undefined, { scroll: false }); }} />}
+      {confirmation && confirmation.type !== "equipment" && (
         <div className={stylesPanel.confirmBackdrop} role="presentation" onMouseDown={(event) => event.target === event.currentTarget && !isCancelling && setConfirmation(null)}>
           <section className={stylesPanel.confirmDialog} role="alertdialog" aria-modal="true" aria-labelledby="cancel-title">
             <h2 id="cancel-title">Cancel this reservation?</h2>

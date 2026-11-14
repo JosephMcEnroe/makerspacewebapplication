@@ -177,6 +177,7 @@ export default async function handler(req, res) {
       return res.status(503).json({ error: "This resource's Stripe pricing is not configured. Please contact staff." });
     }
     const { rows } = await query('SELECT email FROM "users" WHERE user_id = $1', [user.user_id]);
+    if (product.default_price.currency !== "usd") return res.status(503).json({ error: "Equipment checkout requires USD pricing." });
     const origin = process.env.APP_URL || new URL(req.headers.origin || `http://${req.headers.host}`).origin;
     const session = await getStripe().checkout.sessions.create({
       mode: "payment", customer_email: rows[0]?.email, payment_method_types: ["card"],

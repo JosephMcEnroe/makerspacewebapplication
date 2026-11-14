@@ -12,10 +12,14 @@ Equipment checkout quantity is the number of validated one-hour slots (15-minute
 
 Each paid equipment booking stores `stripe_checkout_session_id`. Previously paid room records and their webhook fulfillment remain supported. Monthly room bookings are recognized by their stored start/end dates, so direct monthly bookings keep the monthly editor and legacy hourly rooms keep their hourly editor. Reservation payment ledger entries use the Checkout Session ID in `stripe_invoice_id` as a stable reconciliation/idempotency reference. A database transaction and per-session advisory lock prevent repeat fulfillment, including after machine bookings are deleted by cancellation. Payment failures roll back both bookings and ledger entry and return HTTP 500 for Stripe retries. Equipment bookings can be rescheduled as one or more periods on the original machine; paid studio bookings remain one month on the original room. Cancellation follows the existing behavior and does not refund payments.
 
+## Equipment cancellation update
+
+Equipment cancellations now retain bookings using `booking_active`, with per-hour eligibility and durable refund processing. Edited equipment reservations are non-refundable. See [equipment refund setup and testing](EQUIPMENT_REFUNDS.md) for database prerequisites, Stripe webhook events, Vercel recovery configuration, and the acceptance checklist. This supersedes the cancellation/no-refund behavior described above for equipment. Room cancellation behavior is unchanged.
+
 ## Deferred limitations for the PR
 
 - For equipment: no temporary holds, hold tables, or post-payment availability conflict resolution. Availability is checked before checkout; two customers can pay for overlapping times. Paid sessions are fulfilled even if availability changed. Holds/refund handling will be implemented later.
-- No automatic refunds or price adjustments. Standalone `/stripe/checkout` remains a debugging checkout and does not create reservations.
+- No automatic price adjustments or paid equipment extensions. Standalone `/stripe/checkout` remains a debugging checkout and does not create reservations.
 - Repeated separate checkout attempts can create distinct paid reservations; do not confuse those with retries of a webhook for one session.
 
 ## Verification

@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { fulfillReservation } from "@/lib/reservationCheckout";
+import { handleEquipmentRefundEvent } from "@/lib/equipmentRefundService";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { paymentRepository } from "@/Data_Access_Layer/paymentRepository";
 
@@ -234,6 +235,11 @@ export default async function handler(req, res) {
 
   try {
     switch (event.type) {
+      case "refund.created":
+      case "refund.updated":
+      case "refund.failed":
+        await handleEquipmentRefundEvent(event.data.object);
+        break;
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded":
         await handleCheckoutCompleted(event.data.object);

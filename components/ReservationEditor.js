@@ -126,6 +126,7 @@ export default function ReservationEditor({ type, reservation, resource, resourc
       <header className={styles.header}>
         <h1 className={styles.title}>Edit Reservation</h1>
         <p className={styles.intro}>Update your {reservation.name} reservation. You can cancel without saving or confirm your changes.</p>
+        {type === "equipment" && <p role="note">Saving any changes permanently makes this equipment reservation non-refundable. You can still cancel it later.</p>}
       </header>
       {error && <p role="alert">{error}</p>}
       {isClass ? (
@@ -162,7 +163,7 @@ export default function ReservationEditor({ type, reservation, resource, resourc
           lockMonthCount={reservation.monthly}
           excludedReservationIds={reservation.reservationIds || [reservation.reservationId]}
           unavailableIntervals={resource.unavailableIntervals}
-          confirmLabel={submitting ? "Saving…" : "Confirm Changes"}
+          confirmLabel={submitting ? "Saving…" : type === "equipment" ? "Save Changes — Make Non-refundable" : "Confirm Changes"}
           cancelLabel="Cancel Editing"
           onClose={() => finish()}
           onConfirm={confirmResourceEdit}
