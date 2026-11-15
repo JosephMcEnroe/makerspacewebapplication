@@ -316,6 +316,47 @@
   padding-left: 1.2rem;
   color: #6b5347;
   font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.quoteSummary {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #e9ded2;
+}
+
+.quoteDiscount,
+.quoteTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.quoteDiscount {
+  margin-bottom: 0.4rem;
+  color: #6b5347;
+  font-size: 0.8rem;
+}
+
+.quoteTotal {
+  color: #382222;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.quoteTotal > span:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.quoteOriginal {
+  color: #6b5347;
+  font-size: 0.8rem;
+  font-weight: 400;
 }
 
 .error {

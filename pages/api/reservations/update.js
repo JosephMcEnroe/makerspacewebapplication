@@ -1,5 +1,6 @@
 import { getCalendarMonthSelection, getMonthlyReservationCount, isMonthlyPeriod, isMonthlyReservation, ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 import { businessTime } from "@/lib/businessTime";
+import { hasStudioCoverage } from "@/lib/discounts";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -73,7 +74,7 @@ export default async function handler(req, res) {
     const endColumn = room ? "end_date" : "end_date_time";
     const statusClause = room ? "AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%')" : "AND booking_active = true";
     const current = await client.query(
-      `SELECT ${idColumn} AS reservation_id, ${resourceColumn} AS resource_id, stripe_checkout_session_id, ${startColumn} AS start_time, ${endColumn} AS end_time FROM ${table}
+      `SELECT ${idColumn} AS reservation_id, ${resourceColumn} AS resource_id, stripe_checkout_session_id, ${startColumn} AS start_time, ${endColumn} AS end_time${room ? "" : ", paid_amount"} FROM ${table}
        WHERE ${idColumn} = ${room ? "ANY($1::integer[])" : "$1"} AND user_id = $2 ${statusClause} ORDER BY ${startColumn} FOR UPDATE`,
       [room ? lookupIds : Number(reservationId), user.user_id]
     );
@@ -117,6 +118,12 @@ export default async function handler(req, res) {
     const buffer = room && (monthly || current.rowCount > 1) ? "0 minutes" : room ? "15 minutes" : "0 minutes";
     const resourceId = Number(current.rows[0].resource_id);
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1), $2)", [type, resourceId]);
+    if (!room && current.rows[0].stripe_checkout_session_id && current.rows[0].paid_amount != null
+      && Number(current.rows[0].paid_amount) === 0 && !(await hasStudioCoverage(user.user_id, normalizedPeriods, client))) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+      return res.status(409).json({ error: "These times are outside your studio rental. Cancel this equipment reservation and rebook through checkout." });
+    }
     const preservePaidDuration = type === "equipment" && !!current.rows[0].stripe_checkout_session_id;
     if (preservePaidDuration) {
       if (normalizedPeriods.length !== 1) {

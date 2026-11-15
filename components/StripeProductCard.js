@@ -60,12 +60,7 @@ export default function StripeProductCard({ product, loadingPriceId = null, onCh
             <span>No image available</span>
           </div>
         )}
-
-        {displayPrice && (
-          <div className={styles.priceTag}>
-            {displayPrice}{priceSuffix}
-          </div>
-        )}
+        {displayPrice && <div className={styles.priceTag}>{displayPrice}{priceSuffix}</div>}
       </div>
 
       <div className={styles.body}>

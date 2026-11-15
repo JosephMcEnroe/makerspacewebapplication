@@ -208,6 +208,7 @@ export default function ExplorePage({
 
       {selectedResource && resourceType !== "classes" && !needsWaiver && (
         <Availability
+          showPricing={!!user?.id}
           confirmLabel={isMonthlyStudio ? "Continue to payment" : resourceType === "classes" ? "Confirm Reservation" : "Create Reservation"}
           resource={selectedResource}
           type={resourceType}
