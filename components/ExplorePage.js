@@ -1,3 +1,4 @@
+import MembershipRequiredDialog from "./MembershipRequiredDialog";
 import Head from "next/head";
 import { useState } from "react";
 import { useRouter } from "next/router";
@@ -20,7 +21,9 @@ export default function ExplorePage({
   items,
 }) {
   const router = useRouter();
-  const { user } = useAuthContext();
+  const { user, loading: authLoading } = useAuthContext();
+  const needsMembership = !!user?.id && user.membershipActive !== true;
+  const [showMembershipPrompt, setShowMembershipPrompt] = useState(false);
   // Reservations need a signed waiver (the reservation APIs enforce this too)
   const needsWaiver = user?.waiverSigned === false;
   const [showWaiverPrompt, setShowWaiverPrompt] = useState(false);
@@ -67,6 +70,7 @@ export default function ExplorePage({
       } catch {
         throw new Error("The reservation service returned an invalid response.");
       }
+      if (classResult.code === "MEMBERSHIP_REQUIRED") { setShowMembershipPrompt(true); return; }
       if (!classResponse.ok) throw new Error(classResult.error || "Could not reserve this class.");
       setSelectedResource(null);
       setBookingError("");
@@ -112,6 +116,7 @@ export default function ExplorePage({
     } catch {
       throw new Error("The reservation service returned an invalid response.");
     }
+    if (result.code === "MEMBERSHIP_REQUIRED") { setShowMembershipPrompt(true); return; }
     if (!response.ok) throw new Error(result.error || "Could not create the reservation.");
     if (resourceType === "rooms" && isMonthlyStudioResource(bookingResource || {}) && !result.url) {
       throw new Error("Checkout did not return a redirect URL. Please try again.");
@@ -158,6 +163,9 @@ export default function ExplorePage({
                   {...item}
                   onSelect={() => {
                     setBookingError("");
+                    if (authLoading) return;
+                    if (!user?.id) { router.push("/login"); return; }
+                    if (needsMembership) { setShowMembershipPrompt(true); return; }
                     setSelectedResource(item);
                   }}
                 />
@@ -184,7 +192,7 @@ export default function ExplorePage({
         </section>
       )}
 
-      {selectedResource && resourceType === "classes" && (
+      {selectedResource && !authLoading && !needsMembership && !showMembershipPrompt && resourceType === "classes" && (
         <ClassDetailsModal
           classItem={selectedResource}
           onClose={() => setSelectedResource(null)}
@@ -197,7 +205,7 @@ export default function ExplorePage({
       )}
 
       {/* Rooms/equipment: ask for the waiver instead of opening the booking screen */}
-      {(showWaiverPrompt || (selectedResource && resourceType !== "classes" && needsWaiver)) && (
+      {!authLoading && !needsMembership && !showMembershipPrompt && (showWaiverPrompt || (selectedResource && resourceType !== "classes" && needsWaiver)) && (
         <WaiverRequiredDialog
           onClose={() => {
             setShowWaiverPrompt(false);
@@ -206,7 +214,9 @@ export default function ExplorePage({
         />
       )}
 
-      {selectedResource && resourceType !== "classes" && !needsWaiver && (
+      {!authLoading && (showMembershipPrompt || (selectedResource && needsMembership)) && <MembershipRequiredDialog onClose={() => { setShowMembershipPrompt(false); setSelectedResource(null); }} />}
+
+      {selectedResource && !authLoading && !needsMembership && !showMembershipPrompt && resourceType !== "classes" && !needsWaiver && (
         <Availability
           showPricing={!!user?.id}
           confirmLabel={isMonthlyStudio ? "Continue to payment" : resourceType === "classes" ? "Confirm Reservation" : "Create Reservation"}

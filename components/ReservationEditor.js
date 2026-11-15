@@ -1,3 +1,5 @@
+import { useAuthContext } from "@/context/AuthContext";
+import MembershipRequiredDialog from "./MembershipRequiredDialog";
 import { businessCalendarDate } from "@/lib/businessTime";
 import { useState } from "react";
 import { useRouter } from "next/router";
@@ -40,6 +42,8 @@ async function getCsrfToken() {
 }
 
 export default function ReservationEditor({ type, reservation, resource, resources }) {
+  const { user, loading: authLoading } = useAuthContext();
+  const [membershipRequired, setMembershipRequired] = useState(false);
   const router = useRouter();
   const [selectedClass, setSelectedClass] = useState(null);
   const [classResources, setClassResources] = useState(resources);
@@ -73,6 +77,7 @@ export default function ReservationEditor({ type, reservation, resource, resourc
         }),
       });
       const result = await response.json();
+      if (result.code === "MEMBERSHIP_REQUIRED") { setMembershipRequired(true); return; }
       if (!response.ok) throw new Error(result.error || "Could not update the reservation.");
       await finish();
     } catch (submitError) {
@@ -109,6 +114,7 @@ export default function ReservationEditor({ type, reservation, resource, resourc
         body: JSON.stringify({ oldClassId: reservation.classId, newClassId: selectedClass.resourceId }),
       });
       const result = await response.json();
+      if (result.code === "MEMBERSHIP_REQUIRED") { setMembershipRequired(true); return; }
       if (!response.ok) throw new Error(result.error || "Could not update the class reservation.");
       await finish();
     } catch (submitError) {
@@ -121,6 +127,9 @@ export default function ReservationEditor({ type, reservation, resource, resourc
     ? reservation.selectedMonths
     : reservation.monthly ? [calendarMonthPeriod(reservation.startDate.slice(0, 7), reservation.monthCount || 1).start.slice(0, 7)] : undefined;
   const Availability = reservation.monthly ? MonthlyAvailability : WeeklyAvailability;
+  if (authLoading) return <p role="status">Loading membership...</p>;
+  if (membershipRequired || user?.membershipActive !== true) return <MembershipRequiredDialog onClose={() => router.push("/reservations")} />;
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
