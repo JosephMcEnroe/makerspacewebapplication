@@ -14,6 +14,7 @@ import { businessDateTime } from "@/lib/businessTime";
 import { formatDate, formatTime, formatTimeRange, toISODate } from "@/lib/format";
 import { reservationCustomerEndDateTime } from "@/lib/reservationPeriods";
 import { staffRequest } from "@/lib/staffApi";
+import bannedRepository from "@/Data_Access_Layer/bannedRepository";
 
 const ROLES = ["MEMBER", "STUDENT", "INSTRUCTOR", "STAFF", "ADMIN"];
 const TYPE_LABELS = { room: "Room", equipment: "Equipment", class: "Class" };
@@ -25,11 +26,12 @@ export async function getServerSideProps({ req, resolvedUrl, params }) {
   const memberId = Number(params.id);
   if (!Number.isInteger(memberId) || memberId < 1) return { notFound: true };
 
-  const [user, membership, reservations, targetIsAdmin] = await Promise.all([
+  const [user, membership, reservations, targetIsAdmin, isTerminated] = await Promise.all([
     new UserRepository().findById(memberId),
     new membershipRepositry().findUserMembership(memberId),
     new StaffRepository().findUserReservations(memberId),
     new adminRepository().isAdmin(memberId),
+    new bannedRepository().isUserBanned(memberId),
   ]);
   if (!user) return { notFound: true };
 
@@ -63,6 +65,7 @@ export async function getServerSideProps({ req, resolvedUrl, params }) {
       navRole: guard.navRole,
       viewerIsAdmin: guard.session.isAdmin,
       canEdit: !targetIsAdmin || guard.session.isAdmin,
+      isTerminated: isTerminated,
       member: {
         id: user.user_id,
         first_name: user.first_name || "",
@@ -89,11 +92,19 @@ export async function getServerSideProps({ req, resolvedUrl, params }) {
   };
 }
 
-export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, member, membership, upcoming, history }) {
+export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, member, membership, upcoming, history, isTerminated: initialIsTerminated, }) {
   const router = useRouter();
   const [details, setDetails] = useState(member);
   const [plan, setPlan] = useState(membership);
   const [saving, setSaving] = useState(null);
+  //states for termination flow
+  const [isBan, setIsBan] = useState(false);
+  const [showTerminateModal, setShowTerminateModal] = useState(false);
+  const [isTerminated, setIsTerminated] = useState(initialIsTerminated);
+  const [terminationReason, setTerminationReason] = useState("");
+  const [memberPhoto, setMemberPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+
   const [cancellingKey, setCancellingKey] = useState(null);
   const [message, setMessage] = useState(router.query.booked ? { type: "success", text: "Reservation created." } : null);
 
@@ -113,6 +124,8 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
     }
   };
 
+  
+
   const saveDetails = (event) => {
     event.preventDefault();
     save("details", { user: details }, "Member details saved.");
@@ -121,6 +134,82 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
   const saveMembership = (event) => {
     event.preventDefault();
     save("membership", { membership: plan }, "Membership saved.");
+  };
+
+  const openTerminateModal = () => {
+    if (!viewerIsAdmin || isTerminated) return;
+
+    setTerminationReason("");
+    setMemberPhoto(null);
+    setPhotoPreview(null);
+    setShowTerminateModal(true);
+  };
+
+  const handlePhotoChange = (event) => {
+    const file = event.target.files?.[0];
+
+    if(!file) return;
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+
+    if(!allowedTypes.includes(file.type)) {
+      setMessage({
+        type: "error",
+        text: "Please upload a PNG, JPG, or WEBP image.",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    //Checking file size
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({
+        type: "error",
+        text: "The photo must be smaller than 5 MB.",
+      });
+      event.target.value = "";
+      return;
+    }
+
+    setMemberPhoto(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setMessage(null);
+  };
+
+  //This validated and previews the photo, but hasn't upload it yet. Need to update the staffRequest or 
+  // create a multipart request helper as well as update the API route for parse & validate the uploaded file
+  const terminateMember = async (event) => {
+    event.preventDefault();
+
+    if (!viewerIsAdmin || !terminationReason.trim()) return;
+
+    setIsBan(true);
+    setMessage(null);
+
+    try{
+      await staffRequest(
+        `/api/admin/members/${member.id}/terminate`,
+        "POST",
+        {
+          reason: terminationReason.trimEnd(),
+        }
+      );
+
+      setIsTerminated(true);
+      setShowTerminateModal(false);
+
+      setMessage({
+        type:"success",
+        text: "Account successfully terminated",
+      });
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: error.message
+      });
+    } finally {
+      setIsBan(false);
+    }
   };
 
   const cancelReservation = async (reservation) => {
@@ -219,6 +308,45 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
                 </button>
               </div>
             </fieldset>
+
+            {viewerIsAdmin && (
+              <div className={styles.terminationAction}>
+                {isTerminated ? (
+                  <div className={styles.terminatedBanner}>
+                    <div>
+                      <h3>Account terminated</h3>
+                      <p>
+                        This profile, its contact credentials, and RFID card
+                        have been made inactive.
+                      </p>
+                    </div>
+
+                    <span className={styles.terminatedBadge}>
+                      TERMINATED
+                    </span>
+                  </div>
+                ) : (
+                  <div className={styles.terminationProfile}>
+                    <div>
+                      <h3>Editable membership profile</h3>
+                      <p>
+                        Updates made here are reflected in the member
+                        directory after saving.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      className={styles.terminateMembershipBtn}
+                      onClick={openTerminateModal}
+                      disabled={saving !== null}
+                    >
+                      Terminate Membership
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </form>
 
           <form className={styles.panel} onSubmit={saveDetails}>
@@ -303,6 +431,113 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
               </>
             )}
           </section>
+
+          {showTerminateModal && (
+            <div
+              className={styles.modalOverlay}
+              onMouseDown={(event) => {
+                if (event.target === event.currentTarget && !isBan) {
+                  setShowTerminateModal(false);
+                }
+              }}
+            >
+              <div
+                className={styles.terminationModal}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="terminateTitle"
+              >
+                <button
+                  type="button"
+                  className={styles.modalClose}
+                  onClick={() => setShowTerminateModal(false)}
+                  disabled={isBan}
+                  aria-label="Close modal"
+                >
+                  ×
+                </button>
+
+                <p className={styles.modalEyebrow}>ACCOUNT ACTION</p>
+
+                <h2 id="terminateTitle">
+                  Terminate {member.first_name} {member.last_name}'s account?
+                </h2>
+
+                <div className={styles.terminationWarning}>
+                  <strong>This action restricts future access</strong>
+                  <p>
+                    The terminated account will not be able to use the
+                    associated email address or phone number to create a
+                    new account. The associated RFID card will also be
+                    made inactive.
+                  </p>
+                </div>
+
+                <form onSubmit={terminateMember}>
+                  <label className={styles.modalField}>
+                    Photo of member
+
+                    <label className={styles.uploadArea}>
+                      {photoPreview ? (
+                        <img
+                          src={photoPreview}
+                          alt="Member photo preview"
+                          className={styles.photoPreview}
+                        />
+                      ) : (
+                        <>
+                          <span className={styles.uploadIcon}>↑</span>
+                          <strong>Upload a photo</strong>
+                          <small>PNG, JPG, or WEBP · Max 5 MB</small>
+                        </>
+                      )}
+
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp"
+                        onChange={handlePhotoChange}
+                        hidden
+                      />
+                    </label>
+                  </label>
+
+                  <label className={styles.modalField}>
+                    Reason for termination
+
+                    <textarea
+                      className={styles.terminationTextarea}
+                      placeholder="Enter the reason this membership is being terminated..."
+                      value={terminationReason}
+                      onChange={(event) =>
+                        setTerminationReason(event.target.value)
+                      }
+                      required
+                      rows={4}
+                    />
+                  </label>
+
+                  <div className={styles.modalActions}>
+                    <button
+                      type="button"
+                      className={styles.secondaryBtn}
+                      onClick={() => setShowTerminateModal(false)}
+                      disabled={isBan}
+                    >
+                      Keep Account Active
+                    </button>
+
+                    <button
+                      type="submit"
+                      className={styles.confirmTerminateBtn}
+                      disabled={isBan || !terminationReason.trim()}
+                    >
+                      {isBan ? "Terminating..." : "Terminate Account"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </>
