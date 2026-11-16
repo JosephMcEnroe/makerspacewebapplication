@@ -171,6 +171,66 @@ export function useAuth() {
     }
   }
 
+  // Email password reset
+  const forgotPassword = async (email) => {
+    setLoginLoading(true);
+    setError(null);
+    try {
+        const csrfToken = await getCsrfToken();
+        const response = await fetch("/api/auth/forgotPassword", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                "x-csrf-token": csrfToken,
+            },
+            body: JSON.stringify({ email }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to request password reset");
+        }
+        return data;
+    } catch (err) {
+        setError(err.message || "Failed to request password reset");
+        throw err;
+    } finally {
+        setLoginLoading(false);
+    }
+};
+
+const resetPassword = async (token, newPassword) => {
+    setLoginLoading(true);
+    setError(null);
+    try {
+        const csrfToken = await getCsrfToken();
+
+        const response = await fetch("/api/auth/resetPassword", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+                "Content-Type": "application/json",
+                "x-csrf-token": csrfToken,
+            },
+            body: JSON.stringify({
+                token,
+                newPassword,
+            }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || "Failed to reset password");
+        }
+        return data;
+    } catch (err) {
+        setError(err.message || "Failed to reset password");
+        throw err;
+    } finally {
+        setLoginLoading(false);
+    }
+};
+
   return {
     user,
     loading, // AuthProvider's session check loading or in general
@@ -180,6 +240,8 @@ export function useAuth() {
     login,
     logout,
     signup,
+    forgotPassword,
+    resetPassword,
   };
 }
 

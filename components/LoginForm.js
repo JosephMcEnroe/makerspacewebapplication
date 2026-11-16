@@ -152,7 +152,7 @@ export default function LoginForm() {
             <span>Remember me</span>
           </label>
 
-          <Link href="/forgot-password" className={styles.forgotPassword}>
+          <Link href="/forgotPassword" className={styles.forgotPassword}>
             Forgot password?
           </Link>
         </div>

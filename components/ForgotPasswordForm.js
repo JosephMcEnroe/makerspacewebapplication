@@ -2,10 +2,29 @@
 
 import Link from "next/link";
 import styles from "./ForgotPasswordForm.module.css";
+import { useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ForgotPasswordForm() {
-  const handleSubmit = (e) => {
+  const { forgotPassword, loginloading } = useAuth();
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setMessage("");
+    setError("");
+
+    try {
+      const data = await forgotPassword(email);
+
+      setMessage(data.message);
+      setEmail("");
+
+    } catch (err) {
+      setError(err.message || "Unable to send recovery link.");
+    }
   };
 
   return (
@@ -27,11 +46,20 @@ export default function ForgotPasswordForm() {
             placeholder="your.email@example.com"
             className={styles.input}
             autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            disabled={loginloading}
           />
         </div>
-
-        <button type="submit" className={styles.submitBtn}>
-          Send Recovery Link
+        {message && (
+          <p role="status">{message}</p>
+        )}
+        {error && (
+          <p role="alert">{error}</p>
+        )}
+        <button type="submit" className={styles.submitBtn} disabled={loginloading}>
+          {loginloading ? "Sending..." : "Send Recovery Link"}
         </button>
 
         <div className={styles.divider}>

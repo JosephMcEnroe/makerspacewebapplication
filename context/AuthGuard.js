@@ -6,6 +6,8 @@ const publicRoutes = [
     "/",
     "/login",
     "/register",
+    "/forgotPassword",
+    "/resetPassword",
 ];
 
 //This is to differentiate the public pages and private pages depending on user's authentication role
