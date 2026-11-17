@@ -41,7 +41,7 @@ export default async function handler(req, res) {
   // 2. Get RFID card ID from request body
   const { card_id } = req.body || {};
 
-  if (!card_id || typeof card_id !== "string") {
+  if (typeof card_id !== "string" || !card_id.trim()) {
     return res.status(400).json({
       ok: false,
       error: "Missing or invalid card_id in request body",
@@ -73,6 +73,10 @@ export default async function handler(req, res) {
 
     // No membership has this RFID card
     if (userResult.rows.length === 0) {
+      await query(
+        `INSERT INTO check_in_history (user_id, card_id, status) VALUES ($1, $2, $3)`,
+        [null, normalizedCardId, "red"]
+      );
       return res.status(200).json({
         ok: false,
         status: "red",
@@ -104,7 +108,13 @@ export default async function handler(req, res) {
       message = "Access denied: membership is inactive";
     }
 
-    // 5. Record successful check-in
+    // 5. Record the tap, including denied attempts.
+    await query(
+      `INSERT INTO check_in_history (user_id, card_id, status) VALUES ($1, $2, $3)`,
+      [user.user_id, normalizedCardId, decision]
+    );
+
+    // Record the latest successful check-in separately.
     //
     // last_check_in no longer exists in users.
     // The check_in table is now the source of truth
