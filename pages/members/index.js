@@ -28,9 +28,57 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   return { props: { members, navRole: guard.navRole } };
 }
 
+const PAGE_SIZE = 15;
+
+// First, last, and up to two pages either side of the current one;
+// null marks a gap ("…"). e.g. page 6 of 12 -> 1 … 4 5 6 7 8 … 12
+function pageNumbers(page, pageCount) {
+  const numbers = [];
+  for (let number = 1; number <= pageCount; number += 1) {
+    if (number === 1 || number === pageCount || Math.abs(number - page) <= 2) {
+      if (numbers.length && number - numbers[numbers.length - 1] > 1) numbers.push(null);
+      numbers.push(number);
+    }
+  }
+  return numbers;
+}
+
+function Pagination({ total, page, pageCount, setPage }) {
+  if (pageCount <= 1) return null;
+  const first = (page - 1) * PAGE_SIZE + 1;
+  const last = Math.min(page * PAGE_SIZE, total);
+  return (
+    <nav className={styles.pagination} aria-label="Member pages">
+      <span className={styles.pageInfo}>{first}–{last} of {total}</span>
+      <div className={styles.pageButtons}>
+        <button type="button" className={styles.pageBtn} onClick={() => setPage(page - 1)} disabled={page === 1}>
+          ‹ Prev
+        </button>
+        {pageNumbers(page, pageCount).map((number, index) => number === null ? (
+          <span key={`gap-${index}`} className={styles.pageGap} aria-hidden="true">…</span>
+        ) : (
+          <button
+            key={number}
+            type="button"
+            className={`${styles.pageBtn} ${number === page ? styles.pageBtnActive : ""}`}
+            onClick={() => setPage(number)}
+            aria-current={number === page ? "page" : undefined}
+          >
+            {number}
+          </button>
+        ))}
+        <button type="button" className={styles.pageBtn} onClick={() => setPage(page + 1)} disabled={page === pageCount}>
+          Next ›
+        </button>
+      </div>
+    </nav>
+  );
+}
+
 export default function MembersPage({ members, navRole }) {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearchValue] = useState("");
+  const [statusFilter, setStatusFilterValue] = useState("all");
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -39,6 +87,14 @@ export default function MembersPage({ members, navRole }) {
       return !term || [member.name, member.email, member.phone].some((value) => value.toLowerCase().includes(term));
     });
   }, [members, search, statusFilter]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // A new search or filter starts back on page 1
+  const setSearch = (value) => { setSearchValue(value); setPage(1); };
+  const setStatusFilter = (value) => { setStatusFilterValue(value); setPage(1); };
 
   return (
     <>
@@ -97,7 +153,7 @@ export default function MembersPage({ members, navRole }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((member) => (
+                    {pageRows.map((member) => (
                       <tr key={member.id}>
                         <td>
                           <Link href={`/members/${member.id}`} className={styles.memberName}>{member.name}</Link>
@@ -122,6 +178,7 @@ export default function MembersPage({ members, navRole }) {
                 </table>
               </div>
             )}
+            <Pagination total={filtered.length} page={currentPage} pageCount={pageCount} setPage={setPage} />
           </div>
         </div>
       </div>

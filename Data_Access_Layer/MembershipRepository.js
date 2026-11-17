@@ -117,6 +117,18 @@ export class membershipRepositry {
         return inserted.rows[0] || null;
     }
 
+    //Staff assigns (or clears) the RFID card on an existing membership
+    async updateRfidForUser(userId, rfidId) {
+        const { rows } = await query(
+            `UPDATE "membership"
+             SET rfid_id = $2
+             WHERE user_id = $1
+             RETURNING membership_id, user_id, role_of_membership, period_start_date, period_end_date, rfid_id, status`,
+            [userId, rfidId]
+        );
+        return rows[0] || null;
+    }
+
     async createMembership(membership) {
         const { rows } = await query(
             `INSERT INTO "membership" (

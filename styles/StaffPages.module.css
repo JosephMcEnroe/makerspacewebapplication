@@ -482,3 +482,167 @@
     align-items: flex-start;
   }
 }
+
+/* RFID field with its "Change RFID" button */
+.inlineField {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.inlineField .input {
+  flex: 1 1 auto;
+}
+
+/* Staff modal dialogs (dark theme) */
+dialog.modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(480px, calc(100vw - 2rem));
+  height: fit-content;
+  max-height: min(85vh, 700px);
+  padding: 0;
+  color: #ffffff;
+  background-color: #2a1b17;
+  border: 1px solid #4a352e;
+  border-radius: 14px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+}
+
+.modal::backdrop {
+  background: rgba(12, 8, 6, 0.72);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.4rem 1.5rem 0.5rem;
+}
+
+.modalEyebrow {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #f0a752;
+}
+
+.modalTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.modalClose {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  font-size: 1.2rem;
+  line-height: 1;
+  color: #e8dcd3;
+  background: transparent;
+  border: 1px solid #6b4d3c;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.modalClose:hover:not(:disabled) {
+  border-color: #f0a752;
+}
+
+.modalBody {
+  padding: 0.5rem 1.5rem 1rem;
+}
+
+.modalText {
+  margin-bottom: 1.1rem;
+  font-size: 0.82rem;
+  color: #b3a094;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding: 0.5rem 1.5rem 1.4rem;
+}
+
+/* Member directory pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #3a2924;
+}
+
+.pageInfo {
+  font-size: 0.75rem;
+  color: #8f7a6d;
+}
+
+.pageButtons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.pageBtn {
+  min-width: 32px;
+  padding: 0.35rem 0.6rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #e8dcd3;
+  background-color: transparent;
+  border: 1px solid #4a352e;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: #f0a752;
+}
+
+.pageBtnActive {
+  color: #2b1c1c;
+  background-color: #f0a752;
+  border-color: #f0a752;
+}
+
+.pageBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageBtn:focus-visible {
+  outline: 2px solid #f0a752;
+  outline-offset: 2px;
+}
+
+.pageGap {
+  padding: 0 0.2rem;
+  font-size: 0.75rem;
+  color: #8f7a6d;
+}
+
+@media (max-width: 640px) {
+  .inlineField {
+    flex-direction: column;
+  }
+
+  .modalHeader,
+  .modalBody,
+  .modalFooter {
+    padding-left: 1.1rem;
+    padding-right: 1.1rem;
+  }
+}

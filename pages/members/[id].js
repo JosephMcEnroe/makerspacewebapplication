@@ -15,6 +15,7 @@ import { formatDate, formatTime, formatTimeRange, toISODate } from "@/lib/format
 import { reservationCustomerEndDateTime } from "@/lib/reservationPeriods";
 import { staffRequest } from "@/lib/staffApi";
 import EquipmentCancellationDialog from "@/components/EquipmentCancellationDialog";
+import ChangeRfidDialog from "@/components/ChangeRfidDialog";
 import { refundLabel } from "@/lib/refundDisplay";
 
 const ROLES = ["MEMBER", "STUDENT", "INSTRUCTOR", "STAFF", "ADMIN"];
@@ -99,6 +100,7 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
   const [saving, setSaving] = useState(null);
   const [cancellingKey, setCancellingKey] = useState(null);
   const [equipmentCancellation, setEquipmentCancellation] = useState(null);
+  const [changingRfid, setChangingRfid] = useState(false);
   const [message, setMessage] = useState(router.query.booked ? { type: "success", text: "Reservation created." } : null);
 
   const refresh = () => router.replace(router.asPath.split("?")[0], undefined, { scroll: false });
@@ -159,6 +161,9 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
         bookingId={equipmentCancellation.id} memberId={member.id} name={equipmentCancellation.name}
         time={equipmentCancellation.time} onClose={() => setEquipmentCancellation(null)}
         onComplete={() => { setEquipmentCancellation(null); setMessage({ type: "success", text: "Reservation cancelled. Check its refund status in history." }); refresh(); }} />}
+      {changingRfid && <ChangeRfidDialog memberId={member.id} memberName={`${member.first_name} ${member.last_name}`.trim()}
+        currentRfid={membership.rfid_id} onClose={() => setChangingRfid(false)}
+        onSaved={(rfid) => { setChangingRfid(false); setMessage({ type: "success", text: rfid ? "RFID card updated." : "RFID card removed." }); refresh(); }} />}
       <Head>
         <title>{`${member.first_name} ${member.last_name} - Members - The Crafty Studio`}</title>
       </Head>
@@ -212,10 +217,16 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
                   Period end
                   <input type="date" className={styles.input} value={plan.period_end_date} onChange={updatePlan("period_end_date")} required />
                 </label>
-                <label className={`${styles.field} ${styles.fullWidth}`}>
-                  RFID card
-                  <input className={styles.input} value={plan.rfid_id} onChange={updatePlan("rfid_id")} placeholder="Scan or type the card ID" />
-                </label>
+                <div className={`${styles.field} ${styles.fullWidth}`}>
+                  <label htmlFor="member-rfid">RFID card</label>
+                  <div className={styles.inlineField}>
+                    <input id="member-rfid" className={styles.input} value={membership.rfid_id} placeholder="No card assigned" readOnly />
+                    <button type="button" className={styles.secondaryBtn} onClick={() => setChangingRfid(true)} disabled={!membership.exists}>
+                      Change RFID
+                    </button>
+                  </div>
+                  {!membership.exists && <span className={styles.hint}>Create the membership first to assign a card.</span>}
+                </div>
               </div>
               {membership.hasStripe && (
                 <p className={styles.hint} style={{ marginTop: "0.75rem" }}>
