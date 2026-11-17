@@ -1,12 +1,21 @@
 import { bannedRepository } from "@/Data_Access_Layer/bannedRepository";
 import { requireStaffApi } from "@/lib/staffAuth";
+import { verifyCsrfToken } from "@/lib/csrf";
 
 export default async function handler(req, res) {
+
     // Only allow POST requests
     if (req.method !== "POST") {
         res.setHeader("Allow", ["POST"]);
         return res.status(405).json({
             error: "Method not allowed."
+        });
+    }
+
+    //Verify CSRF token
+    if(!verifyCsrfToken(req)){
+        return res.status(403).json({
+            error: "Invalid or missing CSRF token.",
         });
     }
 

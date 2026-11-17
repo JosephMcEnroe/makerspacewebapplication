@@ -308,7 +308,7 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
                 </button>
               </div>
             </fieldset>
-
+            {/**Termination check for displaying the termination banner or termination button*/}
             {viewerIsAdmin && (
               <div className={styles.terminationAction}>
                 {isTerminated ? (
@@ -431,7 +431,7 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
               </>
             )}
           </section>
-
+          {/**Termination Modal */}
           {showTerminateModal && (
             <div
               className={styles.modalOverlay}
