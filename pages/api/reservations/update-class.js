@@ -1,3 +1,4 @@
+import { hasActiveMembership, MEMBERSHIP_REQUIRED } from "@/lib/membershipEligibility";
 import { businessTime } from "@/lib/businessTime";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
@@ -10,6 +11,7 @@ export default async function handler(req, res) {
   }
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Sign in to edit a class reservation." });
+  if (!hasActiveMembership(user)) return res.status(403).json(MEMBERSHIP_REQUIRED);
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
   const oldClassId = Number(req.body?.oldClassId);
   const newClassId = Number(req.body?.newClassId);

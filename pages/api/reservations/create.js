@@ -1,4 +1,6 @@
+import { hasActiveMembership, MEMBERSHIP_REQUIRED } from "@/lib/membershipEligibility";
 import { businessTime } from "@/lib/businessTime";
+import { resolveDiscount } from "@/lib/discounts";
 import { countEquipmentReservationHours, hasReservationBuffer, isValidReservationPeriod } from "@/lib/reservationPeriods";
 import { mergeRoomReservationPeriods } from "@/lib/reservationGrouping";
 import { getCalendarMonthSelection, isMonthlyPeriod, ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
@@ -13,6 +15,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") { res.setHeader("Allow", "POST"); return res.status(405).json({ error: "Method not allowed" }); }
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Sign in to make a reservation." });
+  if (!hasActiveMembership(user)) return res.status(403).json(MEMBERSHIP_REQUIRED);
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
   if (user.waiver_status !== true) return res.status(403).json(WAIVER_REQUIRED);
 
@@ -113,7 +116,9 @@ export default async function handler(req, res) {
           return res.status(503).json({ error: "This studio's monthly Stripe pricing is not configured. Please contact staff." });
         }
         const { rows: userRows } = await query('SELECT email FROM "users" WHERE user_id = $1', [user.user_id]);
+        const discount = await resolveDiscount({ user, type, periods, productId: product.id });
         const session = await getStripe().checkout.sessions.create({
+          ...(discount && { discounts: [{ coupon: discount.couponId }] }),
           mode: "payment",
           customer_email: userRows[0]?.email,
           payment_method_types: ["card"],
@@ -177,8 +182,12 @@ export default async function handler(req, res) {
       return res.status(503).json({ error: "This resource's Stripe pricing is not configured. Please contact staff." });
     }
     const { rows } = await query('SELECT email FROM "users" WHERE user_id = $1', [user.user_id]);
+    if (product.default_price.currency !== "usd") return res.status(503).json({ error: "Equipment checkout requires USD pricing." });
     const origin = process.env.APP_URL || new URL(req.headers.origin || `http://${req.headers.host}`).origin;
+    const discount = await resolveDiscount({ user, type, periods, productId: product.id });
     const session = await getStripe().checkout.sessions.create({
+      ...(discount && { discounts: [{ coupon: discount.couponId }] }),
+      customer_creation: "always",
       mode: "payment", customer_email: rows[0]?.email, payment_method_types: ["card"],
       client_reference_id: String(user.user_id),
       line_items: [{ price: product.priceId, quantity: type === "equipment" ? countEquipmentReservationHours(periods) : periods.length }],
@@ -190,6 +199,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ url: session.url });
   } catch (error) {
     console.error("Reservation checkout error:", error);
-    return res.status(500).json({ error: "Could not start reservation checkout. Please try again." });
+    return res.status(error.status || 500).json({ error: error.status === 503 ? error.message : "Could not start reservation checkout. Please try again." });
   }
 }

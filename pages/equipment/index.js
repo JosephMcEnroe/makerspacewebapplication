@@ -1,8 +1,11 @@
 import ExplorePage from "@/components/ExplorePage";
 import { loadEquipment } from "@/lib/resources";
+import { getSessionUser } from "@/lib/session";
 
-export async function getServerSideProps() {
-  return { props: { equipment: await loadEquipment() } };
+export async function getServerSideProps({ req, res }) {
+  res.setHeader("Cache-Control", "private, no-store");
+  const user = await getSessionUser(req);
+  return { props: { equipment: await loadEquipment({ user }) } };
 }
 
 export default function EquipmentPage({ equipment }) {

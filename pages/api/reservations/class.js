@@ -1,3 +1,4 @@
+import { hasActiveMembership, MEMBERSHIP_REQUIRED } from "@/lib/membershipEligibility";
 import { getSessionUser, WAIVER_REQUIRED } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
 import { enrollUserInClass } from "@/lib/reservationService";
@@ -9,6 +10,7 @@ export default async function handler(req, res) {
   }
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Sign in to reserve a class." });
+  if (!hasActiveMembership(user)) return res.status(403).json(MEMBERSHIP_REQUIRED);
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
   if (user.waiver_status !== true) return res.status(403).json(WAIVER_REQUIRED);
 
