@@ -1,3 +1,4 @@
+import { hasActiveMembership } from "@/lib/membershipEligibility";
 import { query } from "@/lib/db";
 
 export default async function handler(req, res) {
@@ -62,8 +63,8 @@ export default async function handler(req, res) {
           m.rfid_id,
           m.status AS member_status,
           m.role_of_membership,
-          m.period_start_date,
-          m.period_end_date
+          m.period_start_date::text AS period_start_date,
+          m.period_end_date::text AS period_end_date
        FROM membership m
        JOIN users u ON u.user_id = m.user_id
        WHERE LOWER(m.rfid_id::text) = LOWER($1::text)`,
@@ -95,7 +96,7 @@ export default async function handler(req, res) {
     let decision = "red";
     let message = "Access denied: membership is not active";
 
-    if (memberStatus === "active") {
+    if (hasActiveMembership({ ...user, status: user.member_status })) {
       decision = "green";
       message = "Access granted";
     } else if (memberStatus === "inactive") {

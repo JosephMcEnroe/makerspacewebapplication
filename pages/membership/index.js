@@ -9,6 +9,7 @@ import styles from "@/styles/Account.module.css";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { getSessionUser, loginRedirect } from "@/lib/session";
 import { formatDate } from "@/lib/format";
+import { getStripe } from "@/lib/stripeCatalog";
 
 export async function getServerSideProps({ req, resolvedUrl }) {
   const sessionUser = await getSessionUser(req);
@@ -33,6 +34,20 @@ export async function getServerSideProps({ req, resolvedUrl }) {
   // If the day pass has expired, the member should see the purchase options (treated as inactive)
   const effectiveStatus = dayPassExpired ? "inactive" : (membership?.status ?? "").toLowerCase();
 
+  // Existing subscriptions keep their own pricing; new-purchase catalog
+  // discounts must not change the displayed amount for an existing plan.
+  let subscriptionCost = null;
+  let subscriptionCurrency = null;
+  if (membership?.stripe_subscription_id) {
+    try {
+      const invoice = await getStripe().invoices.createPreview({ subscription: membership.stripe_subscription_id });
+      subscriptionCost = (invoice.total_excluding_tax ?? invoice.total) / 100;
+      subscriptionCurrency = invoice.currency;
+    } catch (error) {
+      console.error("Membership price preview unavailable:", error.code || error.type || "unknown");
+    }
+  }
+
   return {
     props: {
       membership: {
@@ -40,7 +55,8 @@ export async function getServerSideProps({ req, resolvedUrl }) {
           ? "Day Pass"
           : sessionUser.first_name ? `${sessionUser.first_name}'s Membership` : "Membership",
         status: effectiveStatus,
-        monthlyCost: null,
+        monthlyCost: subscriptionCost,
+        currency: subscriptionCurrency,
         nextBillingDate: formatDate(membership?.period_end_date),
         autoRenew: membership?.auto_renew ?? true,
         isDayPass: isDayPass && !dayPassExpired,
@@ -100,8 +116,8 @@ export default function MembershipPage({ membership }) {
   const monthlyProduct = getMonthlyMembershipProduct(products);
   const billingMembership = {
     ...membership,
-    monthlyCost: getMonthlyMembershipCost(monthlyProduct),
-    currency: monthlyProduct?.currency || "usd",
+    monthlyCost: membership.stripeSubscriptionId ? membership.monthlyCost : getMonthlyMembershipCost(monthlyProduct),
+    currency: membership.currency || monthlyProduct?.currency || "usd",
   };
 
   return (

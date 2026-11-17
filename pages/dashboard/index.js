@@ -6,10 +6,13 @@ import ResourceCard from "@/components/ResourceCard";
 import styles from "@/styles/Dashboard.module.css";
 import Navbar from "@/components/Navbar";
 import { loadClasses, loadEquipment, loadRooms } from "@/lib/resources";
+import { getSessionUser } from "@/lib/session";
 
-export async function getServerSideProps() {
+export async function getServerSideProps({ req, res }) {
+  res.setHeader("Cache-Control", "private, no-store");
+  const user = await getSessionUser(req);
   const [equipment, rooms, classes] = await Promise.all([
-    loadEquipment(),
+    loadEquipment({ user }),
     loadRooms(),
     loadClasses(),
   ]);
