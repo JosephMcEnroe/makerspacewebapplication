@@ -50,6 +50,21 @@ export class UserRepository {
         );
         return rows[0] || null;
     }
+    // Member-editable fields from the Account page form
+    async updateAccountProfile(userId, profile) {
+        const { rows } = await query(
+            `UPDATE "users"
+             SET first_name = $2,
+                 last_name = $3,
+                 date_of_birth = $4,
+                 email = $5,
+                 phone_number = $6
+             WHERE user_id = $1
+             RETURNING user_id, first_name, last_name, date_of_birth, email, phone_number`,
+            [userId, profile.first_name, profile.last_name, profile.date_of_birth, profile.email, profile.phone_number]
+        );
+        return rows[0] || null;
+    }
     //Find the role of the user that have userID + (maybe) membership_id
     async findRoleById(userId) {
         const { rows } = await query(

@@ -1,30 +1,37 @@
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   height: 100%;
-  border-radius: 16px;
-  overflow: hidden;
   background-color: #ffffff;
-  box-shadow: 0 4px 20px rgba(43, 25, 22, 0.07);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #edb363;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 6px 16px rgba(43, 25, 22, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(43, 25, 22, 0.12);
+  box-shadow: 0 10px 22px rgba(43, 25, 22, 0.14);
+  border-color: #e5a44c;
 }
 
+/* White image area on top, orange details panel underneath */
 .imagePlaceholder {
   position: relative;
-  aspect-ratio: 16 / 11;
-  flex-shrink: 0;
-  background-color: #d9cabb;
-  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #8c7c6f;
+  /* 4:3 keeps square artwork (most of the logos/photos) filling the frame
+     instead of shrinking to two thirds of the width */
+  aspect-ratio: 4 / 3;
+  padding: 2.1rem 0.5rem 0.5rem;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  color: #b9a696;
+  overflow: hidden;
 }
 
 .placeholderIcon {
@@ -32,80 +39,88 @@
 }
 
 .resourceImage {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  padding: 0;
-  object-fit: cover;
-  object-position: center;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   transition: transform 0.3s ease;
 }
 
 .card:hover .resourceImage {
-  transform: scale(1.03);
+  transform: scale(1.04);
 }
 
 .logoImage {
-  background-color: #ffffff;
   object-fit: contain;
 }
 
-.badgeRow {
-  z-index: 1;
-  position: absolute;
-  top: 0.65rem;
-  left: 0.65rem;
-  right: 0.65rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
+/* Dark pill sitting flush in the top-left corner (price / class date) */
+.priceBadge,
 .timeBadge {
-  padding: 0.3rem 0.65rem;
-  font-size: 0.72rem;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  max-width: calc(100% - 1rem);
+  padding: 0.55rem 1rem;
+  box-sizing: border-box;
+  font-size: 0.75rem;
   font-weight: 700;
   color: #ffffff;
-  background-color: #2b1c1c;
-  border-radius: 999px;
+  background-color: #3a2119;
+  border-radius: 0 14px 14px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
+/* Soft peach pill in the top-right corner (class spots) */
 .spotsBadge {
-  padding: 0.3rem 0.65rem;
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 1;
+  padding: 0.38rem 0.8rem;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #382222;
-  background-color: #ffffff;
+  color: #3a2119;
+  background-color: #f9dcae;
   border-radius: 999px;
+  white-space: nowrap;
 }
 
 .body {
   flex: 1;
   box-sizing: border-box;
-  padding: 1.4rem 1.4rem 1.5rem;
+  padding: 1.1rem 1.25rem 1.35rem;
   display: flex;
   flex-direction: column;
+  background-color: #f0b14e;
   overflow-wrap: anywhere;
 }
 
 .title {
-  font-size: 1.2rem;
+  font-size: 1.02rem;
   font-weight: 800;
-  color: var(--color-primary);
-  margin: 0 0 0.4rem 0;
+  color: #2b1916;
+  margin: 0 0 0.3rem 0;
   line-height: 1.3;
 }
 
 .description {
-  font-size: 0.88rem;
-  color: #5c4536;
+  font-size: 0.82rem;
+  color: #4d3628;
   line-height: 1.5;
-  margin: 0 0 1.25rem;
+  margin: 0;
   flex: 1;
+}
+
+.reserveHint {
+  margin: 0.9rem 0 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #3d2a1e;
 }
 
 .cardUnavailable {
@@ -125,40 +140,33 @@
   outline-offset: 2px;
 }
 
-.reserveHint {
-  margin: 0.65rem 0 0;
-  color: var(--color-muted);
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
 .unavailableBadge {
-  z-index: 2;
   position: absolute;
   inset: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 1rem;
   font-size: 0.8rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #ffffff;
-  padding: 1rem;
   text-align: center;
+  color: #ffffff;
   background-color: rgba(43, 25, 22, 0.55);
 }
 
 .unavailableNote {
+  margin: 0.6rem 0 0 0;
   font-size: 0.75rem;
   font-weight: 700;
-  color: #a05c3a;
-  margin: 0.6rem 0 0 0;
+  color: #7a2f19;
 }
 
 .cardUnavailable:hover {
   transform: none;
-  box-shadow: 0 4px 20px rgba(43, 25, 22, 0.07);
+  box-shadow: 0 6px 16px rgba(43, 25, 22, 0.08);
 }
 
 @media (prefers-reduced-motion: reduce) {

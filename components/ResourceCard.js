@@ -28,7 +28,7 @@ function ResourceImage({ image, name }) {
   );
 }
 
-export default function ResourceCard({ name, image, description, time, spots, unavailable, unavailableNote, onSelect }) {
+export default function ResourceCard({ name, image, description, time, spots, price, unavailable, unavailableNote, onSelect }) {
   const source = image || DEFAULT_RESOURCE_IMAGE;
   const handleKeyDown = (event) => {
     if (onSelect && (event.key === "Enter" || event.key === " ")) {
@@ -47,12 +47,9 @@ export default function ResourceCard({ name, image, description, time, spots, un
     >
       <div className={styles.imagePlaceholder}>
         <ResourceImage key={source} image={source} name={name} />
-        {(time || spots) && (
-          <div className={styles.badgeRow}>
-            {time && <span className={styles.timeBadge}>{time}</span>}
-            {spots && <span className={styles.spotsBadge}>{spots}</span>}
-          </div>
-        )}
+        {price && <span className={styles.priceBadge}>{price}</span>}
+        {time && <span className={styles.timeBadge}>{time}</span>}
+        {spots && <span className={styles.spotsBadge}>{spots}</span>}
         {unavailable && (
           <div className={styles.unavailableBadge}>Booked Indefinitely</div>
         )}
