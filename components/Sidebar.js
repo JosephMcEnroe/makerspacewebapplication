@@ -52,21 +52,33 @@ export default function Sidebar() {
   const mobileMenuId = useId();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const {
-    user,
-    logout,
-  } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    // Future: clear auth session before redirecting
-    //Come back if error show up - check with user data, maybe passing it in?
-    const isTrue = await logout();
+    const didLogOut = await logout();
 
-    if(isTrue)
-      router.push("/login");
-    else
-      return;
+    if (didLogOut) router.push("/login");
   };
+
+  // The same action for every layout: sidebar footer on desktop, a pill in the
+  // compact row nav on tablets, and an item in the dropdown menu on phones.
+  // CSS decides which one is visible.
+  const logoutButton = (extraClassName) => (
+    <button
+      type="button"
+      className={`${styles.logoutBtn} ${extraClassName || ""}`}
+      onClick={handleLogout}
+    >
+      <span className={styles.navIcon}>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+          <polyline points="16 17 21 12 16 7" />
+          <line x1="21" y1="12" x2="9" y2="12" />
+        </svg>
+      </span>
+      Log Out
+    </button>
+  );
 
   return (
     <aside className={styles.sidebar}>
@@ -103,6 +115,7 @@ export default function Sidebar() {
             </Link>
           );
         })}
+        {logoutButton(styles.mobileMenuLogout)}
       </nav>
       <div className={styles.userBlock}>
         <div className={styles.avatar} aria-hidden="true">
@@ -134,30 +147,12 @@ export default function Sidebar() {
               </span>
             </Link>
           );
-        })}
+                })}
+        {logoutButton(styles.rowLogout)}
       </nav>
 
       <div className={styles.footer}>
-        <Link href="/contact" className={styles.navItem}>
-          <span className={styles.navIcon}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2" />
-              <path d="m22 6-10 7L2 6" />
-            </svg>
-          </span>
-          Contact Us
-        </Link>
-
-        <button type="button" className={`${styles.logoutBtn} ${styles.logoutNavItem}`} onClick={handleLogout}>
-          <span className={styles.navIcon}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </span>
-          Log Out
-        </button>
+        {logoutButton()}
       </div>
     </aside>
   );

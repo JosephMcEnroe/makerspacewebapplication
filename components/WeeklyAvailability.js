@@ -4,6 +4,7 @@ import styles from "./WeeklyAvailability.module.css";
 import { buildReservationPeriods, formatMinutesAsTime, getReservationSlotStartMinutes, isUnavailableInterval, reservationCustomerEndDateTime, toggleReservationSlot } from "@/lib/reservationPeriods";
 import { formatTimeRange } from "@/lib/format";
 import { ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
+import ReservationQuote from "./ReservationQuote";
 
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const pad = (value) => String(value).padStart(2, "0");
@@ -41,6 +42,7 @@ export default function WeeklyAvailability({
   cancelLabel = "Keep Browsing",
   onConfirm,
   onClose,
+  showPricing = false,
 }) {
   const alternatives = resource.alternatives || [resource];
   const [selectedResourceId, setSelectedResourceId] = useState(String(initialResourceId || resource.resourceId));
@@ -206,6 +208,10 @@ export default function WeeklyAvailability({
             {displayRange}{cleanupMinutes ? " · 15 minutes reserved for staff cleanup" : ""}
           </li>;
         })}</ul>}
+        {showPricing && type === "equipment" && <ReservationQuote type={type} resourceId={activeResource.resourceId} periods={periods.map(p => {
+          const wall = (date, minute) => `${date}T${pad(Math.floor(minute / 60))}:${pad(minute % 60)}:00`;
+          return { start: wall(p.date, p.startMinute), end: wall(p.endDate, p.endMinute) };
+        })} />}
         {error && <p className={styles.error} role="alert">{error}</p>}
         <div className={styles.actions}>
           <button type="button" className={styles.secondaryButton} onClick={onClose}>{cancelLabel}</button>

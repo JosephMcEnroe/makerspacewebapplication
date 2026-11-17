@@ -18,7 +18,9 @@ html,
 body {
   max-width: 100vw;
   min-height: 100vh;
-  overflow-x: hidden;
+  /* clip instead of hidden: hidden turns html/body into a scroll container,
+     which stops the sidebar/header `position: sticky` from working */
+  overflow-x: clip;
 }
 
 body {

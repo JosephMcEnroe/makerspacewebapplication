@@ -1,5 +1,7 @@
+import { hasActiveMembership, MEMBERSHIP_REQUIRED } from "@/lib/membershipEligibility";
 import { getCalendarMonthSelection, getMonthlyReservationCount, isMonthlyPeriod, isMonthlyReservation, ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 import { businessTime } from "@/lib/businessTime";
+import { hasStudioCoverage } from "@/lib/discounts";
 import { getPool } from "@/lib/db";
 import { getSessionUser } from "@/lib/session";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -31,6 +33,7 @@ export default async function handler(req, res) {
   }
   const user = await getSessionUser(req);
   if (!user) return res.status(401).json({ error: "Sign in to edit a reservation." });
+  if (!hasActiveMembership(user)) return res.status(403).json(MEMBERSHIP_REQUIRED);
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
 
   const { type, reservationId, reservationIds } = req.body || {};
@@ -71,9 +74,9 @@ export default async function handler(req, res) {
     const resourceColumn = room ? "room_id" : "machine_id";
     const startColumn = room ? "start_date" : "start_date_time";
     const endColumn = room ? "end_date" : "end_date_time";
-    const statusClause = room ? "AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%')" : "";
+    const statusClause = room ? "AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%')" : "AND booking_active = true";
     const current = await client.query(
-      `SELECT ${idColumn} AS reservation_id, ${resourceColumn} AS resource_id, stripe_checkout_session_id, ${startColumn} AS start_time, ${endColumn} AS end_time FROM ${table}
+      `SELECT ${idColumn} AS reservation_id, ${resourceColumn} AS resource_id, stripe_checkout_session_id, ${startColumn} AS start_time, ${endColumn} AS end_time${room ? "" : ", paid_amount"} FROM ${table}
        WHERE ${idColumn} = ${room ? "ANY($1::integer[])" : "$1"} AND user_id = $2 ${statusClause} ORDER BY ${startColumn} FOR UPDATE`,
       [room ? lookupIds : Number(reservationId), user.user_id]
     );
@@ -117,6 +120,12 @@ export default async function handler(req, res) {
     const buffer = room && (monthly || current.rowCount > 1) ? "0 minutes" : room ? "15 minutes" : "0 minutes";
     const resourceId = Number(current.rows[0].resource_id);
     await client.query("SELECT pg_advisory_xact_lock(hashtext($1), $2)", [type, resourceId]);
+    if (!room && current.rows[0].stripe_checkout_session_id && current.rows[0].paid_amount != null
+      && Number(current.rows[0].paid_amount) === 0 && !(await hasStudioCoverage(user.user_id, normalizedPeriods, client))) {
+      await client.query("ROLLBACK");
+      transactionStarted = false;
+      return res.status(409).json({ error: "These times are outside your studio rental. Cancel this equipment reservation and rebook through checkout." });
+    }
     const preservePaidDuration = type === "equipment" && !!current.rows[0].stripe_checkout_session_id;
     if (preservePaidDuration) {
       if (normalizedPeriods.length !== 1) {
@@ -179,11 +188,16 @@ export default async function handler(req, res) {
       );
     } else if (normalizedPeriods.length === 1 || preservePaidDuration) {
       await client.query(
-        `UPDATE ${table} SET ${startColumn} = $3, ${endColumn} = $4 WHERE ${idColumn} = $1 AND user_id = $2`,
+        `UPDATE ${table} SET ${startColumn} = $3, ${endColumn} = $4, refund_eligible = false WHERE ${idColumn} = $1 AND user_id = $2`,
         [Number(reservationId), user.user_id, normalizedPeriods[0].start, normalizedPeriods[0].end]
       );
     } else {
-      await client.query(`DELETE FROM ${table} WHERE ${idColumn} = ANY($1::integer[]) AND user_id = $2`, [roomIds, user.user_id]);
+      if (room) {
+        await client.query(`DELETE FROM ${table} WHERE ${idColumn} = ANY($1::integer[]) AND user_id = $2`, [roomIds, user.user_id]);
+      } else {
+        await client.query(`UPDATE machine_booking SET booking_active = false, refund_eligible = false,
+          cancelled_at = NOW(), cancelled_by = $2 WHERE booking_id = ANY($1::integer[]) AND user_id = $2`, [roomIds, user.user_id]);
+      }
       for (const period of normalizedPeriods) {
         if (room) {
           await client.query(
@@ -192,7 +206,7 @@ export default async function handler(req, res) {
           );
         } else {
           await client.query(
-            `INSERT INTO "machine_booking" (machine_id, start_date_time, end_date_time, user_id) VALUES ($1, $2, $3, $4)`,
+            `INSERT INTO "machine_booking" (machine_id, start_date_time, end_date_time, user_id, refund_eligible, booking_active) VALUES ($1, $2, $3, $4, false, true)`,
             [resourceId, period.start, period.end, user.user_id]
           );
         }

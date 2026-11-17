@@ -1,4 +1,6 @@
 import Stripe from "stripe";
+import { getSessionUser } from "@/lib/session";
+import { resolveDiscount } from "@/lib/discounts";
 import { parse } from "cookie";
 import { query } from "@/lib/db";
 
@@ -75,7 +77,10 @@ export default async function handler(req, res) {
       ...(membershipType && { membership_type: membershipType }),
     };
 
+    const account = await getSessionUser(req);
+    const discount = await resolveDiscount({ user: account || user, productId: product?.id, subscription: mode === "subscription", stripe });
     const session = await stripe.checkout.sessions.create({
+      ...(discount && { discounts: [{ coupon: discount.couponId }] }),
       customer_email: user.email,
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
@@ -94,6 +99,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ url: session.url });
   } catch (err) {
     console.error("Product checkout session error:", err);
-    return res.status(500).json({ error: err.message || "Failed to create checkout session" });
+    return res.status(err.status || 500).json({ error: err.message || "Failed to create checkout session" });
   }
 }

@@ -2,11 +2,12 @@ import { useRef, useState } from "react";
 import { calendarMonthPeriod, getMonthlyStartAvailability, ROOM_BOOKING_ADVANCE_DAYS } from "@/lib/monthlyReservation";
 import { businessDateTime } from "@/lib/businessTime";
 import styles from "./WeeklyAvailability.module.css";
+import ReservationQuote from "./ReservationQuote";
 
 const pad = value => String(value).padStart(2, "0");
 const monthKey = value => `${value.getFullYear()}-${pad(value.getMonth() + 1)}`;
 
-export default function MonthlyAvailability({ resource, initialDate = "", initialMonths = 1, initialSelectedMonths, lockMonthCount = false, unavailableIntervals = [], excludedReservationIds = [], onConfirm, onClose, confirmLabel = "Purchase studio months", cancelLabel = "Keep Browsing" }) {
+export default function MonthlyAvailability({ resource, initialDate = "", initialMonths = 1, initialSelectedMonths, lockMonthCount = false, unavailableIntervals = [], excludedReservationIds = [], onConfirm, onClose, showPricing = false, confirmLabel = "Purchase studio months", cancelLabel = "Keep Browsing" }) {
   const alternatives = resource.alternatives || [resource];
   const [selectedResourceId, setSelectedResourceId] = useState(String(resource.initialResourceId || alternatives[0]?.resourceId || resource.resourceId));
   const activeResource = alternatives.find(item => String(item.resourceId) === selectedResourceId) || resource;
@@ -95,6 +96,7 @@ export default function MonthlyAvailability({ resource, initialDate = "", initia
       {lockMonthCount && normalizedMonths.length !== requiredMonthCount && <p role="alert">Select exactly {requiredMonthCount} months to keep the purchased rental length.</p>}
     </section>
     {!selectionAvailable && normalizedMonths.length > 0 && <p role="alert">Remove unavailable months before continuing.</p>}
+    {showPricing && <ReservationQuote type="rooms" resourceId={activeResource.resourceId} periods={periods} />}
     {error && <p className={styles.error} role="alert">{error}</p>}
     <div className={styles.actions}><button type="button" onClick={onClose} disabled={submitting} className={styles.secondaryButton}>{cancelLabel}</button>
       <button type="button" className={styles.primaryButton} disabled={!valid || submitting} onClick={confirm}>{submitting ? "Processing…" : confirmLabel}</button></div>
