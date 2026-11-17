@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     return res.status(403).json({ error: "Only admins can edit admin accounts." });
   }
 
-  const { user: userInput, membership: membershipInput } = req.body || {};
+  const { user: userInput, membership: membershipInput, rfid: rfidInput } = req.body || {};
 
   try {
     let updatedUser = existingUser;
@@ -67,7 +67,8 @@ export default async function handler(req, res) {
         status: membershipInput.status,
         period_start_date: membershipInput.period_start_date,
         period_end_date: membershipInput.period_end_date,
-        rfid_id: text(membershipInput.rfid_id, 64) || null,
+        // The card is changed separately (rfidInput below) so a stale form can't overwrite it
+        rfid_id: existingMembership?.rfid_id ?? null,
       };
       if (!ROLES.includes(details.role_of_membership)) return res.status(400).json({ error: "Choose a valid role." });
       if (!STATUSES.includes(details.status)) return res.status(400).json({ error: "Choose a valid status." });
@@ -78,6 +79,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "The membership end date must be after the start date." });
       }
       updatedMembership = await memberships.saveMembershipForUser(memberId, details);
+    }
+
+    if (rfidInput) {
+      if (!updatedMembership) return res.status(400).json({ error: "Create a membership before assigning an RFID card." });
+      updatedMembership = await memberships.updateRfidForUser(memberId, text(rfidInput.rfid_id, 64) || null);
     }
 
     return res.status(200).json({ ok: true, user: updatedUser, membership: updatedMembership });
