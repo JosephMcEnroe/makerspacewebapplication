@@ -54,6 +54,36 @@ export class classRepository {
         return rows;
     }
 
+    // Roster rows for the classes one instructor teaches. Pass a class id to
+    // narrow it to a single class; ownership is enforced in the query.
+    async findEnrollmentsForInstructor(userId, classId = null) {
+        const { rows } = await query(
+            `SELECT e.class_id, u.user_id, u.first_name, u.last_name, u.email, e.enrolled_at
+             FROM "class_enrollment" e
+             JOIN "class" c ON c.class_id = e.class_id
+             JOIN "users" u ON u.user_id = e.user_id
+             WHERE c.user_id = $1
+               AND ($2::integer IS NULL OR e.class_id = $2)
+             ORDER BY e.class_id, u.last_name, u.first_name`,
+            [userId, classId]
+        ).catch((error) => {
+            // class_enrollment is created lazily on the first class booking
+            if (error.code !== "42P01") throw error;
+            return { rows: [] };
+        });
+        return rows;
+    }
+
+    // Takes one student out of one class. The caller checks who owns the class.
+    async removeEnrollment(classId, userId) {
+        const { rowCount } = await query(
+            `DELETE FROM "class_enrollment"
+             WHERE class_id = $1 AND user_id = $2`,
+            [classId, userId]
+        );
+        return rowCount > 0;
+    }
+
     async findClass(classID) {
         const { rows } = await query(
             `SELECT class_id, name_of_class, user_id, description,
@@ -104,6 +134,19 @@ export class classRepository {
             classData.class_date,
             classData.max_capacity
         ]);
+        return rows[0] || null;
+    }
+
+    // The instructor dashboard may only change a class description; name,
+    // schedule, capacity and instructor stay with staff.
+    async updateClassDescription(classID, description) {
+        const { rows } = await query(
+            `UPDATE "class"
+             SET description = $2
+             WHERE class_id = $1
+             RETURNING class_id, name_of_class, description, class_date, max_capacity`,
+            [classID, description]
+        );
         return rows[0] || null;
     }
 

@@ -206,6 +206,230 @@
   margin-bottom: 0.2rem;
 }
 
+.cardAction {
+  margin-top: 0.65rem;
+  padding: 0.38rem 0.65rem;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #2b1916;
+  background-color: #ffffff;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.cardAction:hover {
+  background-color: #fdf3e7;
+  border-color: #e0cbb6;
+}
+
+.cardAction:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.cardActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.rowActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* Class roster dialog */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background-color: rgba(43, 25, 22, 0.55);
+}
+
+.modal {
+  width: min(520px, 100%);
+  max-height: min(80vh, 640px);
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(43, 25, 22, 0.3);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.modalTitle {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #2b1916;
+  margin: 0 0 0.2rem 0;
+}
+
+.modalMeta {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #8a6a52;
+  margin: 0;
+}
+
+.modalClose {
+  flex-shrink: 0;
+  padding: 0.4rem 0.75rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2b1916;
+  background-color: #ffffff;
+  border: 1px solid #e0cbb6;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.modalClose:hover {
+  background-color: #fdf3e7;
+  border-color: #f0a752;
+}
+
+.rosterError {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #b8412b;
+}
+
+.rosterList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rosterRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.85rem;
+  background-color: #fdf7f0;
+  border: 1px solid #f0e2d3;
+  border-radius: 10px;
+}
+
+.rosterName {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #2b1916;
+}
+
+.rosterEmail {
+  margin: 0.1rem 0 0 0;
+  font-size: 0.76rem;
+  color: #8a6a52;
+}
+
+.removeButton {
+  flex-shrink: 0;
+  padding: 0.4rem 0.8rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #b8412b;
+  background-color: #fdeeee;
+  border: 1px solid #f3c9c3;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.removeButton:hover:enabled {
+  background-color: #f9d9d4;
+}
+
+.removeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Edit class form */
+.fieldLabel {
+  display: block;
+  margin: 0 0 0.3rem 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #2b1916;
+}
+
+.fieldTextarea {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 0.84rem;
+  color: #2b1916;
+  background-color: #ffffff;
+  border: 1px solid #e0cbb6;
+  border-radius: 9px;
+  outline: none;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.fieldTextarea:focus {
+  border-color: #905e49;
+  box-shadow: 0 0 0 3px rgba(144, 94, 73, 0.12);
+}
+
+.fieldHint {
+  margin: 0 0 0.25rem 0;
+  font-size: 0.74rem;
+  color: #8a6a52;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.saveButton {
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #ffffff;
+  background-color: #2b1916;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.saveButton:hover:enabled {
+  background-color: #1e100f;
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
 @media (max-width: 760px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
