@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { serialize } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
+import { bannedRepository } from "@/Data_Access_Layer/bannedRepository";
 import { isValidEmail, isValidLoginPassword, normalizeEmail } from "@/lib/validation";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { verifyCsrfToken } from "@/lib/csrf";
@@ -90,6 +91,16 @@ export default async function handler(req, res) {
             return res.status(401).json({
                 ok: false,
                 error: "invalid email or password",
+            });
+        }
+
+        //Check if the user is banned or not before creating their session
+        const isBanned = await new bannedRepository().isUserBanned(user.user_id);
+
+        if(isBanned){
+            return res.status(403).json({
+                ok: false,
+                error: "Your account has been terminated. You are no longer permitted to access this application"
             });
         }
 

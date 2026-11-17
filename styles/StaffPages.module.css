@@ -482,3 +482,282 @@
     align-items: flex-start;
   }
 }
+
+/* CSS for termination */
+
+/* Membership termination action */
+
+.terminationAction {
+  margin-top: 1.5rem;
+}
+
+.terminationProfile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #1f1512;
+  border: 1px solid #4a352e;
+  border-radius: 10px;
+}
+
+.terminationProfile h3,
+.terminatedBanner h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f0a752;
+  margin-bottom: 0.35rem;
+}
+
+.terminationProfile p,
+.terminatedBanner p {
+  font-size: 0.75rem;
+  color: #8f7a6d;
+  max-width: 340px;
+  line-height: 1.5;
+}
+
+.terminateMembershipBtn {
+  flex-shrink: 0;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #f2a196;
+  background: transparent;
+  border: 1px solid #a65d50;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.terminateMembershipBtn:hover:not(:disabled) {
+  background-color: #3a1f1b;
+}
+
+.terminateMembershipBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Termination modal */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(5px);
+}
+
+.terminationModal {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #1c1310;
+  border: 1px solid #4a352e;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.modalClose {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 30px;
+  height: 30px;
+  color: #b3a094;
+  background: transparent;
+  border: 1px solid #4a352e;
+  border-radius: 50%;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.modalEyebrow {
+  margin-bottom: 0.5rem;
+  color: #c08a4f;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.terminationModal h2 {
+  margin: 0 2rem 1.25rem 0;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.terminationWarning {
+  padding: 0.85rem;
+  margin-bottom: 1.25rem;
+  background-color: #2f1c17;
+  border: 1px solid #75483b;
+  border-radius: 8px;
+}
+
+.terminationWarning strong {
+  display: block;
+  margin-bottom: 0.4rem;
+  color: #e7a18f;
+  font-size: 0.75rem;
+}
+
+.terminationWarning p {
+  color: #c2a99c;
+  font-size: 0.7rem;
+  line-height: 1.55;
+}
+
+.modalField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: #c08a4f;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.uploadArea {
+  display: flex;
+  min-height: 105px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 1rem;
+  color: #f0a752;
+  background-color: #1f1512;
+  border: 1px dashed #75502f;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.uploadArea:hover {
+  background-color: #2a1b17;
+}
+
+.uploadArea strong {
+  font-size: 0.75rem;
+}
+
+.uploadArea small {
+  color: #8f7a6d;
+  font-size: 0.65rem;
+}
+
+.uploadIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #75502f;
+  border-radius: 50%;
+  font-size: 1.1rem;
+}
+
+.photoPreview {
+  width: 100%;
+  max-height: 150px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.terminationTextarea {
+  width: 100%;
+  min-height: 95px;
+  padding: 0.75rem;
+  color: #fff;
+  background-color: #2a1b17;
+  border: 1px solid #75502f;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.75rem;
+  resize: vertical;
+}
+
+.terminationTextarea:focus {
+  outline: none;
+  border-color: #f0a752;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding-top: 1rem;
+  border-top: 1px solid #3a2924;
+}
+
+.confirmTerminateBtn {
+  padding: 0.65rem 1rem;
+  color: #2b1c1c;
+  background-color: #a65d50;
+  border: 1px solid #a65d50;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.confirmTerminateBtn:hover:not(:disabled) {
+  background-color: #bd7163;
+}
+
+.confirmTerminateBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Terminated account banner */
+
+.terminatedBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #3a211c;
+  border: 1px solid #805044;
+  border-radius: 9px;
+}
+
+.terminatedBadge {
+  flex-shrink: 0;
+  padding: 0.3rem 0.6rem;
+  color: #e7a18f;
+  background-color: #552e27;
+  border: 1px solid #805044;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+@media (max-width: 640px) {
+  .terminationProfile,
+  .terminatedBanner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+  }
+
+  .modalActions button {
+    width: 100%;
+  }
+}
+
