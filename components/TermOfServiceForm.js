@@ -1,14 +1,18 @@
 
 import { useRouter } from "next/router";
 import { useState, useRef, useEffect } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import dynamic from "next/dynamic";
 import { useAuth } from "@/hooks/useAuth";
 import styles from "./TermOfServiceForm.module.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url
-).toString();
+// Load PDF viewer ONLY in the browser
+const PdfViewer = dynamic(
+    () => import("./Pdfviewer"),
+    {
+        ssr: false,
+        loading: () => <p>Loading TOS viewer...</p>,
+    }
+);
 
 export default function TermOfServiceForm() {
     const router = useRouter();
@@ -79,8 +83,11 @@ export default function TermOfServiceForm() {
     async function handleAccept() {
         if (!reachedBottom || !accepted ) return;
 
-        //saved data after filling register form and bring to tos page
         const savedData = sessionStorage.getItem("pendingRegister");
+        if (!savedData) {
+            console.error("Pending registration data not found.");
+            return;
+        }
 
         try {
 
@@ -93,9 +100,8 @@ export default function TermOfServiceForm() {
                 saveddata.email,
                 saveddata.password
             );
-            if (!result) {
-                return;
-            }
+            
+            if (!result) return;
 
             // Go to dashboard
             router.push("/dashboard");
@@ -114,34 +120,14 @@ export default function TermOfServiceForm() {
                 onScroll={handleScroll}
             >
                 <div ref={contentRef}>
-                    <Document
+                    <PdfViewer
                         file="/tos/TOS.pdf"
+                        pageWidth={pageWidth}
+                        numPages={numPages}
                         onLoadSuccess={({ numPages }) =>
                             setNumPages(numPages)
                         }
-                        onLoadError={(error) =>
-                            console.error("PDF error:", error)
-                        }
-                        loading={<p>Loading TOS...</p>}
-                        error={<p>Unable to load TOS PDF.</p>}
-                    >
-                        {Array.from(
-                            { length: numPages || 0 },
-                            (_, index) => (
-                                <div
-                                    key={index}
-                                    className={styles.pdfPage}
-                                >
-                                    <Page
-                                        pageNumber={index + 1}
-                                        width={pageWidth}
-                                        renderTextLayer={false}
-                                        renderAnnotationLayer={false}
-                                    />
-                                </div>
-                            )
-                        )}
-                    </Document>
+                    />
                 </div>
             </div>
 
