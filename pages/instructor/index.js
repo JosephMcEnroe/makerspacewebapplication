@@ -1,13 +1,13 @@
 import { Fragment, useMemo, useState } from "react";
 import Head from "next/head";
 import Navbar from "@/components/Navbar";
+import ResourceCard from "@/components/ResourceCard";
 import { useAuthContext } from "@/context/AuthContext";
 import styles from "@/styles/InstructorDashboard.module.css";
 import { classRepository } from "@/Data_Access_Layer/classRepository";
 import { requireInstructorPage } from "@/lib/instructorAuth";
 import { buildInstructorClasses, studentsLabel } from "@/lib/instructorClasses";
 import { businessDateTime } from "@/lib/businessTime";
-import { DEFAULT_RESOURCE_IMAGE } from "@/lib/resourceImages";
 
 // Only instructors can open this page; everyone else is sent to their own dashboard
 export async function getServerSideProps({ req, resolvedUrl }) {
@@ -41,28 +41,23 @@ function dropStudent(item, classId, studentId) {
 }
 
 function ClassCard({ item, onOpenRoster, onEdit }) {
-  const hasPhoto = item.image && item.image !== DEFAULT_RESOURCE_IMAGE;
-
   return (
-    <article className={styles.card}>
-      <div className={`${styles.cardImage} ${hasPhoto ? "" : styles.cardImageFallback}`}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={item.image || DEFAULT_RESOURCE_IMAGE} alt="" className={styles.cardImageElement} />
+    <ResourceCard
+      name={item.name}
+      image={item.image}
+      description={item.timeRange}
+      time={item.cardDateLabel}
+      spots={item.studentsLabel}
+    >
+      <div className={styles.cardActions}>
+        <button type="button" className={styles.cardAction} onClick={() => onOpenRoster(item)}>
+          View Students
+        </button>
+        <button type="button" className={styles.cardAction} onClick={() => onEdit(item)}>
+          Edit Description
+        </button>
       </div>
-      <div className={styles.cardBody}>
-        <p className={styles.cardTime}>{item.timeRange}</p>
-        <h3 className={styles.cardName}>{item.name}</h3>
-        <p className={styles.cardMeta}>{item.cardDateLabel} · {item.studentsLabel}</p>
-        <div className={styles.cardActions}>
-          <button type="button" className={styles.cardAction} onClick={() => onOpenRoster(item)}>
-            View Students
-          </button>
-          <button type="button" className={styles.cardAction} onClick={() => onEdit(item)}>
-            Edit Description
-          </button>
-        </div>
-      </div>
-    </article>
+    </ResourceCard>
   );
 }
 

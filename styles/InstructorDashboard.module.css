@@ -51,64 +51,6 @@
   gap: 1rem;
 }
 
-/* Class card: photo on top, orange detail block underneath */
-.card {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background-color: #f0a752;
-  border-radius: 12px;
-}
-
-.cardImage {
-  aspect-ratio: 16 / 9;
-  background-color: #e9d9c8;
-}
-
-.cardImageFallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #d8c4ae 0%, #c8b09a 100%);
-}
-
-.cardImageElement {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.cardImageFallback .cardImageElement {
-  object-fit: contain;
-  padding: 0.5rem;
-}
-
-.cardBody {
-  padding: 0.7rem 0.85rem 0.85rem;
-}
-
-.cardTime {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #6b3f18;
-  margin: 0 0 0.25rem 0;
-}
-
-.cardName {
-  font-size: 0.9rem;
-  font-weight: 800;
-  color: #2b1916;
-  margin: 0 0 0.3rem 0;
-}
-
-.cardMeta {
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #5c3a18;
-  margin: 0;
-}
-
 .empty {
   padding: 1.4rem 1rem;
   font-size: 0.85rem;
@@ -207,8 +149,7 @@
 }
 
 .cardAction {
-  margin-top: 0.65rem;
-  padding: 0.38rem 0.65rem;
+  padding: 0.38rem 0.4rem;
   font: inherit;
   font-size: 0.7rem;
   font-weight: 700;
@@ -231,9 +172,10 @@
 }
 
 .cardActions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.4rem;
+  margin-top: 0.9rem;
 }
 
 .rowActions {

@@ -28,7 +28,7 @@ function ResourceImage({ image, name }) {
   );
 }
 
-export default function ResourceCard({ name, image, description, time, spots, price, unavailable, unavailableNote, onSelect }) {
+export default function ResourceCard({ name, image, description, time, spots, price, unavailable, unavailableNote, onSelect, children }) {
   const source = image || DEFAULT_RESOURCE_IMAGE;
   const handleKeyDown = (event) => {
     if (onSelect && (event.key === "Enter" || event.key === " ")) {
@@ -63,6 +63,7 @@ export default function ResourceCard({ name, image, description, time, spots, pr
           </p>
         )}
         {onSelect && <p className={styles.reserveHint}>Select to view available times</p>}
+        {children}
       </div>
     </div>
   );
