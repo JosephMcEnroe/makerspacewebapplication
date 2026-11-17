@@ -60,6 +60,19 @@
   box-shadow: 0 0 0 3px rgba(144, 94, 73, 0.1);
 }
 
+.inputInvalid,
+.inputInvalid:focus {
+  border-color: #b8412b;
+  box-shadow: 0 0 0 3px rgba(184, 65, 43, 0.12);
+}
+
+.fieldError {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #b8412b;
+}
+
 .actions {
   display: flex;
   justify-content: flex-start;
@@ -100,6 +113,28 @@
 
 .saveBtn:hover {
   background-color: #1e100f;
+}
+
+/* Nothing edited yet (or a save is in flight) */
+.saveBtn:disabled,
+.saveBtn:disabled:hover {
+  background-color: #b7aca3;
+  cursor: not-allowed;
+}
+
+.statusSuccess,
+.statusError {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.statusSuccess {
+  color: #2f6b3a;
+}
+
+.statusError {
+  color: #b8412b;
 }
 
 @media (max-width: 640px) {
