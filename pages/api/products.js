@@ -1,4 +1,6 @@
 import Stripe from "stripe";
+import { getSessionUser } from "@/lib/session";
+import { isStudent, loadDiscountCoupon, discountedProduct, STUDENT_COUPON } from "@/lib/discounts";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -8,6 +10,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    res.setHeader("Cache-Control", "private, no-store");
+    const user = await getSessionUser(req);
+    const coupon = isStudent(user) ? await loadDiscountCoupon(STUDENT_COUPON, stripe) : null;
     const allProducts = [];
 
     for await (const product of stripe.products.list({
@@ -67,13 +72,13 @@ export default async function handler(req, res) {
     // console.log("=============================");
 
     return res.status(200).json({
-      products: allProducts,
+      products: allProducts.map(product => discountedProduct(product, coupon)),
       count: allProducts.length,
     });
   } catch (error) {
     console.error("Stripe error:", error);
 
-    return res.status(500).json({
+    return res.status(error.status || 500).json({
       error: error.message,
     });
   }

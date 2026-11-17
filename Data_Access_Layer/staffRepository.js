@@ -44,7 +44,7 @@ export class StaffRepository {
                   WHERE end_date >= NOW()
                     AND (status IS NULL OR LOWER(status) NOT LIKE 'cancel%'))
               + (SELECT COUNT(*) FROM "machine_booking"
-                  WHERE end_date_time >= NOW()) AS active_reservations,
+                  WHERE end_date_time >= NOW() AND booking_active = true) AS active_reservations,
                 (SELECT COUNT(*) FROM "membership"
                   WHERE status = 'ACTIVE') AS active_members,
                 (SELECT COUNT(*) FROM "class"
@@ -72,9 +72,12 @@ export class StaffRepository {
             ),
             query(
                 `SELECT b.booking_id AS id, m.name, b.start_date_time AS start_at,
-                    b.end_date_time AS end_at, b.stripe_checkout_session_id, NULL AS status
+                    b.end_date_time AS end_at, b.stripe_checkout_session_id,
+                    CASE WHEN b.booking_active THEN 'active' ELSE 'cancelled' END AS status,
+                    r.amount AS refund_amount, r.status AS refund_status
                  FROM "machine_booking" b
                  LEFT JOIN "machine" m ON m.machine_id = b.machine_id
+                 LEFT JOIN equipment_refund r ON r.booking_id = b.booking_id
                  WHERE b.user_id = $1
                  ORDER BY b.start_date_time DESC`,
                 [userId]

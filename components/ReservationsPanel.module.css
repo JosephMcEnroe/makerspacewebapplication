@@ -197,7 +197,88 @@
   background: #fffaf3;
   box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
   overflow-wrap: anywhere;
+  max-height: 85vh;
+  overflow-y: auto;
 }
+
+.confirmDialog::backdrop {
+  background: rgba(31, 20, 16, 0.68);
+}
+
+dialog.confirmDialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(560px, calc(100vw - 2rem));
+  height: fit-content;
+  max-height: min(85vh, 850px);
+  padding: 0;
+  border: 1px solid #e2d5c7;
+  border-radius: 20px;
+  color: #2b1916;
+}
+
+.dialogHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid #eadfd3;
+}
+
+.dialogEyebrow {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #905e49;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.dialogClose {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e2d5c7;
+  border-radius: 50%;
+  background: #fff;
+  color: #6b5347;
+  cursor: pointer;
+  font-size: 1.3rem;
+}
+
+.dialogBody { padding: 1.25rem 1.5rem; }
+.bookingSummary { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.25rem; }
+.bookingSummary span { font-size: 0.85rem; color: #905e49; }
+.refundSummary { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid #e7d8c5; border-radius: 12px; overflow: hidden; }
+.refundSummary > div { display: flex; flex-direction: column; gap: 0.6rem; padding: 1rem; background: #fff; }
+.refundSummary > div:first-child { background: #fdf0dc; border-right: 1px solid #e7d8c5; }
+.refundSummary span { color: #6b5347; font-size: 0.75rem; }
+.refundSummary strong { font-size: 1.65rem; color: #2b1916; }
+.hourBreakdown { border: 1px solid #eadfd3; border-radius: 10px; padding: 0.85rem; }
+.hourBreakdown summary { cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #6b5347; }
+.hourBreakdown ul { list-style: none; margin: 0.6rem 0 0; padding: 0; }
+.hourBreakdown li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.75rem 0; border-top: 1px solid #eadfd3; font-size: 0.8rem; }
+.hourBreakdown small { display: block; color: #905e49; margin-top: 0.3rem; }
+.confirmDialog .releaseNote { font-size: 0.8rem; margin-bottom: 0; }
+.confirmDialog .dialogError { color: #a12d26; padding: 0.75rem; background: #fff0ed; border-radius: 8px; }
+.dialogFooter { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.65rem; padding: 1rem 1.5rem; border-top: 1px solid #eadfd3; background: #fff; }
+.dialogFooter button { padding: 0.65rem 1rem; }
+.refundBadge { margin: 0.25rem 0 0; padding: 0.35rem 0.65rem; background: #fdf1e2; border-radius: 8px; color: #795038; font-size: 0.78rem; }
+.nonRefundable { margin: 0; color: #905e49; font-size: 0.78rem; }
+.historySection { border: 1px solid #e2d0ba; border-radius: 14px; background: rgba(255, 250, 243, 0.65); }
+.historySummary { display: flex; align-items: center; flex-wrap: wrap; gap: 0.65rem; padding: 1rem 1.2rem; cursor: pointer; list-style: none; }
+.historySummary::-webkit-details-marker { display: none; }
+.historySummary::before { content: '+'; font-size: 1.3rem; color: #905e49; }
+.historySection[open] > .historySummary::before { content: '−'; }
+.historySummary h2 { margin: 0; color: #2b1916; font-size: 1rem; font-weight: 700; }
+.historyCount { padding: 0.15rem 0.5rem; background: #f0e0cc; color: #795038; font-size: 0.75rem; border-radius: 99px; }
+.historyAttention { color: #795038; font-size: 0.75rem; }
+.historyBody { padding: 0 1.2rem 1.2rem; }
+.historyPagination { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+.historyPagination > span { font-size: 0.8rem; color: #905e49; margin-right: auto; }
 
 .confirmDialog h2 {
   margin: 0;
@@ -212,6 +293,10 @@
 }
 
 @media (max-width: 640px) {
+  .dialogHeader, .dialogBody { padding: 1.1rem; }
+  .dialogFooter { padding: 1rem; }
+  .dialogFooter button { flex: 1 1 100%; }
+  .refundSummary > div { padding: 0.85rem; }
   .cardGrid {
     grid-template-columns: 1fr;
   }

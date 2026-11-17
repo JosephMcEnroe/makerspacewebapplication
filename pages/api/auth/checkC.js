@@ -1,3 +1,4 @@
+import { hasActiveMembership } from "@/lib/membershipEligibility";
 import { parse } from "cookie";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { formatYear } from "@/lib/format";
@@ -37,6 +38,7 @@ export default async function handler(req, res) {
             user: {
                 id: user.user_id,
                 status: user.status,
+                membershipActive: hasActiveMembership(user),
                 role: user.role_of_membership,
                 firstName: user.first_name,
                 lastName: user.last_name,

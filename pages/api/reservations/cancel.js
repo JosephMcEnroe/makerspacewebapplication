@@ -11,7 +11,8 @@ export default async function handler(req, res) {
   if (!user) return res.status(401).json({ error: "Sign in to cancel a reservation." });
   if (!verifyCsrfToken(req)) return res.status(403).json({ error: "Invalid or missing CSRF token." });
 
-  const { type, reservationId, reservationIds } = req.body || {};
-  const { status, body } = await cancelUserReservation({ userId: user.user_id, type, reservationId, reservationIds });
+  const { type, reservationId, reservationIds, preview, quote } = req.body || {};
+  res.setHeader("Cache-Control", "no-store");
+  const { status, body } = await cancelUserReservation({ userId: user.user_id, actorId: user.user_id, type, reservationId, reservationIds, preview: preview === true, quote });
   return res.status(status).json(body);
 }

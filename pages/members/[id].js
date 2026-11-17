@@ -14,6 +14,8 @@ import { businessDateTime } from "@/lib/businessTime";
 import { formatDate, formatTime, formatTimeRange, toISODate } from "@/lib/format";
 import { reservationCustomerEndDateTime } from "@/lib/reservationPeriods";
 import { staffRequest } from "@/lib/staffApi";
+import EquipmentCancellationDialog from "@/components/EquipmentCancellationDialog";
+import { refundLabel } from "@/lib/refundDisplay";
 
 const ROLES = ["MEMBER", "STUDENT", "INSTRUCTOR", "STAFF", "ADMIN"];
 const TYPE_LABELS = { room: "Room", equipment: "Equipment", class: "Class" };
@@ -43,6 +45,7 @@ export async function getServerSideProps({ req, resolvedUrl, params }) {
         id: reservation.id,
         type: reservation.type,
         name: reservation.name || TYPE_LABELS[reservation.type],
+        refundLabel: cancelled && reservation.type === "equipment" ? refundLabel(reservation.refund_status, reservation.refund_amount) : null,
         time: reservation.type === "class"
           ? [formatDate(reservation.start_at), formatTime(reservation.start_at)].filter(Boolean).join(" · ")
           : formatTimeRange(reservation.start_at, reservation.type === "equipment"
@@ -95,6 +98,7 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
   const [plan, setPlan] = useState(membership);
   const [saving, setSaving] = useState(null);
   const [cancellingKey, setCancellingKey] = useState(null);
+  const [equipmentCancellation, setEquipmentCancellation] = useState(null);
   const [message, setMessage] = useState(router.query.booked ? { type: "success", text: "Reservation created." } : null);
 
   const refresh = () => router.replace(router.asPath.split("?")[0], undefined, { scroll: false });
@@ -124,6 +128,7 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
   };
 
   const cancelReservation = async (reservation) => {
+    if (reservation.type === "equipment") { setEquipmentCancellation(reservation); return; }
     if (!window.confirm(`Cancel ${reservation.name} (${reservation.time}) for ${member.first_name}?`)) return;
     setCancellingKey(reservation.key);
     setMessage(null);
@@ -150,6 +155,10 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
 
   return (
     <>
+      {equipmentCancellation && <EquipmentCancellationDialog endpoint="/api/staff/reservations/cancel"
+        bookingId={equipmentCancellation.id} memberId={member.id} name={equipmentCancellation.name}
+        time={equipmentCancellation.time} onClose={() => setEquipmentCancellation(null)}
+        onComplete={() => { setEquipmentCancellation(null); setMessage({ type: "success", text: "Reservation cancelled. Check its refund status in history." }); refresh(); }} />}
       <Head>
         <title>{`${member.first_name} ${member.last_name} - Members - The Crafty Studio`}</title>
       </Head>
@@ -292,6 +301,8 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
                     <div key={reservation.key} className={styles.reservationItem}>
                       <div>
                         <p className={styles.reservationName}>{reservation.name}</p>
+                        {reservation.refundLabel && <p role="status">{reservation.refundLabel}</p>}
+                        {reservation.refundLabel && <p role="status">{reservation.refundLabel}</p>}
                         <p className={styles.reservationMeta}>{TYPE_LABELS[reservation.type]} · {reservation.time}</p>
                       </div>
                       <span className={`${styles.badge} ${reservation.state === "cancelled" ? styles.badgeInactive : styles.badgeNone}`}>
