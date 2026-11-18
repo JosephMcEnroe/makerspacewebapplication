@@ -21,6 +21,7 @@ export async function getServerSideProps({ req, resolvedUrl }) {
     phone: row.phone_number || "",
     role: row.role_of_membership || null,
     status: row.status || null,
+    isTerminated: row.is_terminated === true,
     periodEnd: formatDate(row.period_end_date),
     waiverSigned: row.waiver_status === true,
   }));
@@ -83,7 +84,8 @@ export default function MembersPage({ members, navRole }) {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return members.filter((member) => {
-      if (statusFilter === "none" ? member.status : statusFilter !== "all" && member.status !== statusFilter) return false;
+      const status = member.isTerminated ? "TERMINATED" : member.status;
+      if (statusFilter === "none" ? status : statusFilter !== "all" && status !== statusFilter) return false;
       return !term || [member.name, member.email, member.phone].some((value) => value.toLowerCase().includes(term));
     });
   }, [members, search, statusFilter]);
@@ -134,6 +136,7 @@ export default function MembersPage({ members, navRole }) {
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
                 <option value="none">No membership</option>
+                <option value="TERMINATED">Terminated</option>
               </select>
             </div>
 
@@ -164,7 +167,11 @@ export default function MembersPage({ members, navRole }) {
                           {member.phone && <div>{member.phone}</div>}
                         </td>
                         <td>{member.role ? <span className={`${styles.badge} ${styles.badgeRole}`}>{member.role.toLowerCase()}</span> : <span className={styles.muted}>—</span>}</td>
-                        <td><MembershipStatusBadge status={member.status} /></td>
+                        <td>
+                          {member.isTerminated
+                            ? <span className={styles.terminatedBadge}>Terminated</span>
+                            : <MembershipStatusBadge status={member.status} />}
+                        </td>
                         <td className={styles.muted}>{member.periodEnd || "—"}</td>
                         <td>
                           <div className={styles.rowActions}>

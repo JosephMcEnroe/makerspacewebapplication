@@ -27,7 +27,10 @@ export class UserRepository {
         const { rows } = await query(
             `SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone_number,
                 u.waiver_status, m.membership_id, m.role_of_membership, m.status,
-                m.period_start_date, m.period_end_date
+                m.period_start_date, m.period_end_date,
+                EXISTS (
+                    SELECT 1 FROM banned b WHERE b.user_id = u.user_id
+                ) AS is_terminated
              FROM "users" u
              LEFT JOIN "membership" m ON m.user_id = u.user_id
              ORDER BY u.last_name, u.first_name, u.email`
