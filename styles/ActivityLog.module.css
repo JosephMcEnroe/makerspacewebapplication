@@ -1,0 +1,171 @@
+.page {
+  background-color: #1c1310;
+  min-height: 100vh;
+}
+
+.content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+}
+
+.backLink {
+  display: inline-block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #f0a752;
+  text-decoration: none;
+  margin-bottom: 1rem;
+}
+
+.headerRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.heading {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.35rem 0;
+}
+
+.subheading,
+.muted {
+  font-size: 0.85rem;
+  color: #8f7a6d;
+  margin: 0;
+}
+
+.error {
+  color: #d9695f;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.toggle {
+  display: inline-flex;
+  background-color: #2f201c;
+  border: 1px solid #4a352e;
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.toggleButton {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #b3a094;
+  cursor: pointer;
+}
+
+.toggleActive {
+  background-color: #f0a752;
+  color: #1c1310;
+}
+
+.panel {
+  padding: 1.5rem 1.6rem;
+  background-color: #2f201c;
+  border: 1px solid #4a352e;
+  border-radius: 14px;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.panelTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  color: #e8dcd4;
+}
+
+.table th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #8f7a6d;
+  padding: 0 0.75rem 0.6rem 0;
+  border-bottom: 1px solid #4a352e;
+}
+
+.table td {
+  padding: 0.65rem 0.75rem 0.65rem 0;
+  border-bottom: 1px solid #3f2c27;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.mono {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.8rem;
+  color: #b3a094;
+}
+
+.memberLink {
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.memberLink:hover {
+  text-decoration: underline;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.granted {
+  background-color: rgba(111, 191, 115, 0.15);
+  color: #6fbf73;
+}
+
+.denied {
+  background-color: rgba(217, 105, 95, 0.15);
+  color: #d9695f;
+}
+
+@media (max-width: 900px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

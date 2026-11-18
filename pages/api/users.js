@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
   try {
     const result = await query(`
-      SELECT user_id, first_name, email, rfid_id
+      SELECT user_id, first_name, last_name, email
       FROM users
     `);
 

@@ -3,9 +3,13 @@
   flex-direction: column;
   min-height: 100vh;
   background-color: #fbe8c3;
-  /* Height of the sticky header, so the sidebar can pin right below it.
-     Keep in sync with Navbar.module.css / StaffNavbar.module.css. */
-  --navbar-height: 108px;
+  --dashboard-header-height: 108px;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .body {
@@ -24,9 +28,9 @@
   /* Pin the sidebar below the header and let it scroll on its own so it never
      slides out of view with the page content */
   position: sticky;
-  top: var(--navbar-height);
+  top: var(--dashboard-header-height);
   align-self: flex-start;
-  height: calc(100vh - var(--navbar-height));
+  height: calc(100vh - var(--dashboard-header-height));
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -42,6 +46,10 @@
   display: none;
 }
 
+.mainContent :global(#waiver) {
+  scroll-margin-top: calc(var(--dashboard-header-height) + 1rem);
+}
+
 @media (max-width: 900px) {
   .body {
     flex-direction: column;
@@ -54,7 +62,7 @@
   .mobileNavigation {
     position: sticky;
     z-index: 90;
-    top: var(--navbar-height);
+    top: var(--dashboard-header-height);
     display: block;
     background: #fff;
     border-bottom: 1px solid #eadfd4;
@@ -63,17 +71,18 @@
   .mainContent {
     padding: 1.75rem 1.5rem;
   }
+
+  .mainContent :global(#waiver) {
+    scroll-margin-top: calc(var(--dashboard-header-height) + 5rem);
+  }
 }
 
 @media (max-width: 640px) {
   .pageContainer {
-    --navbar-height: 65px;
+    --dashboard-header-height: 65px;
   }
 
   .mobileNavigation {
-    position: sticky;
-    z-index: 90;
-    top: var(--navbar-height);
     box-shadow: 0 4px 18px rgba(43, 25, 22, 0.06);
   }
 

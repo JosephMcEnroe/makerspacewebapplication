@@ -22,7 +22,8 @@ export default async function handler(req, res) {
     const userQuery = new UserRepository();
     const mpQuery = new membershipRepositry();
     const memberQuery = new memberRepositry();
-
+    
+    console.log("Signup data pushed to database");
     console.log("==== SIGNUP REQUEST ====");
     console.log("Method:", req.method);
 

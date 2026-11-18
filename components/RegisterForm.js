@@ -13,7 +13,7 @@ export default function RegisterForm() {
 
   const {
     user,
-    signup,
+    //signup,
     loginloading,
     error,
   } = useAuth();
@@ -46,12 +46,22 @@ export default function RegisterForm() {
       setFormError("Password must be at least 8 characters");
       return;
     }
+    sessionStorage.setItem(
+      "pendingRegister",
+      JSON.stringify({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+      })
+    );
 
-    const result = await signup(formData.firstName, formData.lastName, formData.email, formData.password);
+    router.push("/tos");
+    //const result = await signup(formData.firstName, formData.lastName, formData.email, formData.password);
 
-    if(!result){
-      return;
-    }
+    // if (!result) {
+    //   return;
+    // }
 
     // EMAIL VERIFICATION DISABLED - commented out for now for easier development
     // (Resend needs a verified domain before prod). Swap the DEV ONLY line for this
@@ -59,7 +69,8 @@ export default function RegisterForm() {
     // setPendingEmail(result.email);
 
     // DEV ONLY - signup logs the user straight in
-    router.push("/dashboard");
+    //router.push("/dashboard");
+    router.push("/tos");
   };
 
   if (pendingEmail) {

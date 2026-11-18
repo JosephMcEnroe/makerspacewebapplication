@@ -129,7 +129,7 @@ export default async function handler(req, res) {
       );
     }
 
-    // 6. Return result to Raspberry Pi
+    // 7. Return result to Raspberry Pi
     return res.status(200).json({
       ok: decision === "green",
       status: decision,

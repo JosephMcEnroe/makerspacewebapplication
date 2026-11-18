@@ -1,0 +1,23 @@
+
+.tosContainer {
+    min-height: 100vh;
+    background: var(--color-bg);
+}
+
+.tosMain {
+    max-width: 1120px;
+    margin: auto;
+    padding: 35px 20px;
+}
+
+.tosMain h2 {
+    font-family: "Oswald", sans-serif;
+    font-size: 32px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.tosMain > p {
+    margin-bottom: 24px;
+    color: #65483b;
+}
