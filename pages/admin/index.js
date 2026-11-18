@@ -31,24 +31,10 @@ const formatMoney = (value) => new Intl.NumberFormat("en-US", {
   style: "currency", currency: "USD",
 }).format(value);
 
-// Dummy data — replace with actual daily new-membership counts from the database.
-const MEMBERSHIP_ENTRIES = [
-  { label: "Mar 7", value: 5 },
-  { label: "Mar 8", value: 8 },
-  { label: "Mar 9", value: 6 },
-  { label: "Mar 10", value: 9 },
-  { label: "Mar 11", value: 7 },
-  { label: "Mar 12", value: 10 },
-];
-
-// Dummy data — replace with real machine usage/utilization stats from the database.
-const MACHINE_USAGE = [
-  { name: "3D Printer", subtitle: "34.0 hrs this week", percent: 85 },
-  { name: "Laser Cutter", subtitle: "28.8 hrs this week", percent: 72 },
-  { name: "CNC Mill", subtitle: "31.2 hrs this week", percent: 78 },
-  { name: "Vinyl Cutter", subtitle: "23.2 hrs this week", percent: 58 },
-  { name: "Wood Lathe", subtitle: "24.8 hrs this week", percent: 62 },
-];
+// The API returns Eastern calendar dates without a time or offset.
+const entryDateFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: "UTC", month: "short", day: "numeric",
+});
 
 const DollarIcon = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -84,6 +70,10 @@ export default function AdminDashboardPage() {
   const [revenueLoading, setRevenueLoading] = useState(true);
   const [revenueError, setRevenueError] = useState(null);
   const [refresh, setRefresh] = useState(0);
+  const [operations, setOperations] = useState(null);
+  const [operationsLoading, setOperationsLoading] = useState(true);
+  const [operationsError, setOperationsError] = useState(null);
+  const [operationsRefresh, setOperationsRefresh] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -105,7 +95,32 @@ export default function AdminDashboardPage() {
     return () => controller.abort();
   }, [refresh]);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    async function loadOperations() {
+      setOperationsLoading(true);
+      setOperationsError(null);
+      try {
+        const response = await fetch("/api/admin/operations", { signal: controller.signal });
+        if (!response.ok) throw new Error("Could not load operations data.");
+        const result = await response.json();
+        if (!controller.signal.aborted) setOperations(result);
+      } catch {
+        if (!controller.signal.aborted) setOperationsError("Could not load operations data.");
+      } finally {
+        if (!controller.signal.aborted) setOperationsLoading(false);
+      }
+    }
+    loadOperations();
+    return () => controller.abort();
+  }, [operationsRefresh]);
+
   const revenueValue = (key) => (revenue ? formatMoney(revenue[key]) : "—");
+  const dailyEntries = operations?.dailyEntries.map(({ date, count }) => ({
+    label: entryDateFormatter.format(new Date(date)),
+    value: count,
+  }));
+  const operationsPlaceholder = operationsLoading ? "Loading operations…" : "Operations data unavailable.";
 
   return (
     <>
@@ -144,6 +159,16 @@ export default function AdminDashboardPage() {
             <StatCard label="This Month" value={revenueValue("thisMonth")} icon={DollarIcon} />
           </div>
 
+          <div className={styles.revenueToolbar}>
+            <p className={styles.revenueNotice} role="status">
+              {operationsLoading ? "Loading operations…" : operationsError && operations ? "Showing previous results." : ""}
+            </p>
+            <button className={styles.refreshButton} disabled={operationsLoading} onClick={() => setOperationsRefresh((value) => value + 1)}>
+              Refresh operations
+            </button>
+          </div>
+          {operationsError && <p className={styles.revenueError} role="alert">{operationsError}</p>}
+
           <div className={styles.chartsGrid}>
             <ChartCard title="Revenue Trend" subtitle="Last 7 days · USD">
               {revenue ? (
@@ -152,16 +177,18 @@ export default function AdminDashboardPage() {
                 <p className={styles.revenueNotice}>{revenueLoading ? "Loading revenue..." : "Revenue unavailable"}</p>
               )}
             </ChartCard>
-            {/* Dummy data — see MEMBERSHIP_ENTRIES above; wire up to the database once it exists */}
             <ChartCard title="Daily Membership Entries" subtitle="Last 6 days">
-              <BarChart data={MEMBERSHIP_ENTRIES} />
+              {dailyEntries ? <BarChart data={dailyEntries} /> : <p className={styles.revenueNotice}>{operationsPlaceholder}</p>}
             </ChartCard>
           </div>
 
-          {/* Dummy data — see MACHINE_USAGE above; wire up to the database once it exists */}
           <div className={styles.usageSection}>
-            <ChartCard title="Machine Usage Statistics" subtitle="Today's Utilization">
-              <MachineUsageList machines={MACHINE_USAGE} />
+            <ChartCard title="Machine Usage Statistics" subtitle="Checked-in reservation hours today">
+              {operations?.machines.length ? (
+                <MachineUsageList machines={operations.machines} />
+              ) : (
+                <p className={styles.revenueNotice}>{operations ? "No machines found." : operationsPlaceholder}</p>
+              )}
             </ChartCard>
           </div>
 

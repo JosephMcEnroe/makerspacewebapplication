@@ -11,7 +11,7 @@ const MAX_BAR_WIDTH = 28;
 export default function BarChart({ data, formatValue = (v) => v }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
 
-  const maxValue = Math.max(...data.map((d) => d.value)) * 1.15;
+  const maxValue = Math.max(1, ...data.map((d) => d.value)) * 1.15;
   const innerW = VIEW_W - PAD.left - PAD.right;
   const innerH = VIEW_H - PAD.top - PAD.bottom;
   const slotWidth = innerW / data.length;
