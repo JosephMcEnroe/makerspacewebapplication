@@ -3,8 +3,9 @@ import { requireStaffApi } from "@/lib/staffAuth";
 import { UserRepository } from "@/Data_Access_Layer/UserRepository";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
 import { adminRepository } from "@/Data_Access_Layer/adminRepository";
+import bannedRepository from "@/Data_Access_Layer/bannedRepository";
+import { MEMBERSHIP_ROLES, STAFF_ASSIGNABLE_ROLES } from "@/lib/membershipRoles";
 
-const ROLES = ["MEMBER", "STUDENT", "INSTRUCTOR", "STAFF", "ADMIN"];
 const STATUSES = ["ACTIVE", "INACTIVE"];
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
@@ -28,18 +29,33 @@ export default async function handler(req, res) {
 
   const users = new UserRepository();
   const memberships = new membershipRepositry();
-  const [existingUser, existingMembership, targetIsAdmin] = await Promise.all([
+  const [existingUser, existingMembership, targetIsAdmin, isTerminated] = await Promise.all([
     users.findById(memberId),
     memberships.findUserMembership(memberId),
     new adminRepository().isAdmin(memberId),
+    !session.isAdmin && new bannedRepository().isUserBanned(memberId),
   ]);
   if (!existingUser) return res.status(404).json({ error: "Member not found." });
-  // Staff can't edit admin accounts or hand out roles — only admins can
   if (targetIsAdmin && !session.isAdmin) {
     return res.status(403).json({ error: "Only admins can edit admin accounts." });
   }
+  if (isTerminated) {
+    return res.status(403).json({ error: "Only admins can edit terminated accounts." });
+  }
 
   const { user: userInput, membership: membershipInput, rfid: rfidInput } = req.body || {};
+  const currentRole = existingMembership?.role_of_membership || "MEMBER";
+  const role = membershipInput?.role_of_membership === undefined && !session.isAdmin
+    ? currentRole : membershipInput?.role_of_membership;
+  if (membershipInput) {
+    if (!MEMBERSHIP_ROLES.includes(role)) {
+      return res.status(400).json({ error: "Choose a valid role." });
+    }
+    if (!session.isAdmin && role !== currentRole &&
+        (!STAFF_ASSIGNABLE_ROLES.includes(role) || !STAFF_ASSIGNABLE_ROLES.includes(currentRole))) {
+      return res.status(403).json({ error: "Staff can only assign Member, Student, or Instructor roles to members." });
+    }
+  }
 
   try {
     let updatedUser = existingUser;
@@ -59,9 +75,6 @@ export default async function handler(req, res) {
 
     let updatedMembership = existingMembership;
     if (membershipInput) {
-      const role = session.isAdmin
-        ? membershipInput.role_of_membership
-        : existingMembership?.role_of_membership || "MEMBER";
       const details = {
         role_of_membership: role,
         status: membershipInput.status,
@@ -70,7 +83,6 @@ export default async function handler(req, res) {
         // The card is changed separately (rfidInput below) so a stale form can't overwrite it
         rfid_id: existingMembership?.rfid_id ?? null,
       };
-      if (!ROLES.includes(details.role_of_membership)) return res.status(400).json({ error: "Choose a valid role." });
       if (!STATUSES.includes(details.status)) return res.status(400).json({ error: "Choose a valid status." });
       if (!DATE_PATTERN.test(details.period_start_date || "") || !DATE_PATTERN.test(details.period_end_date || "")) {
         return res.status(400).json({ error: "Enter valid membership start and end dates." });

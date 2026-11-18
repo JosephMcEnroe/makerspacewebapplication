@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import ConfirmationDialog from "./ConfirmationDialog";
 import styles from "./MembershipCard.module.css";
 
 export default function MembershipCard({ membership, showActions = true }) {
@@ -8,6 +9,7 @@ export default function MembershipCard({ membership, showActions = true }) {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState(null);
   const [error, setError] = useState(null);
+  const [confirmCancellation, setConfirmCancellation] = useState(false);
 
   const toggleAutoRenew = async (enable) => {
     setLoading(true);
@@ -37,16 +39,6 @@ export default function MembershipCard({ membership, showActions = true }) {
 
   const handleAutoRenewToggle = () => {
     toggleAutoRenew(!autoRenew);
-  };
-
-  const handleCancelMembership = () => {
-    if (
-      confirm(
-        `Are you sure you want to cancel auto-renewal? Your membership will remain active through ${membership.nextBillingDate || "the end of your billing cycle"}, but will not renew automatically.`
-      )
-    ) {
-      toggleAutoRenew(false);
-    }
   };
 
   return (
@@ -95,7 +87,7 @@ export default function MembershipCard({ membership, showActions = true }) {
               <button
                 type="button"
                 className={styles.cancelBtn}
-                onClick={handleCancelMembership}
+                onClick={() => setConfirmCancellation(true)}
                 disabled={loading}
               >
                 Cancel Membership
@@ -116,6 +108,20 @@ export default function MembershipCard({ membership, showActions = true }) {
           </div>
         )}
       </div>
+      {confirmCancellation && (
+        <ConfirmationDialog
+          title="Cancel auto-renewal?"
+          confirmLabel="Cancel auto-renewal"
+          cancelLabel="Keep auto-renewal"
+          onClose={() => setConfirmCancellation(false)}
+          onConfirm={() => {
+            setConfirmCancellation(false);
+            toggleAutoRenew(false);
+          }}
+        >
+          Your membership will remain active through {membership.nextBillingDate || "the end of your billing cycle"}, but it will not renew automatically.
+        </ConfirmationDialog>
+      )}
     </div>
   );
 }

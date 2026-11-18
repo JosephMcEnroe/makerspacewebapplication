@@ -16,12 +16,13 @@ import { reservationCustomerEndDateTime } from "@/lib/reservationPeriods";
 import { staffRequest } from "@/lib/staffApi";
 import bannedRepository from "@/Data_Access_Layer/bannedRepository";
 import EquipmentCancellationDialog from "@/components/EquipmentCancellationDialog";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 import ChangeRfidDialog from "@/components/ChangeRfidDialog";
 import TerminationDetailsDialog from "@/components/TerminationDetailsDialog";
 import { refundLabel } from "@/lib/refundDisplay";
+import { MEMBERSHIP_ROLES, STAFF_ASSIGNABLE_ROLES } from "@/lib/membershipRoles";
 import { MAX_TERMINATION_PHOTO_BYTES } from "@/lib/terminationPhoto";
 
-const ROLES = ["MEMBER", "STUDENT", "INSTRUCTOR", "STAFF", "ADMIN"];
 const TYPE_LABELS = { room: "Room", equipment: "Equipment", class: "Class" };
 
 export async function getServerSideProps({ req, resolvedUrl, params }) {
@@ -70,7 +71,7 @@ export async function getServerSideProps({ req, resolvedUrl, params }) {
     props: {
       navRole: guard.navRole,
       viewerIsAdmin: guard.session.isAdmin,
-      canEdit: !targetIsAdmin || guard.session.isAdmin,
+      canEdit: guard.session.isAdmin || (!targetIsAdmin && !isTerminated),
       isTerminated: isTerminated,
       member: {
         id: user.user_id,
@@ -108,6 +109,9 @@ function encodePhoto(file) {
 }
 
 export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, member, membership, upcoming, history, isTerminated: initialIsTerminated, }) {
+  const canChangeRole = viewerIsAdmin || STAFF_ASSIGNABLE_ROLES.includes(membership.role_of_membership);
+  const roleOptions = viewerIsAdmin ? MEMBERSHIP_ROLES
+    : canChangeRole ? STAFF_ASSIGNABLE_ROLES : [membership.role_of_membership];
   const router = useRouter();
   const [details, setDetails] = useState(member);
   const [plan, setPlan] = useState(membership);
@@ -125,6 +129,7 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
   }, [photoPreview]);
 
   const [cancellingKey, setCancellingKey] = useState(null);
+  const [pendingCancellation, setPendingCancellation] = useState(null);
   const [equipmentCancellation, setEquipmentCancellation] = useState(null);
   const [changingRfid, setChangingRfid] = useState(false);
   const [message, setMessage] = useState(router.query.booked ? { type: "success", text: "Reservation created." } : null);
@@ -238,8 +243,7 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
   };
 
   const cancelReservation = async (reservation) => {
-    if (reservation.type === "equipment") { setEquipmentCancellation(reservation); return; }
-    if (!window.confirm(`Cancel ${reservation.name} (${reservation.time}) for ${member.first_name}?`)) return;
+    setPendingCancellation(null);
     setCancellingKey(reservation.key);
     setMessage(null);
     try {
@@ -265,6 +269,16 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
 
   return (
     <>
+      {pendingCancellation && (
+        <ConfirmationDialog
+          title={pendingCancellation.type === "class" ? "Cancel class enrollment?" : "Cancel room reservation?"}
+          confirmLabel="Confirm cancellation"
+          onClose={() => setPendingCancellation(null)}
+          onConfirm={() => cancelReservation(pendingCancellation)}
+        >
+          Cancel {pendingCancellation.name} ({pendingCancellation.time}) for {member.first_name}?
+        </ConfirmationDialog>
+      )}
       {equipmentCancellation && <EquipmentCancellationDialog endpoint="/api/staff/reservations/cancel"
         bookingId={equipmentCancellation.id} memberId={member.id} name={equipmentCancellation.name}
         time={equipmentCancellation.time} onClose={() => setEquipmentCancellation(null)}
@@ -296,7 +310,9 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
               {message.text}
             </p>
           )}
-          {!canEdit && <p className={styles.error}>This is an admin account. Only admins can edit it.</p>}
+          {!canEdit && !isTerminated && (
+            <p className={styles.error}>This is an admin account. Only admins can edit it.</p>
+          )}
 
           <form className={styles.panel} onSubmit={saveMembership}>
             <h2 className={styles.panelTitle}>Membership</h2>
@@ -321,10 +337,10 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
                 </label>
                 <label className={styles.field}>
                   Role
-                  <select className={styles.select} value={plan.role_of_membership} onChange={updatePlan("role_of_membership")} disabled={!viewerIsAdmin}>
-                    {ROLES.map((role) => <option key={role} value={role}>{role.charAt(0) + role.slice(1).toLowerCase()}</option>)}
+                  <select className={styles.select} value={plan.role_of_membership} onChange={updatePlan("role_of_membership")}
+                    disabled={!canChangeRole}>
+                    {roleOptions.map((role) => <option key={role} value={role}>{role.charAt(0) + role.slice(1).toLowerCase()}</option>)}
                   </select>
-                  {!viewerIsAdmin && <span className={styles.hint}>Only admins can change roles.</span>}
                 </label>
                 <label className={styles.field}>
                   Period start
@@ -434,7 +450,10 @@ export default function MemberDetailPage({ navRole, viewerIsAdmin, canEdit, memb
                     <button
                       type="button"
                       className={styles.dangerBtn}
-                      onClick={() => cancelReservation(reservation)}
+                      onClick={() => {
+                        if (reservation.type === "equipment") setEquipmentCancellation(reservation);
+                        else setPendingCancellation(reservation);
+                      }}
                       disabled={cancellingKey !== null}
                     >
                       {cancellingKey === reservation.key ? "Cancelling…" : "Cancel"}

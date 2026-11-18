@@ -1,9 +1,10 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import StaffNavbar from "@/components/StaffNavbar";
 import MembershipStatusBadge from "@/components/MembershipStatusBadge";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 import WeeklyAvailability from "@/components/WeeklyAvailability";
 import MonthlyAvailability from "@/components/MonthlyAvailability";
 import { isMonthlyStudioResource } from "@/lib/resourceGroups";
@@ -52,7 +53,7 @@ export async function getServerSideProps({ req, resolvedUrl, query: params }) {
 
   const [users, equipment, rooms, classes] = await Promise.all([
     new UserRepository().findAllWithMembership(),
-    // Staff bookings skip Stripe, so list every machine without loading Stripe products
+    // Load availability independently of Stripe; the API checks pricing for the selected machine.
     loadEquipment({ stripe: false }),
     loadRooms(),
     loadUpcomingClasses(),
@@ -64,26 +65,38 @@ export async function getServerSideProps({ req, resolvedUrl, query: params }) {
     status: user.status || null,
   }));
   const requestedId = Number(params.userId);
+  const initialMemberId = members.some((member) => member.id === requestedId) ? requestedId : null;
+  const initialTab = params.type === "rooms" ? "rooms" : "equipment";
+  const canceled = params.canceled === "true";
+  const initialResource = canceled && initialMemberId
+    ? (initialTab === "rooms" ? rooms : equipment).find((resource) => !resource.unavailable &&
+      (resource.alternatives || [resource]).some((item) => item.resourceId === params.resourceId && !item.unavailable))
+    : null;
 
   return {
     props: {
       navRole: guard.navRole,
       members,
       resources: { equipment, rooms, classes },
-      initialMemberId: members.some((member) => member.id === requestedId) ? requestedId : null,
+      initialMemberId,
+      initialTab,
+      initialResource: initialResource ? { ...initialResource, initialResourceId: params.resourceId } : null,
+      canceled,
     },
   };
 }
 
 const wallTime = (day, minute) => `${day}T${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}:00`;
 
-export default function NewStaffReservationPage({ navRole, members, resources, initialMemberId }) {
+export default function NewStaffReservationPage({ navRole, members, resources, initialMemberId, initialTab, initialResource, canceled }) {
   const router = useRouter();
   const [memberId, setMemberId] = useState(initialMemberId);
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("equipment");
-  const [selectedResource, setSelectedResource] = useState(null);
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [selectedResource, setSelectedResource] = useState(initialResource);
+  const submittingSlots = useRef(false);
   const [bookingClassId, setBookingClassId] = useState(null);
+  const [pendingClass, setPendingClass] = useState(null);
   const [error, setError] = useState("");
 
   const member = members.find((candidate) => candidate.id === memberId) || null;
@@ -98,22 +111,36 @@ export default function NewStaffReservationPage({ navRole, members, resources, i
   const book = (body) => staffRequest("/api/staff/reservations", "POST", { userId: memberId, ...body });
   const monthlyRental = activeTab === "rooms" && isMonthlyStudioResource(selectedResource || {});
   const finish = () => router.push(`/members/${memberId}?booked=1`);
+  const closeSlots = () => {
+    if (!submittingSlots.current) setSelectedResource(null);
+  };
 
   // WeeklyAvailability shows its own error message when this throws
   const confirmSlots = async (periods, bookingResource = selectedResource) => {
-    await book({
-      type: activeTab,
-      resourceId: bookingResource.resourceId,
-      periods: monthlyRental ? periods : periods.map(({ date, startMinute, endDate, endMinute }) => ({
-        start: wallTime(date, startMinute),
-        end: wallTime(endDate, endMinute),
-      })),
-    });
-    await finish();
+    if (submittingSlots.current) return;
+    submittingSlots.current = true;
+    try {
+      const result = await book({
+        type: activeTab,
+        resourceId: bookingResource.resourceId,
+        periods: monthlyRental ? periods : periods.map(({ date, startMinute, endDate, endMinute }) => ({
+          start: wallTime(date, startMinute),
+          end: wallTime(endDate, endMinute),
+        })),
+      });
+      if (result.url) {
+        window.location.assign(result.url);
+        return;
+      }
+      await finish();
+    } catch (bookingError) {
+      submittingSlots.current = false;
+      throw bookingError;
+    }
   };
 
   const bookClass = async (cls) => {
-    if (!window.confirm(`Enroll ${member.name} in ${cls.name} (${cls.time})?`)) return;
+    setPendingClass(null);
     setBookingClassId(cls.resourceId);
     setError("");
     try {
@@ -145,6 +172,7 @@ export default function NewStaffReservationPage({ navRole, members, resources, i
           </div>
 
           {error && <p className={styles.error} role="alert">{error}</p>}
+          {canceled && <p className={styles.hint} role="status">Checkout canceled. Review the reservation to try again.</p>}
 
           <section className={styles.panel}>
             <h2 className={styles.panelTitle}><span className={styles.stepNumber}>1</span>Member</h2>
@@ -226,7 +254,7 @@ export default function NewStaffReservationPage({ navRole, members, resources, i
                         type="button"
                         className={styles.resourceCard}
                         disabled={!member || full || bookingClassId !== null}
-                        onClick={() => bookClass(cls)}
+                        onClick={() => setPendingClass(cls)}
                       >
                         <span className={styles.resourceName}>{cls.name}</span>
                         <span className={styles.resourceMeta}>{cls.time}</span>
@@ -255,20 +283,31 @@ export default function NewStaffReservationPage({ navRole, members, resources, i
         </div>
       </div>
 
+      {pendingClass && member && (
+        <ConfirmationDialog
+          title="Confirm class enrollment"
+          confirmLabel="Enroll member"
+          onClose={() => setPendingClass(null)}
+          onConfirm={() => bookClass(pendingClass)}
+        >
+          Enroll {member.name} in {pendingClass.name} ({pendingClass.time})?
+        </ConfirmationDialog>
+      )}
       {selectedResource && member && (monthlyRental ? <MonthlyAvailability
           resource={selectedResource}
           unavailableIntervals={selectedResource.unavailableIntervals}
-          confirmLabel={`Book for ${member.name.split(" ")[0]}`}
+          confirmLabel="Continue to payment"
           cancelLabel="Back"
-          onClose={() => setSelectedResource(null)}
+          onClose={closeSlots}
           onConfirm={confirmSlots}
         /> : <WeeklyAvailability
           resource={selectedResource}
+          initialResourceId={selectedResource.initialResourceId}
           type={activeTab}
           unavailableIntervals={selectedResource.unavailableIntervals}
-          confirmLabel={`Book for ${member.name.split(" ")[0]}`}
+          confirmLabel={activeTab === "equipment" ? "Continue to payment" : `Book for ${member.name.split(" ")[0]}`}
           cancelLabel="Back"
-          onClose={() => setSelectedResource(null)}
+          onClose={closeSlots}
           onConfirm={confirmSlots}
         />)}
     </>

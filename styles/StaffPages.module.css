@@ -428,6 +428,15 @@
   flex-wrap: wrap;
 }
 
+.selectedMember .rowActions {
+  align-items: center;
+}
+
+.selectedMember .badge {
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
 .resourceGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));

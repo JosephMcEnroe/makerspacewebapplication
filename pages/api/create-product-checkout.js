@@ -90,10 +90,8 @@ export default async function handler(req, res) {
       ...(mode === "subscription" && { subscription_data: { metadata: sessionMetadata } }),
       // Enable invoice generation for one-time payments so day passes receive a real Stripe invoice ID
       ...(mode === "payment" && { invoice_creation: { enabled: true } }),
-      success_url: `${origin}/stripe/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: membershipType
-        ? `${origin}/membership?cancelled=True`
-        : `${origin}/stripe/checkout?canceled=true`,
+      success_url: `${origin}/membership/checkout-return?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/membership?cancelled=true`,
     });
 
     return res.status(200).json({ url: session.url });
