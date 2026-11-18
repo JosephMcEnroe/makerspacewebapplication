@@ -136,8 +136,8 @@ export default function AdminDashboardPage() {
             <ActionCard
               icon={ActivityIcon}
               title="Live Activity Monitor"
-              description="View real-time usage data"
-              onClick={() => console.log("Live activity monitor")}
+              description="Card taps and denied entries for the last hour or day"
+              href="/admin/activity"
             />
             <ActionCard
               icon={MembersIcon}

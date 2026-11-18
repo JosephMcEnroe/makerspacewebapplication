@@ -103,7 +103,15 @@ export default async function handler(req, res) {
       message = "Access denied: membership is inactive";
     }
 
-    // 5. Record successful check-in
+    // 5. Log every tap from a member's card, granted or denied, for the
+    // admin card log. Unknown cards returned above and are not logged.
+    await query(
+      `INSERT INTO check_in_history (user_id, card_id, status)
+       VALUES ($1, $2, $3)`,
+      [user.user_id, normalizedCardId, decision]
+    );
+
+    // 6. Record successful check-in
     //
     // last_check_in no longer exists in users.
     // The check_in table is now the source of truth
@@ -118,7 +126,7 @@ export default async function handler(req, res) {
       );
     }
 
-    // 6. Return result to Raspberry Pi
+    // 7. Return result to Raspberry Pi
     return res.status(200).json({
       ok: decision === "green",
       status: decision,
