@@ -19,9 +19,11 @@ Equipment cancellations now retain bookings using `booking_active`, with per-hou
 ## Deferred limitations for the PR
 
 - For equipment: no temporary holds, hold tables, or post-payment availability conflict resolution. Availability is checked before checkout; two customers can pay for overlapping times. Paid sessions are fulfilled even if availability changed. Holds/refund handling will be implemented later.
-- No automatic price adjustments or paid equipment extensions. Standalone `/stripe/checkout` remains a debugging checkout and does not create reservations.
+- No automatic price adjustments or paid equipment extensions.
 - Repeated separate checkout attempts can create distinct paid reservations; do not confuse those with retries of a webhook for one session.
 
 ## Verification
+
+Staff and admins start equipment and monthly studio Checkout from the staff reservation form. The member pays on Stripe in the same tab. The staff return screen checks fulfillment for the initiating staff account, and the webhook records the payment and reservation under the selected member. Hourly room bookings and class enrollments save directly.
 
 Run `npm test -- --run`, `npm run lint`, and `npm run build`. Verify direct hourly room reservations and overlap rejection without Stripe. In Stripe test mode, verify one and three equipment slots, cancellation, pending return-page status, and replay of a completed checkout webhook. Confirm the payment ledger and booking rows are created once and membership/day-pass purchases still work. Use test mode for payment verification; the implementation does not create test charges automatically.
