@@ -1,6 +1,9 @@
 import { bannedRepository } from "@/Data_Access_Layer/bannedRepository";
 import { requireStaffApi } from "@/lib/staffAuth";
 import { verifyCsrfToken } from "@/lib/csrf";
+import { decodeTerminationPhoto } from "@/lib/terminationPhoto";
+
+export const config = { api: { bodyParser: { sizeLimit: "4300kb" } } };
 
 export default async function handler(req, res) {
 
@@ -46,13 +49,21 @@ export default async function handler(req, res) {
         });
     }
 
+    let photo;
     try {
-        const reason = req.body?.reason?.trim() || 
-        "Account terminated by administrator.";
+        photo = decodeTerminationPhoto(req.body?.photo, req.body?.photoType);
+    } catch (error) {
+        return res.status(400).json({ error: error.message });
+    }
+
+    try {
+        const reason = (typeof req.body?.reason === "string" && req.body.reason.trim()) ||
+            "Account terminated by administrator.";
 
         const result = await new bannedRepository().terminatedUser(
             userId,
-            reason
+            reason,
+            photo
         );
 
         if(!result){

@@ -1,7 +1,18 @@
 import { query, getPool } from "@/lib/db";
 
+export async function findLatestTermination(userId) {
+    const { rows } = await query(`
+        SELECT reason, pic_of_shame AS photo
+        FROM banned
+        WHERE user_id = $1
+        ORDER BY banned_date DESC, ban_id DESC
+        LIMIT 1
+    `, [userId]);
+    return rows[0] || null;
+}
+
 export class bannedRepository {
-    async terminatedUser(userId, reason) {
+    async terminatedUser(userId, reason, photo = null) {
         const client = await getPool().connect();
 
         try {
@@ -28,10 +39,11 @@ export class bannedRepository {
                     user_id,
                     email,
                     reason,
-                    banned_date
+                    banned_date,
+                    pic_of_shame
                 )
-                VALUES ($1, $2, $3, CURRENT_DATE)
-                `, [user.user_id, user.email, reason]);
+                VALUES ($1, $2, $3, CURRENT_DATE, $4)
+                `, [user.user_id, user.email, reason, photo]);
 
             //Remove existing sessions
             await client.query(`
