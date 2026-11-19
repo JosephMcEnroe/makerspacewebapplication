@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { businessDateTime } from "@/lib/businessTime";
 import { fulfillReservation } from "@/lib/reservationCheckout";
 import { handleEquipmentRefundEvent } from "@/lib/equipmentRefundService";
 import { membershipRepositry } from "@/Data_Access_Layer/MembershipRepository";
@@ -21,10 +22,10 @@ async function readRawBody(req) {
   return Buffer.concat(chunks);
 }
 
-// Unix seconds (or a Date) -> 'YYYY-MM-DD' for the DATE columns on the membership table
+// Store the Eastern calendar date used by membership eligibility checks.
 function toDateString(value) {
   const date = typeof value === "number" ? new Date(value * 1000) : value;
-  return date.toISOString().slice(0, 10);
+  return businessDateTime(date).slice(0, 10);
 }
 
 // Newer Stripe API versions moved the billing period onto the subscription items
